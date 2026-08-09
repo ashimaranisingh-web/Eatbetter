@@ -2744,11 +2744,11 @@ const PMS_MEAL_PLAN = {
         { n:'Protein + cocoa + milk', cal:200, p:40, c:10, f:4, fib:1 },
         { n:'Banana',                 cal:80,  p:1,  c:20, f:0, fib:2 }
       ] },
-    { id:'fri-5', time:'7–8pm · Dinner', title:'Egg curry + palak + jeera rice',
-      desc:'Post-dance recovery. 3-egg curry = high protein, easy to make. Palak = iron (getting close to period). Small jeera rice = comfort + serotonin.',
-      quantities:'Eggs (3, curry) · Spinach/palak (100g) · Jeera rice (60g cooked) · Tomato-onion gravy · 1 tsp oil',
+    { id:'fri-5', time:'7–8pm · Dinner', title:'Scrambled eggs + palak + jeera rice',
+      desc:'Post-dance recovery. Three eggs scrambled in the pan — nothing to assemble. Palak for iron. Small jeera rice for comfort + serotonin.',
+      quantities:'Eggs (3, scrambled) · Spinach/palak (100g) · Jeera rice (60g cooked) · Onion-tomato · 1 tsp oil',
       items:[
-        { n:'3-egg curry',         cal:280, p:21, c:6,  f:18, fib:2 },
+        { n:'3 scrambled eggs',    cal:270, p:21, c:3,  f:18, fib:0 },
         { n:'Sautéed palak',       cal:60,  p:4,  c:6,  f:2,  fib:4 },
         { n:'Jeera rice (small)',  cal:80,  p:1,  c:17, f:1,  fib:0 },
         { n:'Tomato-onion gravy',  cal:50,  p:2,  c:10, f:1,  fib:2 }
@@ -3197,44 +3197,49 @@ const MEAL_PLAN = {
   },
   sun: {
     meals: [
-      { id:'sun-1', time:'7–8am · Wake-up', title:'Coffee + protein shake',
-        desc:'Black coffee with 60ml slim milk.',
-        quantities:'Black coffee (1 cup) · Slim milk (60ml)',
+      { id:'sun-1', time:'7–8am · Wake-up', title:'Coffee + electrolytes',
+        desc:'Slow Sunday start. Dance class is at 2:30 — the real fuelling happens at breakfast.',
+        quantities:'Black coffee · Slim milk (60ml) · Electrolyte tablet',
         items:[
           { n:'Coffee + slim milk', cal:25, p:2, c:3, f:0, fib:0 },
-          { n:'Protein shake (1 scoop)', cal:120, p:25, c:3, f:1, fib:0 },
+          { n:'Electrolytes',       cal:20, p:0, c:5, f:0, fib:0 }
         ] },
-      { id:'sun-2', time:'9am · Post-workout', title:'Avocado toast + 1 egg',
-        desc:'1 multigrain toast + full avocado + 1 scrambled egg on top. High healthy fats + protein.',
-        quantities:'Multigrain bread (1 slice / ~40g) · Avocado (1 whole / ~150g) · Egg (1, scrambled) · Salt + pepper + lemon',
+
+      { id:'sun-2', time:'10am · Breakfast', title:'Avocado toast + 2 scrambled eggs + hung curd',
+        desc:'The big pre-dance meal — 4½ hours before class, so there is time to digest. Two slices if you have room, one if you don\'t. Half the avocado here, half saved for tonight\'s bowl so nothing gets wasted. Two eggs, not one, to balance the fat.',
+        quantities:'Brown / multigrain toast (2 slices) · Avocado (half / 75g) · Eggs (2, scrambled) · Hung curd (100g) · Salt + pepper + chilli flakes',
         items:[
-          { n:'Multigrain toast',    cal:110, p:5,  c:18, f:2,  fib:3 },
-          { n:'Full avocado',        cal:240, p:3,  c:12, f:22, fib:10 },
-          { n:'1 scrambled egg',     cal:90,  p:7,  c:1,  f:6,  fib:0 }
+          { n:'Brown/multigrain toast (2)', cal:160, p:8,   c:28, f:2,  fib:5 },
+          { n:'Avocado (half, 75g)',       cal:120, p:1.5, c:6,  f:11, fib:5 },
+          { n:'2 scrambled eggs',          cal:180, p:14,  c:2,  f:12, fib:0 },
+          { n:'Hung curd (100g)',          cal:90,  p:8,   c:4,  f:4,  fib:0 }
         ] },
-      { id:'sun-3', time:'1–1:30pm · Meal 1', title:'Chicken + big salad bowl',
-        desc:'Chicken breast (120g raw, weigh before cooking) with cucumber-cherry tomato-lettuce-onion salad + lemon.',
-        quantities:'Raw chicken (120g) · Cucumber (80g) · Cherry tomato (40g) · Lettuce (40g) · Onion (30g) · Lemon · Salt + pepper',
+
+      { id:'sun-3', time:'1pm · Lunch (light)', title:'Half banana + dates',
+        desc:'Leaving at 1pm and dancing at 2:30 — this is topping up quick carbs, not a meal. Anything heavier will sit badly through class.',
+        quantities:'Banana (half) · Dates (2)',
         items:[
-          { n:'Grilled chicken (120g raw)', cal:132, p:28, c:0, f:3, fib:0 },
-          { n:'Big salad bowl',   cal:60,  p:2,  c:10, f:0, fib:4 }
+          { n:'Banana (half)', cal:40, p:0.5, c:10, f:0, fib:1 },
+          { n:'Dates (2)',     cal:46, p:0.4, c:12, f:0, fib:1 }
         ] },
-      { id:'sun-4', time:'5pm · Snack', title:'Hung curd + paneer cubes + veg sticks',
-        desc:'Cucumber and carrot sticks with thick hung curd dip + 30g paneer cubes.',
-        quantities:'Cucumber (100g) · Carrot (60g) · Hung curd (80g) · Paneer cubes (30g) · Lemon · Mint · Salt',
+
+      { id:'sun-4', time:'5pm · Snack', title:'Protein shake straight after class',
+        desc:'You come out of class genuinely hungry. Two scoops in water, drunk on the way home — it takes the edge off so dinner is a choice rather than a raid on the fridge.',
+        quantities:'Protein powder (2 scoops) · Water',
         items:[
-          { n:'Cucumber + carrot', cal:35, p:2, c:8, f:0, fib:3 },
-          { n:'Hung curd dip',     cal:70, p:6, c:3, f:3, fib:0 },
-          { n:'Paneer cubes',      cal:80, p:6, c:1, f:6, fib:0 }
+          { n:'Protein shake (2 scoops)', cal:240, p:50, c:6, f:2, fib:0 }
         ] },
-      { id:'sun-5', time:'8–8:30pm · Meal 2', title:'Egg curry + dal + palak',
-        desc:'3-egg curry in tomato-onion gravy + small dal + sautéed palak.',
-        quantities:'Boiled eggs (3) · Tomato (60g) · Onion (40g) · Ginger · Spinach (100g) · Yellow dal (20g dry / ~50g cooked) · 1 tsp oil · Spices',
+
+      { id:'sun-5', time:'5:30–6pm · Dinner', title:'Big chicken salad bowl + rice',
+        desc:'The proper post-dance refuel. Raw spinach as the salad base — easiest way to actually get it in. The other half of the morning avocado goes here, and rice replaces what the class burned.',
+        quantities:'Chicken breast (150g raw, grilled) · Baby spinach + cucumber + tomato + onion · Avocado (half / 75g) · Rice (150g cooked) · Sweet corn (70g) · Olive oil + lemon',
         items:[
-          { n:'Egg curry (3 eggs)', cal:280, p:21, c:6,  f:18, fib:2 },
-          { n:'Small yellow dal',   cal:70,  p:5,  c:10, f:1,  fib:2 },
-          { n:'Tomato-onion gravy', cal:50,  p:2,  c:10, f:1,  fib:2 },
-          { n:'Sautéed palak',      cal:60,  p:4,  c:6,  f:2,  fib:4 }
+          { n:'Chicken breast (150g raw)', cal:180, p:34.5, c:0,  f:3,  fib:0 },
+          { n:'Big spinach salad bowl',    cal:60,  p:3,    c:10, f:0,  fib:4 },
+          { n:'Avocado (half, 75g)',       cal:120, p:1.5,  c:6,  f:11, fib:5 },
+          { n:'Rice (150g cooked)',        cal:195, p:4,    c:42, f:0,  fib:0 },
+          { n:'Sweet corn (70g)',          cal:67,  p:2,    c:15, f:1,  fib:2 },
+          { n:'Olive oil + lemon',         cal:45,  p:0,    c:1,  f:5,  fib:0 }
         ] }
     ],
     note:'Light cardio day. No rice — eggs and palak are satisfying.'
@@ -5201,6 +5206,7 @@ const INGREDIENTS = [
     unit:'Roti 55g (~1⅓) · Paratha 52g (~1) · Rice 115g',
     cal:150, p:4, c:28, f:2, fib:2 },
   { id:'dosa',        name:'Dosa (incl. oil)',                     unit:'100g',      cal:150, p:3,  c:26, f:3,  fib:1 },
+  { id:'brownbread', name:'Brown / multigrain toast',              unit:'1 slice',  cal:80,  p:4, c:14, f:1, fib:2.5 },
   { id:'sourdough',   name:'Olive & rosemary sourdough (buttered)', unit:'1 slice (60g) + butter', cal:198, p:5, c:30, f:7, fib:2 },
   { id:'chilla',      name:'Moong dal chilla (incl. oil)',         unit:'100g',      cal:170, p:9,  c:20, f:5,  fib:4 },
   { id:'egg_boiled',  name:'Boiled egg',                           unit:'1 egg',     cal:70,  p:6,  c:0,  f:5,  fib:0 },
