@@ -5249,9 +5249,9 @@ const SNACK_INGREDIENTS = [
 const COFFEE_OPTIONS = [
   { id:'coffee_black',   name:'Black coffee',                          unit:'1 cup', cal:5,  p:0, c:1,  f:0, fib:0 },
   { id:'coffee_milk',    name:'Black coffee + slim milk',              unit:'1 cup (60ml milk)', cal:25, p:2, c:3, f:0, fib:0 },
-  { id:'coffee_jaggery', name:'Black coffee + slim milk + jaggery',    unit:'1 cup (60ml milk + 1 tsp jaggery)', cal:45, p:2, c:8, f:0, fib:0 },
-  { id:'coffee_lf',      name:'Coffee + lactose-free milk + jaggery',  unit:'1 cup (250ml Amul LF + 1 tsp jaggery)', cal:170, p:8, c:17, f:8, fib:0,
-    qty:'Black coffee · Amul lactose-free milk (250ml) · Jaggery (1 tsp)' },
+  { id:'coffee_monk',    name:'Black coffee + slim milk + monk fruit', unit:'1 cup (60ml milk + monk fruit)', cal:25, p:2, c:3, f:0, fib:0 },
+  { id:'coffee_lf',      name:'Coffee + lactose-free milk + monk fruit', unit:'1 cup (250ml Amul LF + monk fruit)', cal:150, p:8, c:12, f:8, fib:0,
+    qty:'Black coffee · Amul lactose-free milk (250ml) · Monk fruit sweetener' },
 ];
 
 // Protein — its own component, separate from wake-up. Logged whenever it
@@ -5288,7 +5288,7 @@ const BUILDERS = {
       { id:'slim',    name:'Slim milk',           unit:'60ml',     cal:22,  p:2,   c:3, f:0.1, fib:0 },
       { id:'lf',      name:'Lactose-free milk',   unit:'60ml',     cal:35,  p:2,   c:3, f:1.8, fib:0 },
       { id:'lf250',   name:'Lactose-free milk',   unit:'250ml',    cal:148, p:8,   c:12,f:7.5, fib:0 },
-      { id:'jaggery', name:'Jaggery',             unit:'1 tsp',    cal:20,  p:0,   c:5, f:0,   fib:0 },
+      { id:'monkfruit',name:'Monk fruit sweetener', unit:'1 tsp',    cal:0,   p:0,   c:0, f:0,   fib:0 },
       { id:'whey_c',  name:'Whey isolate',        unit:'1 scoop',  cal:130, p:30,  c:1, f:0.5, fib:0 },
     ]
   }
