@@ -82,7 +82,6 @@
     position: sticky; top: 0; z-index: 10;
     background: var(--counter-bg);
     border: 0.5px solid var(--card-stroke);
-    border-left: 3px solid var(--accent);
     border-radius: var(--radius-lg);
     padding: 14px 16px; margin-bottom: 18px;
     transition: box-shadow 0.2s ease, border-color 0.2s ease,
@@ -610,7 +609,6 @@
   .recipe-line {
     font-size: 12px; color: var(--text-primary); margin: 4px 0 10px; line-height: 1.5;
     padding: 8px 10px; background: var(--bg-primary); border-radius: var(--radius-md);
-    border-left: 2px solid var(--border-secondary);
   }
   .bottom-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
   .macro-pills { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -648,7 +646,7 @@
   .groc-content {
     margin-top: 8px; padding: 10px 12px; background: var(--bg-primary);
     border-radius: var(--radius-md); font-size: 12px; color: var(--text-primary);
-    line-height: 1.6; border-left: 2px solid var(--border-secondary);
+    line-height: 1.6;
   }
 
   /* Quantities block — same expand/collapse as groceries but rendered as a block above the macro pills row */
@@ -1030,6 +1028,12 @@
     color: white;
     cursor: pointer;
     font-family: inherit;
+  }
+  .cycle-month {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 0 4px 2px;
   }
   .cycle-calendar-wrap {
     overflow-x: auto;
@@ -1837,9 +1841,8 @@
     font-size: 9px;
   }
 
-  /* Each slot type gets a very light tint + edge so you can see where one
-     card ends and the next begins while scrolling. */
-  .slot-card[data-slot] { border-left: 3px solid var(--slot-accent, var(--card-stroke)); }
+  /* Each slot type gets its own tinted name chip so you can tell the
+     cards apart while scrolling. */
   .slot-card[data-slot="coffee"],
   .slot-card[data-slot="protein"],
   .slot-card[data-slot="snack"]   { --slot-accent:#c8a63c; --slot-chip-bg:#221d10; }
@@ -2158,12 +2161,11 @@
   .day-tab.active .day-dot.over    { background: #ffd0d0; }
 
   /* ── Weekly card ── */
-  /* Both calorie counters share a slightly tinted surface + accent edge so
-     they stand apart from the neutral #101010 cards used everywhere else. */
+  /* Both calorie counters share a slightly tinted surface so they stand
+     apart from the neutral #101010 cards used everywhere else. */
   .week-card {
     background: var(--counter-bg);
     border: 0.5px solid var(--card-stroke);
-    border-left: 3px solid var(--accent);
     border-radius: var(--radius-lg);
     padding: 14px 16px;
     margin-bottom: 18px;
@@ -2280,6 +2282,8 @@
   .week-reset-ghost:active { color: var(--danger); }
 
 </style>
+<link rel="stylesheet" href="shell.css">
+<script src="store.js"></script>
 </head>
 <body>
 <div class="container">
@@ -4602,11 +4606,13 @@ function renderCycleCalendar() {
   today.setHours(0,0,0,0);
   const todayStrLocal = dateToStr(today);
 
+  // Scrolls back 6 months (to the same date) and 5 weeks ahead.
   const windowStart = new Date(today);
-  windowStart.setDate(today.getDate() - 21);
+  windowStart.setMonth(today.getMonth() - 6);
+  const todayIdx = Math.round((today - windowStart) / 86400000);
 
   const days = [];
-  for (let i = 0; i < 56; i++) {
+  for (let i = 0; i < todayIdx + 35; i++) {
     const d = new Date(windowStart);
     d.setDate(windowStart.getDate() + i);
     days.push(d);
@@ -4619,7 +4625,7 @@ function renderCycleCalendar() {
     const meta = info ? PHASE_META[info.phase] : null;
     const dotClass = meta ? meta.dot : '';
     const clickAttr = info ? `onclick="showPhasePopup('${ds}','${cycleStart}')"` : '';
-    return `<div class="cycle-day-cell${isToday ? ' today' : ''}" ${clickAttr} style="${info ? 'cursor:pointer' : ''}">
+    return `<div class="cycle-day-cell${isToday ? ' today' : ''}" data-date="${ds}" ${clickAttr} style="${info ? 'cursor:pointer' : ''}">
       <span class="cycle-day-name">${WEEK_DAYS[d.getDay()]}</span>
       <span class="cycle-day-num">${d.getDate()}</span>
       <span class="cycle-dot ${dotClass}"></span>
@@ -4627,6 +4633,7 @@ function renderCycleCalendar() {
   }).join('');
 
   section.innerHTML = `
+    <div class="cycle-month" id="cycleMonth" aria-live="polite"></div>
     <div class="cycle-calendar-wrap" id="cycleCalWrap">
       <div class="cycle-calendar">${cells}</div>
     </div>
@@ -4635,11 +4642,31 @@ function renderCycleCalendar() {
   requestAnimationFrame(() => {
     const wrap = document.getElementById('cycleCalWrap');
     if (!wrap) return;
-    const todayIdx = 21;
     const cellW = 46;
     const offset = todayIdx * cellW - (wrap.clientWidth / 2) + cellW / 2;
     wrap.scrollLeft = Math.max(0, offset);
+    updateCycleMonth();
+    wrap.addEventListener('scroll', updateCycleMonth, { passive: true });
   });
+  updateCycleMonth();
+}
+
+// Month label above the strip follows whichever day sits in the middle.
+function updateCycleMonth() {
+  const wrap = document.getElementById('cycleCalWrap');
+  const label = document.getElementById('cycleMonth');
+  if (!wrap || !label) return;
+  const cells = wrap.querySelectorAll('.cycle-day-cell');
+  const mid = wrap.getBoundingClientRect().left + wrap.clientWidth / 2;
+  let cell = null;
+  for (const c of cells) { if (c.getBoundingClientRect().right >= mid) { cell = c; break; } }
+  cell = cell || wrap.querySelector('.cycle-day-cell.today');
+  if (!cell) return;
+  const [y, m] = cell.dataset.date.split('-').map(Number);
+  const d = new Date(y, m - 1, 1);
+  const text = d.toLocaleDateString(undefined,
+    y === new Date().getFullYear() ? { month: 'long' } : { month: 'long', year: 'numeric' });
+  if (label.textContent !== text) label.textContent = text;
 }
 
 function renderInsight(cycleStart, todayStrArg) {
@@ -6371,6 +6398,9 @@ document.addEventListener('keydown', (e) => {
 
 renderWeight();
 </script>
+<script src="onboarding.js"></script>
+<script src="profile.js"></script>
+<script src="assistant.js"></script>
 </div>
 </body>
 </html>
