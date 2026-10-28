@@ -25,7 +25,7 @@
   function build(p) {
     const on = p.reminders || [];
     const list = [];
-    if (on.includes('morning')) list.push({ id: IDS.morning, title: 'Today’s menu is ready', body: 'See what’s on your plate today.', schedule: { on: { hour: 8, minute: 0 } } });
+    if (on.includes('morning')) list.push({ id: IDS.morning, title: 'Today’s meals are ready', body: 'See what’s on your plate today.', schedule: { on: { hour: 8, minute: 0 } } });
     if (on.includes('meals')) {
       list.push({ id: IDS.lunch, title: 'Lunch time', body: 'Your planned lunch is waiting.', schedule: { on: { hour: 12, minute: 45 } } });
       list.push({ id: IDS.dinner, title: 'Dinner time', body: 'Check tonight’s dinner before you cook.', schedule: { on: { hour: 19, minute: 30 } } });

@@ -2305,7 +2305,8 @@
   <div class="tracker-head">
     <span class="tracker-label" id="trackerDayLabel">Monday's progress</span>
     <span style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:10px;color:var(--text-tertiary)">maintenance <b style="color:var(--text-secondary);font-weight:600">2,072</b></span>
+      <span class="tracker-stat"><small>Maintenance</small><b id="tdeeLabel">2,072</b></span>
+      <span class="tracker-stat" id="planGapLabel"></span>
       <button class="reset-btn" id="resetBtn">Reset day</button>
     </span>
   </div>
@@ -2535,7 +2536,8 @@ function r2(n) {
   const v = Number(n) || 0;
   return Math.round(v * 100) / 100;
 }
-const TDEE = 2072;
+// let, not const: planner.js replaces it with an estimate from the profile.
+let TDEE = 2072;
 const CAL_PER_KG = 7700;
 const PMS_TARGETS = { cal: 1700, p: 110, c: 155, f: 55, fib: 30 };
 
@@ -6316,14 +6318,20 @@ function confirmResetWeek(weekNum) {
   if (typeof renderSupplements === 'function') renderSupplements();
 }
 
+// Built from the live targets so a personalised plan shows its own numbers.
+function modeSubtitle(pms) {
+  if (pms) return `🌙 PMS mode · ${PMS_TARGETS.cal.toLocaleString()} cal · Hormone-balanced · Comfort carbs`;
+  const deficit = TDEE - TARGETS.cal;
+  return `${TARGETS.cal.toLocaleString()} cal · ${TARGETS.p}g protein` +
+    (deficit > 0 ? ` · ${deficit} cal deficit · ${r2(deficit * 7 / CAL_PER_KG)}kg/week` : '');
+}
+
 function setMode(pms) {
   setPMSMode(pms);
   document.body.classList.toggle('pms-mode', pms);
   document.getElementById('btnNormal').classList.toggle('active', !pms);
   document.getElementById('btnPMS').classList.toggle('active', pms);
-  document.getElementById('modeSubtitle').textContent = pms
-    ? '🌙 PMS mode · 1,700 cal · Hormone-balanced · No chicken · Comfort carbs'
-    : '1,550 cal · 120g protein · 500 cal deficit · 0.5kg/week';
+  document.getElementById('modeSubtitle').textContent = modeSubtitle(pms);
   renderTabs();
   renderTracker();
   renderWeeklyTracker();
@@ -6335,8 +6343,7 @@ function setMode(pms) {
   document.body.classList.toggle('pms-mode', pms);
   document.getElementById('btnNormal').classList.toggle('active', !pms);
   document.getElementById('btnPMS').classList.toggle('active', pms);
-  if (pms) document.getElementById('modeSubtitle').textContent =
-    '🌙 PMS mode · Hormone-balanced meals · No chicken · Comfort carbs · Anti-bloat';
+  document.getElementById('modeSubtitle').textContent = modeSubtitle(pms);
 })();
 
 renderCycleCalendar();
@@ -6400,6 +6407,8 @@ renderWeight();
 </script>
 <script src="health.js"></script>
 <script src="reminders.js"></script>
+<script src="planner.js"></script>
+<script src="app.js"></script>
 <script src="onboarding.js"></script>
 <script src="profile.js"></script>
 <script src="assistant.js"></script>

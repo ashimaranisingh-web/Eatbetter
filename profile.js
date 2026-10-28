@@ -63,6 +63,13 @@
             <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Not set')}</span></span>${ICONS.chevron}</button>`;
         }).join('')}</div>
 
+        <p class="eb-group-label">Meal Plan</p>
+        <div class="eb-seg pf-seg" role="radiogroup" aria-label="Meal plan">
+          ${[['generated', 'Built for me'], ['original', 'Original plan']].map(([v, t]) =>
+            `<button type="button" class="eb-seg-btn${(p.planSource || 'generated') === v ? ' on' : ''}" data-plan-src="${v}" role="radio" aria-checked="${(p.planSource || 'generated') === v}">${t}</button>`).join('')}
+        </div>
+        <p class="eb-group-note">${window.EBPlanner && EBPlanner.current() ? `Built from your food, goal and activity. About ${TARGETS.cal.toLocaleString()} cal a day (an estimate).` : 'The fixed weekly plan the app started with.'}</p>
+
         <p class="eb-group-label">Appearance</p>
         <div class="eb-seg pf-seg" role="radiogroup" aria-label="Appearance">
           ${[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, t]) =>
@@ -73,23 +80,23 @@
         <p class="eb-group-label">Apple Health</p>
         <div class="eb-list">
           ${EBHealth.isConnected()
-            ? `<button type="button" class="eb-list-row" data-pf="healthSync"><span class="eb-row-text"><span class="eb-list-label">Sync now</span>
+            ? `<button type="button" class="eb-list-row" data-pf="healthSync"><span class="eb-row-text"><span class="eb-list-label">Sync Now</span>
                  <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span></button>
-               <button type="button" class="eb-list-row" data-pf="healthOff"><span class="eb-list-label">Stop syncing</span></button>`
+               <button type="button" class="eb-list-row" data-pf="healthOff"><span class="eb-list-label">Stop Syncing</span></button>`
             : `<button type="button" class="eb-list-row" data-pf="healthOn"><span class="eb-row-text"><span class="eb-list-label">Connect Apple Health</span>
                  <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span>${ICONS.chevron}</button>`}
         </div>` : ''}
 
         <p class="eb-group-label">Meal assistant</p>
         <div class="eb-list">
-          <label class="eb-list-row is-input"><span class="eb-list-label">Claude API key</span>
+          <label class="eb-list-row is-input"><span class="eb-list-label">Claude API Key</span>
             <input type="password" class="pf-inline" data-pf="apiKey" value="${esc(p.apiKey)}" placeholder="Optional" autocomplete="off" spellcheck="false"></label>
         </div>
         <p class="eb-group-note">Adds AI estimates for foods the built-in list doesn’t know. Meal text is sent to Anthropic when set.</p>
 
         <div class="eb-list pf-actions">
-          <button type="button" class="eb-list-row" data-pf="redo"><span class="eb-list-label">Redo onboarding</span>${ICONS.chevron}</button>
-          <button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase profile</span></button>
+          <button type="button" class="eb-list-row" data-pf="redo"><span class="eb-list-label">Redo Onboarding</span>${ICONS.chevron}</button>
+          <button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase Profile</span></button>
         </div>
         <p class="eb-group-note center">Not medical advice. Check with your doctor before big diet changes.</p>
       </div>`;
@@ -120,6 +127,8 @@
   }
   function onClick(e) {
     const t = e.target;
+    const ps = t.closest('[data-plan-src]');
+    if (ps) { patch(p => { p.planSource = ps.dataset.planSrc; }); if (window.EBPlanner) EBPlanner.refresh(); return render(); }
     const tp = t.closest('[data-theme-pref]');
     if (tp) { EB.setThemePref(tp.dataset.themePref); return render(); }
     const se = t.closest('[data-step-edit]');

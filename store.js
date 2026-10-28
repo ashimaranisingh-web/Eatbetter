@@ -18,11 +18,11 @@
                regular: '', symptoms: [], pmsStart: '' },
       activity: { level: '', types: [] },
       trackers: [],
-      food: { diet: '', usual: '', files: [] },
+      food: { diet: '', cuisines: [], usual: '', files: [] },
       nutritionist: { has: '', name: '', contact: '' },
       sleep: { hours: '', regular: '' },
       health: { conditions: [], meds: '' },
-      coach: '', reminders: [],
+      coach: '', reminders: [], planSource: 'generated',
       apiKey: ''
     };
   }

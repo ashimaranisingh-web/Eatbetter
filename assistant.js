@@ -316,7 +316,7 @@
     el.innerHTML = `
       <div class="as-sheet" role="dialog" aria-modal="true" aria-labelledby="asTitle">
         <div class="as-head">
-          <h2 id="asTitle">Log what you ate</h2>
+          <h2 id="asTitle">Log What You Ate</h2>
           <button type="button" class="eb-icon-btn" data-as="close" aria-label="Close">${ICONS.close}</button>
         </div>
         <div class="as-log" id="asLog" aria-live="polite"></div>
