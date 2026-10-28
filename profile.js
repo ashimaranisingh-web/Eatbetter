@@ -34,7 +34,7 @@
   function render() {
     const p = EB.getProfile();
     const pref = EB.getThemePref();
-    const steps = EBOnboarding.STEPS.filter(s => !s.when || s.when(p));
+    const steps = EBOnboarding.STEPS.filter(s => !s.info && s.profile !== false && (!s.when || s.when(p)));
     el.innerHTML = `
       <div class="ob-top">
         <button type="button" class="eb-icon-btn" data-pf="close" aria-label="Close">${ICONS.back}</button>
@@ -68,6 +68,17 @@
           ${[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, t]) =>
             `<button type="button" class="eb-seg-btn${pref === v ? ' on' : ''}" data-theme-pref="${v}" role="radio" aria-checked="${pref === v}">${t}</button>`).join('')}
         </div>
+
+        ${window.EBHealth && EBHealth.native ? `
+        <p class="eb-group-label">Apple Health</p>
+        <div class="eb-list">
+          ${EBHealth.isConnected()
+            ? `<button type="button" class="eb-list-row" data-pf="healthSync"><span class="eb-row-text"><span class="eb-list-label">Sync now</span>
+                 <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span></button>
+               <button type="button" class="eb-list-row" data-pf="healthOff"><span class="eb-list-label">Stop syncing</span></button>`
+            : `<button type="button" class="eb-list-row" data-pf="healthOn"><span class="eb-row-text"><span class="eb-list-label">Connect Apple Health</span>
+                 <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span>${ICONS.chevron}</button>`}
+        </div>` : ''}
 
         <p class="eb-group-label">Meal assistant</p>
         <div class="eb-list">
@@ -115,6 +126,9 @@
     if (se) return openEditor(se.dataset.stepEdit);
     const a = t.closest('[data-pf]'); if (!a) return;
     if (a.dataset.pf === 'close') close();
+    if (a.dataset.pf === 'healthOn') connectHealth();
+    if (a.dataset.pf === 'healthSync') EBHealth.syncIn().then(() => EBHealth.syncOut()).then(() => { EB.toast('Synced with Apple Health'); render(); });
+    if (a.dataset.pf === 'healthOff') { EBHealth.disconnect(); render(); }
     if (a.dataset.pf === 'redo') { close(); EBOnboarding.open(); }
     if (a.dataset.pf === 'erase') {
       if (!confirm('Erase your profile and onboarding answers? Logged meals are kept.')) return;
@@ -123,6 +137,12 @@
       try { localStorage.removeItem('eb_profile'); } catch {}
       close(); EBOnboarding.open();
     }
+  }
+
+  async function connectHealth() {
+    try { await EBHealth.connect(); EB.toast('Apple Health connected'); }
+    catch { EB.toast('Apple Health isn’t available on this device'); }
+    if (el) render();
   }
 
   // Edit one onboarding step in place
@@ -140,7 +160,7 @@
         <button type="button" class="eb-text-btn strong" data-ed="save">Save</button>
       </div>
       <div class="ob-body">
-        <h1 class="ob-title" id="edTitle" tabindex="-1">${step.title}</h1>
+        <h1 class="ob-title" id="edTitle" tabindex="-1">${EBOnboarding.titleOf(step, draft)}</h1>
         <div class="ob-fields">${step.render(draft)}</div>
       </div>`;
     document.body.appendChild(ed);
@@ -160,6 +180,7 @@
     function save() {
       delete draft.weight._unit;
       EB.saveProfile(draft);
+      if (window.EBReminders && (step.id === 'reminders' || step.id === 'cycle')) EBReminders.apply(draft);
       ed.remove(); render();
     }
     ed.addEventListener('click', (e) => {

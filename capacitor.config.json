@@ -1,0 +1,8 @@
+{
+  "appId": "com.ashimaranisingh.menufi",
+  "appName": "Menu-fi",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never"
+  }
+}

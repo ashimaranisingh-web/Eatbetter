@@ -9,10 +9,30 @@
   const GOALS = [
     { v: 'lose', t: 'Lose weight', syn: ['lose', 'loose', 'weight loss', 'fat', 'slim', 'cut'] },
     { v: 'maintain', t: 'Maintain my weight', syn: ['maintain', 'same', 'stay'] },
-    { v: 'muscle', t: 'Build muscle', syn: ['muscle', 'tone', 'strong', 'gain', 'bulk'] },
-    { v: 'hormones', t: 'Manage PCOS or hormones', syn: ['pcos', 'pcod', 'hormone', 'thyroid'] },
+    { v: 'muscle', t: 'Build muscle', syn: ['muscle', 'tone', 'strong', 'gain', 'bulk'] }
+  ];
+  const EXTRA_GOALS = [
     { v: 'pms', t: 'Ease PMS symptoms', syn: ['pms', 'period', 'cramp'] },
-    { v: 'healthier', t: 'Eat healthier', syn: ['health', 'healthy', 'better', 'clean'] }
+    { v: 'hormones', t: 'Manage PCOS or hormones', syn: ['pcos', 'pcod', 'hormone', 'thyroid'] },
+    { v: 'energy', t: 'More steady energy', syn: ['energy', 'tired', 'energetic'] },
+    { v: 'gut', t: 'Better digestion', syn: ['gut', 'digest', 'bloat', 'acidity'] },
+    { v: 'protein', t: 'Eat more protein', syn: ['protein'] },
+    { v: 'training', t: 'Train better', syn: ['train', 'workout', 'performance', 'sport'] },
+    { v: 'relationship', t: 'A calmer relationship with food', syn: ['relationship', 'guilt', 'binge', 'emotional'] },
+    { v: 'healthier', t: 'Eat healthier overall', syn: ['healthier', 'healthy', 'clean'] },
+    { v: 'learn', t: 'Learn about nutrition', syn: ['learn', 'nutrition', 'understand'] }
+  ];
+  const COACHES = [
+    { v: 'cheer', t: 'Cheerleader', d: '“Lunch logged! You’re smashing it.”', syn: ['cheer', 'hype', 'excited', 'motivat'] },
+    { v: 'gentle', t: 'Gentle & kind', d: '“A heavier day is fine. Tomorrow’s a fresh plate.”', syn: ['gentle', 'kind', 'soft', 'nice'] },
+    { v: 'straight', t: 'Straight talker', d: '“You’re 300 over. Keep dinner light.”', syn: ['straight', 'direct', 'honest', 'blunt', 'strict'] },
+    { v: 'mindful', t: 'Mindful guide', d: '“How did that meal make you feel?”', syn: ['mindful', 'calm', 'guide', 'aware'] }
+  ];
+  const REMINDERS = [
+    { v: 'morning', t: 'Morning menu', d: '8:00 am · see what’s on your plate', syn: ['morning', 'menu', 'breakfast'] },
+    { v: 'meals', t: 'Before meals', d: '12:45 pm and 7:30 pm', syn: ['before meals', 'meal', 'lunch', 'dinner'] },
+    { v: 'evening', t: 'Evening log', d: '9:00 pm · log anything you ate', syn: ['evening', 'night', 'log'] },
+    { v: 'pms', t: 'PMS heads-up', d: 'The day before PMS usually starts', syn: ['pms', 'period', 'heads up'] }
   ];
   const SYMPTOMS = [
     { v: 'cramps', t: 'Cramps', syn: ['cramp'] },
@@ -125,6 +145,26 @@
         <span class="eb-row-text"><span class="eb-row-title">${esc(o.t)}</span>${o.d ? `<span class="eb-row-desc">${esc(o.d)}</span>` : ''}</span>
         <span class="eb-radio" aria-hidden="true"></span></button>`).join('')}</div>`;
   }
+  function checkRows(path, list, value) {
+    const sel = value || [];
+    return `<div class="eb-rows" role="group">${list.map(o =>
+      `<button type="button" class="eb-row${sel.includes(o.v) ? ' on' : ''}" data-path="${path}" data-value="${esc(o.v)}" data-multi
+        role="checkbox" aria-checked="${sel.includes(o.v)}">
+        <span class="eb-row-text"><span class="eb-row-title">${esc(o.t)}</span>${o.d ? `<span class="eb-row-desc">${esc(o.d)}</span>` : ''}</span>
+        <span class="eb-check" aria-hidden="true">${ICONS.check}</span></button>`).join('')}</div>`;
+  }
+  function cards(path, list, value) {
+    return `<div class="eb-cards" role="radiogroup">${list.map(o =>
+      `<button type="button" class="eb-card${value === o.v ? ' on' : ''}" data-path="${path}" data-value="${esc(o.v)}"
+        role="radio" aria-checked="${value === o.v}">
+        <span class="eb-card-title">${esc(o.t)}</span><span class="eb-card-quote">${esc(o.d)}</span></button>`).join('')}</div>`;
+  }
+  // Content screens: a short list with a marker (number or colour dot).
+  function infoList(items) {
+    return `<ul class="ob-info">${items.map(it => `<li>
+      <span class="ob-info-mark"${it.color ? ` style="background:${it.color}"` : ''}>${it.n || ''}</span>
+      <span><b>${it.t}</b>${it.d ? `<span>${it.d}</span>` : ''}</span></li>`).join('')}</ul>`;
+  }
   function stepper(path, value, min, max, unit) {
     return `<div class="eb-stepper">
       <button type="button" class="eb-step-btn" data-step="${path}" data-delta="-1" data-min="${min}" data-max="${max}" aria-label="Decrease">−</button>
@@ -160,12 +200,40 @@
   }
 
   // ── Steps ──
+  // Question steps edit the draft. `info` steps are content screens between
+  // questions (no answers, not shown on the review or profile pages).
+  const firstName = p => (p.name || '').trim().split(/\s+/)[0];
+  const pmsExtra = () => { try { return PMS_TARGETS.cal - TARGETS.cal; } catch { return 150; } };
+  const phaseColor = k => { try { return PHASE_META[k].color; } catch { return 'var(--accent)'; } };
+
   const STEPS = [
     {
-      id: 'goal', short: 'Goal', title: 'What’s your main goal?',
+      id: 'name', short: 'Name', title: 'First, what should we call you?', optional: true, profile: false,
+      render: p => `<input class="eb-input eb-input-lg" data-path="name" value="${esc(p.name)}" placeholder="Your first name" autocomplete="given-name" aria-label="Your name" enterkeyhint="next">`,
+      valid: () => true,
+      touched: p => !!p.name.trim(),
+      summary: p => p.name
+    },
+    {
+      id: 'goal', short: 'Main goal', title: p => firstName(p) ? `What’s your main goal, ${esc(firstName(p))}?` : 'What’s your main goal?',
       render: p => rows('goal', GOALS, p.goal),
       valid: p => !!p.goal,
       summary: p => label(GOALS, p.goal)
+    },
+    {
+      id: 'goals', short: 'Other goals', title: 'Anything else you’d like help with?', optional: true, skipLabel: 'No other goals',
+      render: p => checkRows('goals', EXTRA_GOALS, p.goals),
+      valid: () => true,
+      touched: p => p.goals.length > 0,
+      summary: p => labels(EXTRA_GOALS, p.goals)
+    },
+    {
+      id: 'how', info: true, eyebrow: 'How Menu-fi works', title: 'Plan once. Then just follow the menu.',
+      render: () => infoList([
+        { n: 1, t: 'Your week of meals is planned', d: 'Open the app and the day’s menu is waiting.' },
+        { n: 2, t: 'It changes with your cycle', d: 'Before your period, meals switch to PMS mode: comfort food with a little more room.' },
+        { n: 3, t: 'Ate something else? Just say it', d: 'Type or speak what you had and the day’s totals update.' }
+      ])
     },
     {
       id: 'weight', short: 'Weight', title: 'Your weight',
@@ -181,7 +249,15 @@
       summary: p => p.weight.current ? `${p.weight.current} → ${p.weight.goal || '—'} ${p.weight.unit}` : ''
     },
     {
+      id: 'cycleIntro', info: true, eyebrow: 'Your cycle', title: 'Next, a few questions about your cycle',
+      render: () => `
+        <p class="ob-lead">What your body needs shifts through the month, so your meals do too.</p>
+        <p class="ob-lead">Skip anything you’d rather not share. Your answers stay on this device.</p>
+        <button type="button" class="eb-link" data-action="noPeriods">I don’t get periods</button>`
+    },
+    {
       id: 'cycle', short: 'Cycle', title: 'Your cycle', optional: true,
+      when: p => p.cycle.tracks !== false,
       render: p => `
         ${field('First day of your last period', `<input type="date" class="eb-input" data-path="cycle.lastStart" aria-label="First day of your last period" max="${EB.todayISO()}" value="${esc(p.cycle.lastStart)}">`)}
         ${field('Cycle length', stepper('cycle.cycleLength', p.cycle.cycleLength, 15, 60, 'days'))}
@@ -207,11 +283,25 @@
         .filter(Boolean).join(' · ')
     },
     {
+      id: 'why', info: true, eyebrow: 'Why it works', title: 'What changes through your cycle',
+      when: p => p.cycle.tracks !== false,
+      render: () => `${infoList([
+        { color: phaseColor('menstrual'), t: 'Period · days 1–5', d: 'Iron-rich food like palak, rajma and dates helps replace what you lose.' },
+        { color: phaseColor('follicular'), t: 'Follicular · days 6–13', d: 'Energy usually rises. A good time for more protein and training.' },
+        { color: phaseColor('ovulation'), t: 'Ovulation · days 14–16', d: 'Often your strongest days. Fuel harder workouts well.' },
+        { color: phaseColor('luteal'), t: 'Luteal · day 17 to your period', d: `Your body may burn a little more and cravings are common. PMS mode switches on and adds ${pmsExtra()} calories.` }
+      ])}
+        <p class="eb-privacy">General guidance, not medical advice.</p>`
+    },
+    {
       id: 'activity', short: 'Activity', title: 'How active are you?',
       render: p => `
         ${rows('activity.level', LEVELS, p.activity.level)}
         ${field('What do you do?', chips('activity.types', ACT_TYPES, p.activity.types, { multi: true }), 'eb-field-gap')}
-        ${field('Do you use a fitness tracker?', chips('trackers', TRACKERS, p.trackers, { multi: true }))}`,
+        ${field('Do you use a fitness tracker?', chips('trackers', TRACKERS, p.trackers, { multi: true }))}
+        ${window.EBHealth && EBHealth.native ? (EBHealth.isConnected()
+          ? `<p class="eb-hint">${ICONS.check} Apple Health connected</p>`
+          : `<button type="button" class="eb-btn secondary" data-action="connectHealth">Connect Apple Health</button>`) : ''}`,
       valid: p => !!p.activity.level,
       summary: p => [label(LEVELS, p.activity.level), labels(ACT_TYPES, p.activity.types), labels(TRACKERS, p.trackers)]
         .filter(Boolean).join(' · ')
@@ -256,8 +346,25 @@
       valid: () => true,
       touched: p => !!(p.health.conditions.length || p.health.meds.trim()),
       summary: p => [labels(CONDITIONS, p.health.conditions), p.health.meds.trim()].filter(Boolean).join(' · ')
+    },
+    {
+      id: 'coach', short: 'Coach style', title: 'How should I talk to you?', optional: true,
+      render: p => cards('coach', COACHES, p.coach),
+      valid: () => true,
+      touched: p => !!p.coach,
+      summary: p => label(COACHES, p.coach)
+    },
+    {
+      id: 'reminders', short: 'Reminders', title: 'When should we remind you?', optional: true, skipLabel: 'Set up later',
+      render: p => `
+        ${checkRows('reminders', REMINDERS.filter(r => r.v !== 'pms' || p.cycle.tracks !== false), p.reminders)}
+        ${window.EBHealth && EBHealth.native ? '' : '<p class="eb-privacy">Reminders arrive through the iPhone app.</p>'}`,
+      valid: () => true,
+      touched: p => p.reminders.length > 0,
+      summary: p => labels(REMINDERS, p.reminders)
     }
   ];
+  const titleOf = (step, p) => typeof step.title === 'function' ? step.title(p) : step.title;
 
   // ── Diet-plan upload ──
   function fileBlock(p) {
@@ -314,6 +421,18 @@
       }
       const act = e.target.closest('[data-action]');
       if (act && act.dataset.action === 'noPeriods') { p.cycle.tracks = false; onNoPeriods && onNoPeriods(); }
+      if (act && act.dataset.action === 'connectHealth') {
+        EBHealth.connect()
+          .then(() => {
+            if (!p.trackers.includes('apple')) p.trackers = p.trackers.filter(t => t !== 'none').concat('apple');
+            // Fill blanks in this draft with what Health just synced.
+            const synced = EB.getProfile();
+            if (!p.weight.current && synced.weight.current) { p.weight.current = synced.weight.current; p.weight.unit = p.weight._unit = synced.weight.unit; }
+            if (!p.cycle.lastStart && synced.cycle.lastStart) Object.assign(p.cycle, { lastStart: synced.cycle.lastStart, cycleLength: synced.cycle.cycleLength, tracks: true });
+            changed(true);
+          })
+          .catch(() => EB.toast('Apple Health isn’t available on this device'));
+      }
       if (act && act.dataset.action === 'removeFile') {
         const id = act.dataset.id;
         p.food.files = p.food.files.filter(f => f.id !== id);
@@ -379,16 +498,19 @@
 
   function renderWelcome() {
     el.innerHTML = `
-      <div class="ob-top"><span></span>${themeBtn()}</div>
+      <div class="ob-hero" aria-hidden="true">
+        <div class="ob-hero-ring"></div>
+        <span class="ob-hero-word">Menu-fi</span>
+      </div>
+      <div class="ob-top ob-top-float"><span></span>${themeBtn()}</div>
       <div class="ob-body ob-welcome">
-        <div class="ob-mark" aria-hidden="true">E</div>
-        <h1 class="ob-title" id="obTitle">Let’s build your plan</h1>
-        <p class="ob-sub">9 quick questions · about 2 minutes</p>
+        <h1 class="ob-title" id="obTitle">Know what to eat, every day of your cycle.</h1>
+        <p class="ob-sub">A daily meal plan that changes with your cycle. Ate something else? Log it in a sentence.</p>
       </div>
       <div class="ob-foot">
         <button type="button" class="eb-btn primary" data-ob="start">Get started</button>
         ${EB.voice.canListen ? `<button type="button" class="eb-btn ghost" data-ob="voice">${ICONS.mic}<span>Answer by voice</span></button>` : ''}
-        <p class="eb-privacy center">Your answers stay on this device.</p>
+        <p class="eb-privacy center">About 3 minutes · answers stay on this device</p>
       </div>`;
     el.onclick = (e) => {
       const a = e.target.closest('[data-ob]'); if (!a) return;
@@ -409,8 +531,9 @@
         <div class="ob-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${idx}" aria-label="Step ${idx + 1} of ${steps.length}"><span style="width:${Math.max(pct, 4)}%"></span></div>
         ${themeBtn()}
       </div>
-      <div class="ob-body">
-        <h1 class="ob-title" id="obTitle" tabindex="-1">${step.title}</h1>
+      <div class="ob-body${step.info ? ' ob-content' : ''}">
+        ${step.eyebrow ? `<p class="ob-eyebrow">${step.eyebrow}</p>` : ''}
+        <h1 class="ob-title" id="obTitle" tabindex="-1">${titleOf(step, draft)}</h1>
         <div class="ob-fields">${step.render(draft)}</div>
       </div>
       <div class="ob-foot"><button type="button" class="eb-btn" data-ob="next"></button></div>`;
@@ -419,31 +542,41 @@
     bindStep(fields, step, draft, {
       rerender: () => { fields.innerHTML = step.render(draft); bindAgain(); refresh(); },
       refresh,
-      onNoPeriods: () => { idx++; renderStep(); }
+      onNoPeriods: () => { idx = visible().indexOf(step) + 1; renderStep(); }
     });
     function bindAgain() { // re-attach dictation after repaint (delegated handlers survive)
       fields.querySelectorAll('[data-dictate]').forEach(btn => EB.attachDictation(btn, btn.parentElement.querySelector('textarea')));
     }
     refresh();
+    const next = () => {
+      const btn = el.querySelector('[data-ob="next"]');
+      if (btn.disabled) return;
+      step.onNext && step.onNext(draft);
+      if (reviewReturn) return renderReview();
+      idx++; renderStep();
+    };
     el.onclick = (e) => {
       const a = e.target.closest('[data-ob]'); if (!a) return;
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
       if (a.dataset.ob === 'back') { if (reviewReturn) return renderReview(); idx--; idx < 0 ? renderWelcome() : renderStep(); }
-      if (a.dataset.ob === 'next') {
-        if (a.disabled) return;
-        if (reviewReturn) return renderReview();
-        idx++; renderStep();
-      }
+      if (a.dataset.ob === 'next') next();
     };
-    el.querySelector('#obTitle').focus({ preventScroll: true });
+    // Enter in a one-line field moves on (the name screen has nothing else).
+    fields.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'date') { e.preventDefault(); next(); }
+    });
+    const first = step.id === 'name' && fields.querySelector('input');
+    if (first) first.focus(); else el.querySelector('#obTitle').focus({ preventScroll: true });
     el.querySelector('.ob-body').scrollTop = 0;
   }
-  // Optional + untouched → the one button reads "Skip" (no separate skip link).
+  // Optional + untouched → the one button reads "Skip" (or the step's own
+  // wording, like "No other goals") instead of a separate skip link.
   function updateNext(step) {
     const btn = el.querySelector('[data-ob="next"]');
+    if (step.info) { btn.textContent = 'Continue'; btn.className = 'eb-btn primary'; btn.disabled = false; return; }
     const untouched = step.optional && !(step.touched ? step.touched(draft) : step.valid(draft));
     const ok = step.valid(draft);
-    btn.textContent = reviewReturn ? 'Done' : untouched ? 'Skip' : 'Continue';
+    btn.textContent = reviewReturn ? 'Done' : untouched ? (step.skipLabel || 'Skip') : 'Continue';
     btn.className = 'eb-btn ' + (untouched ? 'secondary' : 'primary');
     btn.disabled = !untouched && !ok;
   }
@@ -460,19 +593,65 @@
       <div class="ob-body">
         <h1 class="ob-title" id="obTitle" tabindex="-1">Look right?</h1>
         <div class="eb-list">${steps.map((s, i) => {
+          if (s.info) return '';
           const sum = s.summary(draft);
           return `<button type="button" class="eb-list-row" data-edit="${i}">
             <span class="eb-row-text"><span class="eb-list-label">${s.short}</span>
             <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Skipped')}</span></span>${ICONS.chevron}</button>`;
         }).join('')}</div>
       </div>
-      <div class="ob-foot"><button type="button" class="eb-btn primary" data-ob="finish">Start my plan</button></div>`;
+      <div class="ob-foot"><button type="button" class="eb-btn primary" data-ob="continue">Continue</button></div>`;
     el.onclick = (e) => {
       const ed = e.target.closest('[data-edit]');
       if (ed) { idx = +ed.dataset.edit; reviewReturn = true; return renderStep(); }
       const a = e.target.closest('[data-ob]'); if (!a) return;
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
       if (a.dataset.ob === 'back') { idx = steps.length - 1; renderStep(); }
+      if (a.dataset.ob === 'continue') renderFinal();
+    };
+    el.querySelector('#obTitle').focus({ preventScroll: true });
+  }
+
+  // Next period: last start + cycle length, rolled forward past today.
+  function nextPeriod(p) {
+    if (p.cycle.tracks === false || !p.cycle.lastStart) return null;
+    const [y, m, d] = p.cycle.lastStart.split('-').map(Number);
+    const next = new Date(y, m - 1, d);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const len = +p.cycle.cycleLength || 28;
+    do next.setDate(next.getDate() + len); while (next <= today);
+    return next;
+  }
+
+  // "Last step": what the plan will actually do, in three lines.
+  function renderFinal() {
+    const name = firstName(draft);
+    let target = '1,550', protein = 120;
+    try { target = TARGETS.cal.toLocaleString(); protein = TARGETS.p; } catch {}
+    const np = nextPeriod(draft);
+    const items = [
+      { icon: ICONS.check, t: `${target} calories and ${protein} g protein a day` },
+      np && { icon: ICONS.check, t: `Next period around ${np.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}. PMS meals switch on before it.` },
+      draft.reminders.length
+        ? { icon: ICONS.check, t: `Reminders: ${labels(REMINDERS, draft.reminders).replace(/(^|, )\w/g, m => m.toLowerCase()).replace(/\bpMS\b/g, 'PMS')}` }
+        : { icon: ICONS.check, t: 'Log anything by typing or speaking it' },
+      draft.coach && { icon: ICONS.check, t: `Your coach: ${label(COACHES, draft.coach).toLowerCase()}` }
+    ].filter(Boolean).slice(0, 3);
+    el.innerHTML = `
+      <div class="ob-top">
+        <button type="button" class="eb-icon-btn" data-ob="back" aria-label="Back">${ICONS.back}</button>
+        <span></span>${themeBtn()}
+      </div>
+      <div class="ob-body ob-final">
+        <p class="ob-eyebrow">Last step</p>
+        <h1 class="ob-title" id="obTitle" tabindex="-1">${name ? `Your plan is ready, ${esc(name)}` : 'Your plan is ready'}</h1>
+        <ul class="ob-benefits">${items.map(i => `<li>${i.icon}<span>${esc(i.t)}</span></li>`).join('')}</ul>
+      </div>
+      <div class="ob-foot"><button type="button" class="eb-btn primary" data-ob="finish">Start my plan</button></div>`;
+    el.onclick = (e) => {
+      const a = e.target.closest('[data-ob]'); if (!a) return;
+      if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
+      if (a.dataset.ob === 'back') renderReview();
       if (a.dataset.ob === 'finish') finish();
     };
     el.querySelector('#obTitle').focus({ preventScroll: true });
@@ -482,6 +661,7 @@
     delete draft.weight._unit;
     draft.completedAt = draft.completedAt || new Date().toISOString();
     EB.saveProfile(draft);
+    if (window.EBReminders) EBReminders.apply(draft);
     el.classList.add('ob-leaving');
     setTimeout(() => { close(); EB.toast('You’re all set'); }, 220);
   }
@@ -548,8 +728,14 @@
   const isSkip = t => /\b(skip|pass|prefer not|rather not|next)\b/i.test(t);
 
   const VOICE_QS = [
-    { ask: 'What’s your main goal? For example, lose weight, maintain, build muscle, manage PCOS, ease PMS, or eat healthier.',
+    { ask: 'First, what should I call you?', free: true,
+      parse: (t, p) => { const n = t.trim().replace(/^(it'?s|i'?m|my name is|call me)\s+/i, '').split(/\s+/)[0];
+        if (n && n.length > 1) { p.name = n.charAt(0).toUpperCase() + n.slice(1); return p.name; } } },
+    { ask: 'What’s your main goal? Lose weight, maintain your weight, or build muscle?',
       parse: (t, p) => { const v = matchOne(t, GOALS); if (v) { p.goal = v; return label(GOALS, v); } } },
+    { ask: 'Anything else you’d like help with? Like easing PMS, managing PCOS, more energy, or eating more protein. Or say no.',
+      parse: (t, p) => { const v = matchMany(t, EXTRA_GOALS); if (v.length) { p.goals = v; return labels(EXTRA_GOALS, v); }
+        if (/^\s*(no|nope|nothing|none)\b/i.test(t)) return 'no other goals'; } },
     { ask: 'What do you weigh right now?',
       parse: (t, p) => { const n = parseNum(t); if (n > 20) { p.weight.unit = /pound|lb/i.test(t) ? 'lb' : 'kg'; p.weight._unit = p.weight.unit; p.weight.current = n; return `${n} ${p.weight.unit === 'kg' ? 'kilos' : 'pounds'}`; } } },
     { ask: 'And your goal weight?',
@@ -590,8 +776,13 @@
       parse: (t, p) => { const v = matchOne(t, SLEEP_REG); if (v) { p.sleep.regular = v; return label(SLEEP_REG, v); } } },
     { ask: 'Any health conditions, like PCOS, thyroid or diabetes? You can say none, or skip.',
       parse: (t, p) => { const v = matchMany(t, CONDITIONS); if (v.length) { p.health.conditions = v; return labels(CONDITIONS, v); } } },
-    { ask: 'Last one. Do you take any medicines or supplements?', free: true,
-      parse: (t, p) => { if (/^\s*(no|none|nothing|nope)\b/i.test(t)) return 'none'; if (t.trim()) { p.health.meds = t.trim(); return 'noted'; } } }
+    { ask: 'Do you take any medicines or supplements?', free: true,
+      parse: (t, p) => { if (/^\s*(no|none|nothing|nope)\b/i.test(t)) return 'none'; if (t.trim()) { p.health.meds = t.trim(); return 'noted'; } } },
+    { ask: 'How should I talk to you? Cheerleader, gentle and kind, straight talker, or mindful guide?',
+      parse: (t, p) => { const v = matchOne(t, COACHES); if (v) { p.coach = v; return label(COACHES, v); } } },
+    { ask: 'Last one. Want reminders? Morning menu, before meals, evening log, or a PMS heads-up. Or say later.',
+      parse: (t, p) => { if (/\b(later|no|none|nope)\b/i.test(t)) return 'later';
+        const v = matchMany(t, REMINDERS); if (v.length) { p.reminders = v; return labels(REMINDERS, v); } } }
   ];
 
   let vIdx, vRunning, vMisses;
@@ -677,7 +868,7 @@
   function nextQ(prefix) { vIdx++; askCurrent(prefix); }
 
   // ── Public ──
-  window.EBOnboarding = { open, STEPS, bindStep, isDone: () => !!EB.getProfile().completedAt };
+  window.EBOnboarding = { open, STEPS, titleOf, bindStep, isDone: () => !!EB.getProfile().completedAt };
 
   function boot() { if (!EBOnboarding.isDone()) open(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
