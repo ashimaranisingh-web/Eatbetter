@@ -334,3 +334,71 @@ input[type="date"].pf-inline { -webkit-appearance: none; appearance: none; justi
   .eb-pair { gap: 8px; }
 }
 .pf-actions .eb-list-label { flex: 1; }
+.eb-hint svg { vertical-align: -3px; color: var(--accent); }
+
+/* ── Onboarding v2: content screens ── */
+.ob-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-tertiary); margin: 8px 0 0; }
+.ob-lead { font-size: 17px; line-height: 1.5; color: var(--text-secondary); margin: 0; }
+.ob-content .ob-fields { gap: 16px; }
+.ob-info { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+.ob-info li { display: flex; gap: 14px; align-items: flex-start; }
+.ob-info b { display: block; font-size: 17px; font-weight: 600; color: var(--text-primary); }
+.ob-info li > span:last-child span { display: block; font-size: 15px; line-height: 1.45; color: var(--text-secondary); margin-top: 3px; }
+.ob-info-mark {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; margin-top: 1px;
+  display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  background: var(--bg-secondary); color: var(--text-primary);
+}
+.ob-info-mark:empty { width: 12px; height: 12px; margin: 6px 8px 0; }
+
+.eb-input-lg { font-size: 24px; font-weight: 600; min-height: 60px; }
+
+.eb-check {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; border: 1.5px solid var(--border-secondary);
+  display: grid; place-items: center; color: transparent;
+}
+.eb-check svg { width: 14px; height: 14px; }
+.eb-row.on .eb-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.eb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.eb-card {
+  display: grid; gap: 8px; align-content: start; text-align: left; padding: 16px 14px; min-height: 128px;
+  border-radius: var(--eb-radius); background: var(--bg-primary); border: 1px solid var(--border-secondary);
+  color: var(--text-primary); cursor: pointer; font-family: inherit;
+}
+.eb-card.on { border-color: var(--accent); background: var(--accent-dim); }
+.eb-card-title { font-size: 16px; font-weight: 600; }
+.eb-card-quote { font-size: 14px; line-height: 1.4; color: var(--text-secondary); }
+
+/* Hero welcome: abstract top half, copy anchored low (Public / WHOOP) */
+.ob-hero {
+  position: absolute; inset: 0 0 auto 0; height: 52%; overflow: hidden; pointer-events: none;
+  background: radial-gradient(120% 90% at 70% 10%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 60%),
+              linear-gradient(160deg, #0b0f14, #14202c 70%, var(--bg-page));
+}
+:root[data-theme="light"] .ob-hero {
+  background: radial-gradient(120% 90% at 70% 10%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 60%),
+              linear-gradient(160deg, #e8efe9, #f1f4f2 70%, var(--bg-page));
+}
+.ob-hero-ring {
+  position: absolute; width: 340px; height: 340px; right: -90px; top: 40px; border-radius: 50%;
+  border: 28px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-right-color: color-mix(in srgb, #f13294 45%, transparent);
+  border-bottom-color: color-mix(in srgb, #42a5f5 35%, transparent);
+  transform: rotate(-30deg);
+}
+.ob-hero-word { position: absolute; left: 20px; top: calc(env(safe-area-inset-top) + 64px); font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
+:root[data-theme="light"] .ob-hero-word { color: var(--text-primary); }
+.ob-top-float { position: relative; z-index: 1; }
+.ob-top-float .eb-icon-btn { color: #fff; }
+:root[data-theme="light"] .ob-top-float .eb-icon-btn { color: var(--text-primary); }
+.ob .ob-welcome { justify-content: flex-end; text-align: left; position: relative; }
+.ob .ob-welcome .ob-title { font-size: 34px; margin: 0 0 12px; }
+
+/* Final "Last step" */
+.ob-final { display: flex; flex-direction: column; justify-content: center; }
+.ob-benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; }
+.ob-benefits li { display: flex; gap: 14px; align-items: flex-start; font-size: 17px; line-height: 1.4; }
+.ob-benefits svg { flex-shrink: 0; margin-top: 2px; color: var(--accent); }
+.ob-hero { -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); height: 60%; }
+.ob-top > span:empty { flex: 1; }

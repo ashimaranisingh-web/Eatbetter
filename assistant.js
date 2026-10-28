@@ -278,6 +278,28 @@
     return JSON.parse(json).meals.filter(m => m.items.length);
   }
 
+  // ── Coach tone (picked in onboarding) ──
+  function coachLine(kind, { when = 'today', left = null } = {}) {
+    const tone = EB.getProfile().coach || 'gentle';
+    const over = left != null && left < 0;
+    const amount = left == null ? '' : `${Math.abs(left).toLocaleString()} cal`;
+    const lines = {
+      greet: {
+        cheer: `What did you eat ${when}? Tell me everything!`,
+        gentle: `What did you have ${when}? Rough amounts are fine.`,
+        straight: `What did you eat ${when}? Quantities make it accurate.`,
+        mindful: `What did you eat ${when}? Take a moment to remember each meal.`
+      },
+      done: {
+        cheer: over ? 'Logged! A bigger day happens. You’re still showing up.' : `Logged! ${amount ? amount + ' to go. ' : ''}You’re doing great.`,
+        gentle: over ? 'Saved. A fuller day is okay, tomorrow is a fresh plate.' : 'Saved. Every log helps you see the pattern.',
+        straight: left == null ? 'Logged.' : over ? `You’re ${amount} over. Keep the rest of today light.` : `${amount} left today.`,
+        mindful: 'Logged. How did those meals leave you feeling?'
+      }
+    };
+    return (lines[kind] || {})[tone] || '';
+  }
+
   // ── UI ──
   let el, log, pending;
   function dayLabel() {
@@ -313,7 +335,7 @@
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } });
     el.querySelector('#asForm').addEventListener('submit', e => { e.preventDefault(); submit(); });
     el.addEventListener('click', onClick);
-    if (!log.children.length) bot(`What did you eat ${dayLabel() === DAY_NAMES_TODAY() ? 'today' : 'on ' + dayLabel()}? Give quantities if you know them.`);
+    if (!log.children.length) bot(coachLine('greet', { when: dayLabel() === DAY_NAMES_TODAY() ? 'today' : 'on ' + dayLabel() }));
     requestAnimationFrame(() => { el.classList.add('open'); ta.focus(); });
   }
   function DAY_NAMES_TODAY() {
@@ -415,6 +437,10 @@
     const names = pending.map(m => SLOT_NAMES[m.slot].toLowerCase());
     const t = totals(pending.flatMap(m => m.items));
     card.innerHTML = `<p class="as-done">${ICONS.check}<span>Updated ${names.join(', ')} · ${Math.round(t.cal)} cal</span></p>`;
+    let left = null;
+    try { left = Math.round((isPMSMode() ? PMS_TARGETS : TARGETS).cal - computeConsumed(currentDay).cal); } catch {}
+    const follow = coachLine('done', { left });
+    if (follow) bot(follow);
     pending = [];
   }
 

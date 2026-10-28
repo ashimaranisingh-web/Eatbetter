@@ -12,7 +12,7 @@
       version: 1,
       completedAt: null,
       name: '', birthday: '', photo: '',
-      goal: '',
+      goal: '', goals: [],
       weight: { unit: 'kg', current: '', goal: '' },
       cycle: { tracks: null, lastStart: '', cycleLength: 28, periodLength: 5,
                regular: '', symptoms: [], pmsStart: '' },
@@ -22,6 +22,7 @@
       nutritionist: { has: '', name: '', contact: '' },
       sleep: { hours: '', regular: '' },
       health: { conditions: [], meds: '' },
+      coach: '', reminders: [],
       apiKey: ''
     };
   }
@@ -49,6 +50,11 @@
         const cs = typeof getCycleStart === 'function' ? getCycleStart() : null;
         if (cs) { p.cycle.lastStart = cs; p.cycle.tracks = true; }
       } catch {}
+    }
+    // v1 had one goal list; PMS, PCOS and "eat healthier" are now extra goals.
+    if (['pms', 'hormones', 'healthier'].includes(p.goal)) {
+      if (!p.goals.includes(p.goal)) p.goals.push(p.goal);
+      p.goal = '';
     }
     return p;
   }
