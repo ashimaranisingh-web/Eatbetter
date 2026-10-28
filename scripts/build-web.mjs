@@ -2,7 +2,7 @@
 // straight from the repo root (GitHub / file://), so nothing moves.
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-const FILES = ['index.html', 'shell.css', 'store.js', 'health.js', 'reminders.js', 'onboarding.js', 'profile.js', 'assistant.js'];
+const FILES = ['index.html', 'shell.css', 'store.js', 'health.js', 'reminders.js', 'planner.js', 'app.js', 'onboarding.js', 'profile.js', 'assistant.js'];
 
 rmSync('www', { recursive: true, force: true });
 mkdirSync('www');
