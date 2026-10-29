@@ -1550,3 +1550,38 @@ body.has-tabs {
 .app-page .app-card.app-dark .app-cycle-stats b { color: #fff; }
 .app-page .app-card.app-dark .app-cycle-stats span, .app-page .app-card.app-dark .app-cycle-stats small { color: rgba(255,255,255,.6); }
 :root[data-theme="light"] .app-page .app-card.app-dark .eb-btn.secondary { background: #fff !important; color: var(--ink) !important; }
+/* Nutrition: craving box sits on the gradient, so it's white with an edge */
+.app-page .craving-input { background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06); }
+.app-page .mode-toggle-bar { background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06); }
+
+/* ══ Contrast pass (WCAG AA 4.5:1 for text) ══ */
+:root[data-theme="light"] {
+  --accent: #16803f; --accent-light: #12703f; --accent-dim: #e5f5ec;
+  --success: #16803f; --success-light: #12703f; --success-dim: #e5f5ec;
+  --green: #16803f;
+  --text-secondary: #4f525a; --text-tertiary: #6b6e76;
+}
+:root[data-theme="light"] body.pms-mode {
+  --accent: #d22f6c; --accent-light: #b0265b; --accent-dim: #fde8f0;
+  --success: #d22f6c; --success-light: #b0265b; --success-dim: #fde8f0;
+}
+:root { --pink: #d22f6c; }
+/* Keep the gradient solid behind white header text, then fade */
+body.has-tabs {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 100%, #000 8%) 0px,
+      var(--accent) 300px,
+      color-mix(in srgb, var(--accent) 35%, #fff) 420px,
+      color-mix(in srgb, var(--accent) 10%, #fff) 560px,
+      #fff 720px) no-repeat, #fff !important;
+}
+#pageHome .week-card { --text-secondary: #4f525a; --text-tertiary: #6b6e76; }
+/* Text on the gradient: solid white (no translucent greys); tints darken instead of lighten */
+.app-page .app-motto, .app-page .app-head .reset-btn, .app-hero span, .app-hero-sub,
+#pageHome .app-date, #pageHome .week-card .week-card-sub,
+#pageCycle .cycle-day-name, #pageCycle .cycle-reset-btn, .app-page .day-tab:not(.active) { color: #fff !important; }
+#pageHome .app-avatar { background: rgba(0,0,0,.18) !important; }
+#pageCycle .cycle-day-cell.today { background: rgba(0,0,0,.18) !important; }
+#pageHome .week-nav-btn:disabled { color: rgba(255,255,255,.7) !important; }
+#pageHome .week-card .week-bar { background: rgba(0,0,0,.15) !important; }
