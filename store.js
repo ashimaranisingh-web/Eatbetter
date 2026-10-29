@@ -92,8 +92,10 @@
     if (pref === 'light' || pref === 'dark') return pref;
     return window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
-  function applyTheme(pref) {
-    const t = resolvedTheme(pref || getThemePref());
+  // One palette for the whole app (white, black, green / pink accent):
+  // there is no dark mode any more, so the theme is always "light".
+  function applyTheme() {
+    const t = 'light';
     document.documentElement.dataset.theme = t;
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = t === 'light' ? '#f6f6f4' : '#000000';
@@ -185,13 +187,33 @@
         if (!voice.canSpeak) return resolve();
         speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        u.rate = 1.02;
+        const v = pickVoice();
+        if (v) { u.voice = v; u.lang = v.lang; }
+        // Slightly slower and a touch higher: calmer, friendlier delivery.
+        u.rate = 0.95; u.pitch = 1.08;
         u.onend = resolve; u.onerror = resolve;
         speechSynthesis.speak(u);
       });
     },
     hush() { try { speechSynthesis.cancel(); } catch {} }
   };
+
+  // Luna's voice: the warmest young female voice the device offers.
+  // Apple's Indian-English voices first, then other natural female voices.
+  const VOICE_PREFS = ['Isha', 'Veena', 'Neerja', 'Samantha', 'Ava', 'Zoe', 'Allison', 'Susan', 'Karen', 'Tessa', 'Moira',
+    'Google UK English Female', 'Microsoft Aria', 'Microsoft Jenny', 'Female'];
+  let chosenVoice = null;
+  function pickVoice() {
+    if (chosenVoice) return chosenVoice;
+    const all = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    const en = all.filter(v => /^en/i.test(v.lang));
+    for (const name of VOICE_PREFS) {
+      const hit = en.find(v => v.name.includes(name) && /premium|enhanced/i.test(v.name)) || en.find(v => v.name.includes(name));
+      if (hit) return (chosenVoice = hit);
+    }
+    return null;
+  }
+  if (window.speechSynthesis) speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', () => { chosenVoice = null; });
 
   // Mic button for any text field: appends what's said to the field.
   function attachDictation(button, field) {

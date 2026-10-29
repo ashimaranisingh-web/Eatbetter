@@ -316,7 +316,7 @@
     el.innerHTML = `
       <div class="as-sheet" role="dialog" aria-modal="true" aria-labelledby="asTitle">
         <div class="as-head">
-          <h2 id="asTitle">Log What You Ate</h2>
+          <h2 id="asTitle">Luna</h2><p class="as-sub">Your food friend. Tell me what you ate.</p>
           <button type="button" class="eb-icon-btn" data-as="close" aria-label="Close">${ICONS.close}</button>
         </div>
         <div class="as-log" id="asLog" aria-live="polite"></div>
@@ -335,17 +335,22 @@
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } });
     el.querySelector('#asForm').addEventListener('submit', e => { e.preventDefault(); submit(); });
     el.addEventListener('click', onClick);
-    if (!log.children.length) bot(coachLine('greet', { when: dayLabel() === DAY_NAMES_TODAY() ? 'today' : 'on ' + dayLabel() }));
+    if (!log.children.length) {
+      const first = (EB.getProfile().name || '').trim().split(/\s+/)[0];
+      bot(`Hi${first ? ' ' + first : ''}, I’m Luna. ` + coachLine('greet', { when: dayLabel() === DAY_NAMES_TODAY() ? 'today' : 'on ' + dayLabel() }));
+    }
     requestAnimationFrame(() => { el.classList.add('open'); ta.focus(); });
   }
   function DAY_NAMES_TODAY() {
     try { return DAY_NAMES[['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()]]; } catch { return ''; }
   }
-  function close() {
+  // immediate: switching tabs removes the page at once instead of fading.
+  function close(immediate) {
+    if (!el) return;
     EB.voice.abort();
     el.classList.remove('open');
     const node = el; el = null;
-    setTimeout(() => node.remove(), 200);
+    if (immediate === true) node.remove(); else setTimeout(() => node.remove(), 200);
     document.documentElement.classList.remove('eb-locked');
   }
   function onClick(e) {
@@ -444,5 +449,5 @@
     pending = [];
   }
 
-  window.EBAssistant = { open, parseLocal };
+  window.EBAssistant = { open, close, isOpen: () => !!el, parseLocal, foods: () => allFoods() };
 })();
