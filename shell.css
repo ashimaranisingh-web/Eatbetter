@@ -1585,3 +1585,12 @@ body.has-tabs {
 #pageCycle .cycle-day-cell.today { background: rgba(0,0,0,.18) !important; }
 #pageHome .week-nav-btn:disabled { color: rgba(255,255,255,.7) !important; }
 #pageHome .week-card .week-bar { background: rgba(0,0,0,.15) !important; }
+
+/* Your cycle (black card): two flat columns with a soft divider, quieter button */
+:root[data-theme="light"] .app-page .app-card.app-dark .app-cycle-stats > div { background: none !important; padding: 0 !important; border-radius: 0 !important; }
+.app-page .app-card.app-dark .app-cycle-stats { padding: 4px 0 2px; }
+.app-page .app-card.app-dark .app-cycle-stats > div + div { padding-left: 16px !important; border-left: 1px solid rgba(255,255,255,.14) !important; }
+.app-page .app-card.app-dark .app-cycle-stats span, .app-page .app-card.app-dark .app-cycle-stats small { color: rgba(255,255,255,.72); }
+:root[data-theme="light"] .app-page .app-card.app-dark .eb-btn.secondary {
+  background: rgba(255,255,255,.12) !important; color: #fff !important; min-height: 44px; font-size: 15px;
+}
