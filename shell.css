@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* ── Light theme ─────────────────────────────────────────────────────
    The meal plan was built dark-only on CSS variables, so light mode is
    mostly a token swap. The few hard-coded dark tints are overridden below. */
@@ -659,8 +660,8 @@ body[data-tab="food"].has-tabs { padding-bottom: calc(var(--tabbar-h) + env(safe
 body.has-tabs .week-caret {
   font-size: 0; transform: none !important; padding: 5px 10px; border-radius: 14px; background: var(--bg-secondary); flex-shrink: 0;
 }
-body.has-tabs .week-caret::before { content: 'Details ▾'; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
-body.has-tabs .week-caret.open::before { content: 'Hide ▴'; }
+body.has-tabs .week-caret::before { content: 'Details \25BE'; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+body.has-tabs .week-caret.open::before { content: 'Hide \25B4'; }
 
 /* PMS badge: one line + facts */
 .app-badge { margin-bottom: 14px; }
@@ -682,8 +683,8 @@ body.has-tabs .pf .ob-top [data-pf="close"] { visibility: hidden; }
 .mf-group:first-child { border-top: 0; }
 .mf-group summary { list-style: none; display: flex; justify-content: space-between; align-items: center; padding: 12px 2px; cursor: pointer; font-size: 14px; font-weight: 600; }
 .mf-group summary::-webkit-details-marker { display: none; }
-.mf-group summary::after { content: '▾'; color: var(--text-tertiary); margin-left: 8px; }
-.mf-group[open] summary::after { content: '▴'; }
+.mf-group summary::after { content: '\25BE'; color: var(--text-tertiary); margin-left: 8px; }
+.mf-group[open] summary::after { content: '\25B4'; }
 .mf-n { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--text-tertiary); }
 .mf-count { font-size: 12px; color: var(--text-tertiary); margin: 4px 2px 6px; }
 .mf-item { border-radius: 10px; padding: 8px 10px; margin-bottom: 4px; background: var(--bg-secondary); }
@@ -1079,8 +1080,8 @@ body.pms-mode .mode-btn#btnPMS.active { background: var(--pink) !important; }
 .app-phase-row summary i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin: 0; }
 .app-phase-row summary b { flex: 1; font-size: 15px; font-weight: 600; }
 .app-phase-row summary em { font-style: normal; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--ink); color: #fff; }
-.app-phase-row summary::after { content: '▾'; color: var(--text-tertiary); font-size: 12px; }
-.app-phase-row[open] summary::after { content: '▴'; }
+.app-phase-row summary::after { content: '\25BE'; color: var(--text-tertiary); font-size: 12px; }
+.app-phase-row[open] summary::after { content: '\25B4'; }
 .app-phase-row[open] summary { margin-bottom: 8px; }
 .app-phase-row > p { margin-top: 6px; }
 .app-phase-body { color: var(--text-primary) !important; }
@@ -1102,8 +1103,8 @@ body.pms-mode .mode-btn#btnPMS.active { background: var(--pink) !important; }
 .app-tip { padding: 14px 16px; gap: 10px; }
 .app-tip summary { list-style: none; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 15px; font-weight: 600; }
 .app-tip summary::-webkit-details-marker { display: none; }
-.app-tip summary::after { content: '▾'; font-size: 12px; color: var(--text-tertiary); }
-.app-tip[open] summary::after { content: '▴'; }
+.app-tip summary::after { content: '\25BE'; font-size: 12px; color: var(--text-tertiary); }
+.app-tip[open] summary::after { content: '\25B4'; }
 .app-tip[open] summary { margin-bottom: 4px; }
 .app-tip p { padding: 4px 0; }
 .app-tile2 { align-content: start; }
@@ -1113,3 +1114,439 @@ body.pms-mode .mode-btn#btnPMS.active { background: var(--pink) !important; }
 .app-cycle-stats > div + div { padding-left: 16px; border-left: 1px solid var(--card-stroke); }
 /* Selected tab follows the mode: green (Normal) / pink (PMS) */
 .eb-tabbar-pill button.on { background: var(--accent-dim) !important; color: var(--accent-light) !important; }
+
+/* Home "Today" card: Eaten, Burned, then Up next */
+.app-today { gap: 0 !important; padding: 8px 16px !important; }
+.app-today-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0; background: none; border: 0; text-align: left; cursor: pointer; color: var(--text-primary); font-family: inherit; }
+.app-today-row .app-ico { width: 36px; height: 36px; border-radius: 11px; }
+.app-today-row .app-ico svg { width: 19px; height: 19px; }
+.app-today-text { flex: 1; display: grid; gap: 1px; }
+.app-today-side { text-align: right; font-size: 13px; color: var(--text-secondary); display: grid; }
+.app-today-side small { font-size: 12px; color: var(--text-tertiary); }
+.app-today > .app-tile2-bar { margin: 0 0 6px 48px; width: calc(100% - 48px); }
+.app-today-next { display: flex; align-items: center; gap: 12px; padding: 14px 0 8px; margin-top: 6px; border-top: 1px solid var(--card-stroke); cursor: pointer; }
+.app-today-next .app-opt-btn { padding: 0 16px; min-width: 0; }
+/* Cycle "what to expect" card under This week */
+.app-expect { display: grid !important; gap: 8px !important; padding: 14px 16px !important; text-align: left; cursor: pointer; width: 100%; font-family: inherit; color: var(--text-primary); }
+.app-expect .app-date-cycle { margin: 0; justify-self: start; cursor: pointer; }
+.app-expect-text { font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+.app-expect-text b { color: var(--text-primary); font-weight: 600; margin-right: 2px; }
+
+/* ── Home: mode-coloured gradient at the top (green Normal, pink PMS) ── */
+body.has-tabs[data-tab="home"] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 34%, #fff) 0px, color-mix(in srgb, var(--accent) 12%, #fff) 220px, #fff 460px) no-repeat,
+    #fff;
+}
+
+/* ── This week: black card for contrast (Fuse Plus) ── */
+#pageHome .week-card {
+  --text-primary: #ffffff; --text-secondary: rgba(255,255,255,.72); --text-tertiary: rgba(255,255,255,.5);
+  --bg-secondary: rgba(255,255,255,.12); --border-tertiary: rgba(255,255,255,.1); --border-secondary: rgba(255,255,255,.18);
+  background: radial-gradient(120% 90% at 85% 120%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), #0b0b0c !important;
+  border-color: #0b0b0c !important; color: #fff;
+}
+#pageHome .week-card .week-card-label, #pageHome .week-card .week-card-val { color: #fff !important; }
+#pageHome .week-card .week-bar { background: rgba(255,255,255,.14) !important; }
+#pageHome .week-card .week-bar-fill { background: var(--accent) !important; }
+#pageHome .week-card .week-caret { background: rgba(255,255,255,.14) !important; }
+#pageHome .week-card .week-caret::before { color: #fff !important; }
+#pageHome .week-card button { color: inherit; }
+.app-today-sep { border-top: 1px solid var(--card-stroke); margin-top: 6px; padding-top: 14px; }
+.app-today-next + .app-today-row { margin-top: 8px; }
+/* Selected segment follows the mode: green (Normal) / pink (PMS) */
+.eb-seg-btn.on, :root[data-theme="light"] .eb-seg-btn.on, :root[data-theme="light"] .app-card .eb-seg-btn.on {
+  background: var(--accent-dim) !important; color: var(--accent-light) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+}
+/* Energy card: workout "Log" as a tertiary underlined link */
+.app-opts .app-opt-btn, .app-opts .app-opt-btn:not(.done):not(:disabled) {
+  background: none !important; color: var(--text-primary) !important; min-width: 0; min-height: 36px; padding: 0 4px;
+  text-decoration: underline; text-underline-offset: 3px; font-weight: 600;
+}
+.app-opts .app-opt-btn.done, .app-opts .app-opt-btn:disabled { text-decoration: none; color: var(--accent-light) !important; }
+
+/* ── Home v8: deeper gradient (Fuse "Secure your wallet"), frosted cards, tighter spacing ── */
+body.has-tabs[data-tab="home"] {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 78%, #fff) 0px,
+      color-mix(in srgb, var(--accent) 45%, #fff) 180px,
+      color-mix(in srgb, var(--accent) 18%, #fff) 420px,
+      #fff 680px) no-repeat, #fff;
+}
+#pageHome .app-head h1, #pageHome .app-date { color: var(--ink); }
+#pageHome .app-date { opacity: .7; }
+#pageHome .app-avatar { background: rgba(255,255,255,.7); box-shadow: none; }
+#pageHome .app-card:not(.week-card) {
+  background: rgba(255,255,255,.82) !important; border-color: rgba(255,255,255,.9) !important;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+#pageHome .app-card .eb-seg { background: var(--bg-secondary) !important; }
+#pageHome .app-card .eb-seg-btn:not(.on) { background: transparent !important; }
+
+/* Tighter cards */
+#pageHome .app-head { padding-bottom: 6px; }
+#pageHome .week-nav { margin-bottom: 4px; }
+#pageHome .week-card { margin-bottom: 10px; padding: 14px 16px !important; }
+#pageHome .app-card { margin-bottom: 10px; }
+.app-expect { padding: 12px 14px !important; gap: 6px !important; }
+.app-expect-text { font-size: 13px; }
+.app-energy-card { padding: 14px 16px !important; gap: 8px !important; }
+.app-energy-card .app-card-label + .app-muted { margin-top: -6px; font-size: 13px; }
+.app-opt { padding: 8px 0; }
+.app-today { padding: 4px 14px !important; }
+.app-today-row { padding: 8px 0; }
+.app-today > .app-tile2-bar { margin-bottom: 4px; }
+.app-today-next { padding: 10px 0 6px; margin-top: 4px; }
+.app-next-text { gap: 0; }
+.app-today-next .app-opt-btn { min-height: 34px; }
+
+/* ── Home: energy is the black contrast card; This week goes white ── */
+#pageHome .week-card {
+  --text-primary: #111214; --text-secondary: #6b6e76; --text-tertiary: #9a9da5;
+  --bg-secondary: #f1f1f3; --border-tertiary: #eceef1; --border-secondary: #dfe1e6;
+  background: rgba(255,255,255,.82) !important; border-color: rgba(255,255,255,.9) !important; color: var(--ink);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+#pageHome .week-card .week-card-label, #pageHome .week-card .week-card-val { color: var(--ink) !important; }
+#pageHome .week-card .week-bar { background: #ececef !important; }
+#pageHome .week-card .week-caret { background: #f1f1f3 !important; }
+#pageHome .week-card .week-caret::before { color: var(--text-secondary) !important; }
+
+#pageHome .app-energy-card {
+  --text-primary: #ffffff; --text-secondary: rgba(255,255,255,.72); --text-tertiary: rgba(255,255,255,.5);
+  --border-tertiary: rgba(255,255,255,.1);
+  background: radial-gradient(120% 90% at 90% 120%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), #0b0b0c !important;
+  border-color: #0b0b0c !important; color: #fff; backdrop-filter: none;
+}
+#pageHome .app-energy-card .app-card-label { color: #fff; }
+#pageHome .app-energy-card .eb-seg { background: rgba(255,255,255,.1) !important; }
+#pageHome .app-energy-card .eb-seg-btn:not(.on) { color: rgba(255,255,255,.7) !important; }
+#pageHome .app-energy-card .eb-seg-btn.on { background: var(--accent) !important; color: #fff !important; box-shadow: none !important; }
+#pageHome .app-energy-card .app-opts { border-top-color: rgba(255,255,255,.1); }
+#pageHome .app-energy-card .app-opt { border-bottom-color: rgba(255,255,255,.1); }
+#pageHome .app-energy-card .app-opt-btn { color: #fff !important; }
+#pageHome .app-energy-card .app-opt-btn.done { color: color-mix(in srgb, var(--accent) 60%, #fff) !important; }
+
+/* Home: deeper accent at the top, white header text on it */
+body.has-tabs[data-tab="home"] {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 100%, #000 8%) 0px,
+      var(--accent) 150px,
+      color-mix(in srgb, var(--accent) 55%, #fff) 330px,
+      color-mix(in srgb, var(--accent) 18%, #fff) 520px,
+      #fff 760px) no-repeat, #fff;
+}
+#pageHome .app-head h1, #pageHome .app-date { color: #fff !important; opacity: 1; }
+#pageHome .app-date { color: rgba(255,255,255,.82) !important; }
+#pageHome .app-avatar { background: rgba(255,255,255,.22); color: #fff; }
+#pageHome .week-nav-label, #pageHome .week-nav-btn { color: #fff !important; }
+#pageHome .week-nav-btn:disabled { color: rgba(255,255,255,.45) !important; }
+/* (more specific than the frosted-card rule above) */
+#pageHome .app-card.app-energy-card {
+  background: radial-gradient(120% 90% at 90% 120%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), #0b0b0c !important;
+  border-color: #0b0b0c !important; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+
+/* Home: energy card rails (3 workouts, 3 foods), side-scrolling */
+.app-rail-label { margin: 14px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--text-tertiary); }
+.app-rail {
+  display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 0 16px; scroll-padding: 0 16px; scrollbar-width: none;
+}
+.app-rail::-webkit-scrollbar { display: none; }
+.app-rail-tile {
+  flex: 0 0 42%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 2px;
+  padding: 12px; border-radius: 16px; background: var(--bg-secondary);
+}
+.app-rail-tile b { font-size: 15px; font-weight: 600; }
+.app-rail-tile span { font-size: 12px; line-height: 1.35; color: var(--text-tertiary); flex: 1; }
+.app-rail-tile .app-opt-btn, .app-rail-tile .app-opt-btn:not(.done):not(:disabled) {
+  align-self: flex-start; margin-top: 8px; padding: 0; min-height: 0; min-width: 0;
+  background: none !important; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; font-size: 14px;
+}
+#pageHome .app-energy-card .app-rail-tile { background: rgba(255,255,255,.08); }
+#pageHome .app-energy-card .app-rail-tile span { color: rgba(255,255,255,.6); }
+#pageHome .app-energy-card .app-rail-label { color: rgba(255,255,255,.55); }
+#pageHome .app-energy-card .app-rail-tile .app-opt-btn { color: #fff !important; }
+#pageHome .app-energy-card .app-rail-tile .app-opt-btn.done { text-decoration: none; color: color-mix(in srgb, var(--accent) 60%, #fff) !important; }
+
+/* Home: stronger contrast on the week card and week nav */
+#pageHome .week-card { background: rgba(255,255,255,.95) !important; }
+#pageHome .week-card .week-bar { background: rgba(17,18,20,.1) !important; }
+#pageHome .week-card .week-caret { background: var(--ink) !important; }
+#pageHome .week-card .week-caret::before { color: #fff !important; }
+#pageHome .week-nav { gap: 24px; }
+#pageHome .week-nav-label { flex: 0 0 auto; }
+#pageHome .week-nav-btn { padding: 4px 0; }
+#pageHome .week-nav-btn:disabled { opacity: 1; color: rgba(255,255,255,.6) !important; }
+#pageHome .week-reset-ghost { margin-left: auto; }
+
+/* Nutrition/Fitness: calendar and day tabs back to unboxed */
+.app-shared #cycleSection {
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  border-radius: 0 !important; padding: 0 !important;
+}
+.app-shared #cycleSection .cycle-month { padding: 0 4px 2px; }
+.day-tab:not(.active), :root[data-theme="light"] .day-tab:not(.active) { background: none !important; box-shadow: none !important; border: 0 !important; }
+
+/* Not-yet-eaten: a dashed box that fills with the accent once ticked */
+.slot-check {
+  -webkit-appearance: none; appearance: none; width: 24px; height: 24px; margin: 0 0 0 8px;
+  border: 2px dashed #a9adb5; border-radius: 8px; background: none;
+  display: grid; place-content: center; cursor: pointer;
+}
+.slot-check:checked { border: 0; background: var(--accent); }
+.slot-check:checked::after {
+  content: ''; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.slot-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Nutrition: smaller Maintenance / Weight loss / Deficit row with a hairline below */
+body.has-tabs .tracker-head { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 0.5px solid var(--border-secondary, #dfe1e6); }
+.tracker-stat small { font-size: 11px !important; }
+.tracker-stat b { font-size: 14px !important; }
+.app-rail-tile .app-rail-cal { flex: 0 0 auto; margin-top: 4px; }
+.app-rail-tile { flex-basis: 40%; }
+/* Rail tiles: wide and short, action on the right */
+.app-rail-tile { flex: 0 0 72%; flex-direction: row; align-items: center; gap: 12px; padding: 12px; }
+.app-rail-tile > div { flex: 1; min-width: 0; }
+.app-rail-tile span { display: block; margin-top: 1px; }
+.app-rail-tile .app-opt-btn, .app-rail-tile .app-opt-btn:not(.done):not(:disabled) { align-self: center; margin-top: 0; }
+/* Section label → its content: 8px (the card's grid gap) */
+.app-rail-label { margin: 8px 0 0; }
+/* Accent icons follow the mode: green normally, pink in PMS */
+.app-ico.green { background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 65%, #fff), var(--accent)) !important; }
+
+/* Home: What to expect, collapsed into the top-right of the cycle card */
+.app-expect { cursor: default; }
+.app-expect > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer; }
+.app-expect > summary::-webkit-details-marker { display: none; }
+.app-expect-toggle { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.app-expect-toggle::after { content: ' \25BE'; color: var(--text-tertiary); }
+.app-expect[open] .app-expect-toggle::after { content: ' \25B4'; }
+.app-expect .app-expect-text { margin: 0; }
+.app-expect-more { justify-self: start; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* Home Eaten/Burned: one line, "1,072 of 1,840 eaten" */
+#pageHome .app-today-row { padding: 6px 0; }
+#pageHome .app-today-row .app-big { font-size: 20px; }
+#pageHome .app-today-row .app-big span:last-child:not(:first-child) { font-size: 14px; font-weight: 500; }
+#pageHome .app-today-side { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+#pageHome .app-today-row .app-big { font-size: 18px; }
+#pageHome .app-today-row .app-big span { font-size: 18px; font-weight: 500; }
+/* Home cards: 16px apart */
+#pageHome .week-card, #pageHome .app-home-body > .app-card { margin-bottom: 16px !important; }
+
+/* Home: weekly summary sits on the gradient (no card); week nav replaces "This week" */
+#pageHome .week-card {
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  padding: 0 !important; color: #fff;
+}
+#pageHome .week-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#pageHome .week-top .week-nav { margin: 0 !important; gap: 16px; }
+#pageHome .week-nav-label { font-size: 15px; }
+#pageHome .week-summary-nums { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+#pageHome .week-card .week-card-val { color: #fff !important; }
+#pageHome .week-card .week-card-sub { color: rgba(255,255,255,.75) !important; }
+#pageHome .week-card .week-bar { background: rgba(255,255,255,.28) !important; }
+#pageHome .week-card .week-bar-fill { background: #fff !important; }
+#pageHome .week-card .week-caret { border: 0; cursor: pointer; font-family: inherit; background: #fff !important; }
+#pageHome .week-card .week-caret::before { color: var(--ink) !important; }
+#pageHome .week-detail-panel {
+  margin-top: 12px; padding: 12px 16px; border-radius: 20px; background: #fff; color: var(--ink);
+  --text-primary: #111214; --text-secondary: #6b6e76; --text-tertiary: #9a9da5;
+}
+
+/* Calendar: month on the left, Jump to today on the right */
+.cycle-month-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cycle-today-btn {
+  border: 0; background: none; padding: 4px; font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.cycle-month-nav { display: flex; align-items: center; gap: 4px; }
+.cycle-month-nav .cycle-month { padding: 0 !important; min-width: 64px; text-align: center; }
+.cycle-month-btn { border: 0; background: none; padding: 2px 8px; font: inherit; font-size: 18px; line-height: 1; color: var(--text-secondary); cursor: pointer; }
+/* Home: 36px between the greeting and the week row */
+#pageHome .app-home-head { padding-bottom: 0 !important; margin-bottom: 36px !important; }
+.app-expect .app-date-cycle { background: none !important; padding: 0 !important; }
+
+/* Tab bar: selected = filled icon, medium label, 3px accent line below (no pill) */
+.eb-tabbar-pill button { position: relative; }
+.eb-tabbar-pill button.on { background: none !important; }
+.eb-tabbar-pill button.on span { font-weight: 500; }
+.eb-tabbar-pill button.on svg path, .eb-tabbar-pill button.on svg circle { fill: currentColor; }
+.eb-tabbar-pill button.on::after {
+  content: ''; position: absolute; left: 50%; bottom: 2px; width: 24px; height: 3px;
+  transform: translateX(-50%); border-radius: 2px; background: var(--accent);
+}
+.eb-tabbar-pill button.on { padding-bottom: 10px; }
+.eb-tabbar-pill button.on::after { bottom: 1px; }
+/* What to expect card: 40px tall when closed */
+#pageHome .app-expect { padding: 0 14px !important; }
+#pageHome .app-expect > summary { min-height: 38px; }
+#pageHome .app-expect[open] { padding-bottom: 12px !important; }
+.eb-tabbar-pill button.on::after { left: 8px; right: 8px; width: auto; transform: none; }
+#pageHome .app-expect:not([open]) { gap: 0 !important; }
+.eb-tabbar-pill button.on::after { left: 0; right: 0; }
+
+/* ══ Radius scale: 12px containers · 8px controls · 4px small bits (circles stay round) ══ */
+:root, :root[data-theme="light"] { --radius-lg: 12px; --radius-md: 8px; --radius-sm: 4px; --eb-radius: 12px; }
+/* 12 — cards, lists, sheets, bars that hold things */
+.app-card, .tracker, .week-card, .slot-card, .drawer-group, .drawer-group .activity, .activity[open], .insight-card, .daily-msg-card,
+.survival-badge, .eb-list, .eb-card, .eb-row, .app-tile, .app-tile2, .prep-card, .supp-card, .cycle-setup, .app-goals,
+.tracker.is-stuck, body.has-tabs .tracker.is-stuck, .meal-row, .weekly-stat, details.weekly-grocery, .craving-result,
+.eb-tabbar-pill, .app-lsheet, .eb-toast, #pageHome .week-detail-panel, .cycle-toggle, .add-meal-btn { border-radius: 12px !important; }
+.modal, .phase-popup, .eb-cal, .as-sheet, .talk-popup, .talk-toast { border-radius: 12px 12px 0 0 !important; }
+/* 8 — buttons, chips, inputs, tiles inside cards, icon squares */
+.eb-btn, .app-opt-btn, .eb-chip, .eb-seg, .mode-toggle-bar, .eb-input, .craving-input, .craving-btn, .modal-input, .activity-input,
+.quick-pick-search, .as-input textarea, .eb-stepper, .eb-file, .eb-drop, .app-food-search, .app-next, .app-rail-tile, .app-tip,
+.app-phase-row, .app-cycle-stats > div, .day-tab, .cycle-day-cell, .eb-tabbar-pill button, .app-ico, .app-quick-list .app-ico,
+.app-lsheet-head .app-ico, .app-tile2 .app-ico, .app-today-row .app-ico, .ob-mark, .as-msg, .mf-item, .activity-preset,
+#pageFitness .activity-preset, .activity-add-btn, .activity-item, .fitness-row, .skip-panel, .skip-item, .skip-done-btn,
+.modal-cancel, .modal-save, .quick-pick-acc, .quick-pick-list, .talk-btn, .talk-quick-btn, .talk-open-claude, .talk-cancel,
+.supp-row, .supp-drawer-item, .slot-select, .qty-select, .qty-input, .slot-chip, .builder-row, .sub-block, .pms-mode-banner,
+.week-caret, body.has-tabs .week-caret, .ai-estimate-btn, .reset-original-btn, .meal-action-btn, details.groc summary,
+.groc-content, .day-totals, .alt-line, .recipe-line, .note-box, details.grocery-section summary, .phase-popup-close,
+.weight-unit-toggle, .cycle-toggle-track, .cycle-calendar-wrap { border-radius: 8px !important; }
+.eb-seg-btn, .eb-seg-btn.on, .mode-btn, .mode-btn.active, .quick-pick-item, .quick-pick-qty-btn { border-radius: 6px !important; }
+/* 4 — tags, small pills */
+.app-tag, .pill, .slot-macro, .app-badge-facts span, .app-phase-row summary em, .insight-pill, .phase-popup-pill, .talk-toast-msg,
+.weight-delta { border-radius: 4px !important; }
+
+/* Normal mode is all green: these follow the accent (pink only in PMS) */
+.app-date-cycle { color: var(--accent-light) !important; }
+.app-tag.off { background: var(--accent-dim) !important; color: var(--accent-light) !important; }
+.app-ico.pink { background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 65%, #fff), var(--accent)) !important; }
+
+/* Home: white cards need an edge once the gradient fades to white */
+#pageHome .app-home-body > .app-card:not(.app-energy-card) {
+  background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important;
+  box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06) !important;
+}
+/* Rail links on light cards (Fitness) were white-on-grey */
+.app-rail-tile .app-opt-btn, .app-rail-tile .app-opt-btn:not(.done):not(:disabled) { color: var(--ink) !important; }
+.app-rail-tile .app-opt-btn.done { text-decoration: none; color: var(--accent-light) !important; }
+
+/* ══ v9: every tab gets Home's treatment — accent gradient header, hero number,
+   white cards with an edge, black energy card ══ */
+body.has-tabs {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 100%, #000 8%) 0px,
+      var(--accent) 150px,
+      color-mix(in srgb, var(--accent) 55%, #fff) 330px,
+      color-mix(in srgb, var(--accent) 18%, #fff) 520px,
+      #fff 760px) no-repeat, #fff !important;
+}
+/* Header text in white on the gradient */
+.app-page .app-head h1, .app-page .app-head .subtitle, .app-page .app-motto { color: #fff !important; }
+.app-page .app-motto { color: rgba(255,255,255,.85) !important; }
+.app-page .app-head .reset-btn { color: rgba(255,255,255,.85) !important; }
+.app-page .app-head { margin-bottom: 20px; }
+
+/* Hero number under the page title */
+.app-hero { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 2px; color: #fff; }
+.app-hero b { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.app-hero span { font-size: 15px; font-weight: 500; color: rgba(255,255,255,.8); }
+.app-hero-sub { display: block; font-size: 14px; color: rgba(255,255,255,.8); }
+.app-page .app-head .subtitle { display: block; margin: 0; }
+
+/* Day tabs on the gradient */
+.app-page .day-tab:not(.active) { color: rgba(255,255,255,.85) !important; }
+.app-page .day-tab.active { background: #fff !important; color: var(--ink) !important; }
+.app-page .day-tab:not(.active) .day-dot.ontrack { background: #fff; }
+.app-page .day-tab:not(.active) .day-dot.over { background: #ffc2c2; }
+.app-page .day-tab.active .day-dot.ontrack { background: var(--accent); }
+.app-page .day-tab.active .day-dot.over { background: var(--danger, #e5484d); }
+.app-page .app-shared { margin-bottom: 16px; }
+
+/* Cycle strip on the gradient (Menstruation) */
+#pageCycle .cycle-month, #pageCycle .cycle-month-btn, #pageCycle .cycle-day-num { color: #fff !important; }
+#pageCycle .cycle-day-name, #pageCycle .cycle-reset-btn { color: rgba(255,255,255,.75) !important; }
+#pageCycle .cycle-today-btn { color: #fff !important; }
+#pageCycle .cycle-day-cell.today { background: rgba(255,255,255,.22) !important; }
+#pageCycle .cycle-dot { box-shadow: 0 0 0 1.5px rgba(255,255,255,.85); }
+
+/* White cards with an edge on every page */
+.app-page .app-card:not(.app-energy-card), .app-page .tracker, .app-page .slot-card, .app-page .drawer-group,
+.app-page .app-goals, .app-page .app-tile, .app-page .insight-card, .app-page .daily-msg-card, .app-page .craving-result {
+  background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important;
+  box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06) !important;
+}
+/* …so fills inside them go light grey instead of white */
+:root[data-theme="light"] .app-page .app-card .app-cycle-stats > div, :root[data-theme="light"] .app-page .app-card:not(.app-energy-card) .eb-seg,
+:root[data-theme="light"] .app-page .app-card .eb-chip:not(.on), :root[data-theme="light"] .app-page .tracker .bar,
+:root[data-theme="light"] .app-page .app-card .eb-btn.secondary, .app-page .app-tip, .app-page .app-phase-row[open] { background: #f3f3f5 !important; }
+
+/* Black energy card everywhere (was Home only) */
+.app-page .app-card.app-energy-card {
+  --text-primary: #ffffff; --text-secondary: rgba(255,255,255,.72); --text-tertiary: rgba(255,255,255,.5); --border-tertiary: rgba(255,255,255,.1);
+  background: radial-gradient(120% 90% at 90% 120%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), #0b0b0c !important;
+  border-color: #0b0b0c !important; color: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none !important;
+}
+.app-page .app-energy-card .app-card-label { color: #fff; }
+.app-page .app-energy-card .eb-seg { background: rgba(255,255,255,.1) !important; }
+.app-page .app-energy-card .eb-seg-btn:not(.on) { color: rgba(255,255,255,.7) !important; background: none !important; }
+.app-page .app-energy-card .eb-seg-btn.on { background: var(--accent) !important; color: #fff !important; box-shadow: none !important; border: 0 !important; }
+.app-page .app-energy-card .app-rail-tile { background: rgba(255,255,255,.08) !important; }
+.app-page .app-energy-card .app-rail-tile span { color: rgba(255,255,255,.6); }
+.app-page .app-energy-card .app-rail-label { color: rgba(255,255,255,.55); }
+.app-page .app-energy-card .app-rail-tile .app-opt-btn { color: #fff !important; }
+.app-page .app-energy-card .app-rail-tile .app-opt-btn.done { color: color-mix(in srgb, var(--accent) 60%, #fff) !important; }
+
+/* Apple Health: icon row with a black button */
+.app-health-row { display: flex; align-items: center; gap: 12px; }
+.app-health-row .app-ico { width: 36px; height: 36px; }
+.app-health-row .app-ico svg { width: 20px; height: 20px; }
+.app-health-text { flex: 1; min-width: 0; }
+.app-health-text b { display: block; font-size: 15px; font-weight: 600; }
+.app-health-text span { display: block; font-size: 13px; color: var(--text-tertiary); margin-top: 1px; }
+.app-health .app-opt-btn, .app-health .app-opt-btn:not(:disabled):not(.primary) { background: var(--ink) !important; color: #fff !important; }
+
+/* Activity log: a plain card, no drawer header or emoji */
+.app-log-card { padding: 16px !important; }
+.app-log-card .app-log-title { margin: 0 0 10px; }
+.app-log-card > details > summary.activity-summary { display: none; }
+.app-log-card .activity-body { padding: 0 !important; border: 0 !important; }
+.app-log-card .activity-hint { display: none; }
+.app-log-card .activity-presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.app-log-card .activity-preset {
+  display: inline-flex !important; flex-direction: row !important; align-items: baseline; gap: 6px !important;
+  padding: 7px 10px !important; background: #f3f3f5 !important; border: 0 !important; font-size: 13px; color: var(--ink);
+}
+.app-log-card .preset-cal { font-size: 12px; color: var(--text-tertiary); }
+.app-log-card .activity-list { margin: 12px 0 0; padding: 0; display: grid; gap: 0; }
+.app-log-card .activity-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0 !important; background: none !important;
+  border: 0 !important; border-top: 1px solid rgba(17,18,20,.06) !important; border-radius: 0 !important;
+}
+.activity-item-ico { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; color: #fff;
+  background: linear-gradient(145deg, #3a3b3f, #111214); }
+.app-log-card .activity-item-name { flex: 1; font-size: 15px; font-weight: 500; }
+.app-log-card .activity-item-cal { font-size: 14px; font-weight: 600; color: var(--ink); }
+:root[data-theme="light"] .app-page .app-card.app-energy-card .eb-seg { background: rgba(255,255,255,.1) !important; }
+.app-log-card .activity-presets { display: flex !important; grid-template-columns: none !important; }
+.app-log-card .activity-preset { width: auto !important; }
+:root[data-theme="light"] body .app-page .app-card.app-energy-card .eb-seg-btn.on { background: var(--accent) !important; color: #fff !important; box-shadow: none !important; border: 0 !important; }
+:root[data-theme="light"] body .app-page .app-card.app-energy-card .eb-seg-btn:not(.on) { background: none !important; color: rgba(255,255,255,.7) !important; }
+/* Weekly goals: flat rows with hairlines, no boxes-in-a-box */
+.app-page .app-goals { padding: 16px !important; }
+.app-page .app-goals .fitness-row { background: none !important; border: 0 !important; border-top: 1px solid rgba(17,18,20,.06) !important; border-radius: 0 !important; padding: 12px 0 !important; margin: 0 !important; }
+.app-page .app-goals .fitness-row:first-child { border-top: 0 !important; }
+.app-page .app-goals #fitnessSummaryText, .app-page .app-goals .fitness-divider { display: none; }
+.app-log-card .activity-list, .app-log-card .activity-list li { background: none !important; }
+
+/* Menstruation: "Your cycle" is the black contrast card */
+.app-page .app-card.app-dark {
+  --text-primary: #fff; --text-secondary: rgba(255,255,255,.72); --text-tertiary: rgba(255,255,255,.55);
+  background: radial-gradient(120% 90% at 90% 120%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), #0b0b0c !important;
+  border-color: #0b0b0c !important; box-shadow: none !important; color: #fff;
+}
+.app-page .app-card.app-dark .app-card-label, .app-page .app-card.app-dark .app-phase { color: #fff; }
+:root[data-theme="light"] .app-page .app-card.app-dark .app-cycle-stats > div { background: rgba(255,255,255,.08) !important; }
+.app-page .app-card.app-dark .app-cycle-stats b { color: #fff; }
+.app-page .app-card.app-dark .app-cycle-stats span, .app-page .app-card.app-dark .app-cycle-stats small { color: rgba(255,255,255,.6); }
+:root[data-theme="light"] .app-page .app-card.app-dark .eb-btn.secondary { background: #fff !important; color: var(--ink) !important; }
