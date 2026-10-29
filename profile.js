@@ -55,14 +55,6 @@
             <input type="date" class="pf-inline" data-pf="birthday" value="${esc(p.birthday)}" max="${EB.todayISO()}" autocomplete="bday"></label>
         </div>
 
-        <p class="eb-group-label">Your plan</p>
-        <div class="eb-list">${steps.map(s => {
-          const sum = s.summary(p);
-          return `<button type="button" class="eb-list-row" data-step-edit="${s.id}">
-            <span class="eb-row-text"><span class="eb-list-label">${s.short}</span>
-            <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Not set')}</span></span>${ICONS.chevron}</button>`;
-        }).join('')}</div>
-
         <p class="eb-group-label">Meal Plan</p>
         <div class="eb-seg pf-seg" role="radiogroup" aria-label="Meal plan">
           ${[['generated', 'Built for me'], ['original', 'Original plan']].map(([v, t]) =>
@@ -70,11 +62,13 @@
         </div>
         <p class="eb-group-note">${window.EBPlanner && EBPlanner.current() ? `Built from your food, goal and activity. About ${TARGETS.cal.toLocaleString()} cal a day (an estimate).` : 'The fixed weekly plan the app started with.'}</p>
 
-        <p class="eb-group-label">Appearance</p>
-        <div class="eb-seg pf-seg" role="radiogroup" aria-label="Appearance">
-          ${[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, t]) =>
-            `<button type="button" class="eb-seg-btn${pref === v ? ' on' : ''}" data-theme-pref="${v}" role="radio" aria-checked="${pref === v}">${t}</button>`).join('')}
-        </div>
+        <p class="eb-group-label">Your Plan</p>
+        <div class="eb-list">${steps.map(s => {
+          const sum = s.summary(p);
+          return `<button type="button" class="eb-list-row" data-step-edit="${s.id}">
+            <span class="eb-row-text"><span class="eb-list-label">${s.short}</span>
+            <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Not set')}</span></span>${ICONS.chevron}</button>`;
+        }).join('')}</div>
 
         ${window.EBHealth && EBHealth.native ? `
         <p class="eb-group-label">Apple Health</p>
@@ -87,7 +81,7 @@
                  <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span>${ICONS.chevron}</button>`}
         </div>` : ''}
 
-        <p class="eb-group-label">Meal assistant</p>
+        <p class="eb-group-label">Meal Assistant</p>
         <div class="eb-list">
           <label class="eb-list-row is-input"><span class="eb-list-label">Claude API Key</span>
             <input type="password" class="pf-inline" data-pf="apiKey" value="${esc(p.apiKey)}" placeholder="Optional" autocomplete="off" spellcheck="false"></label>
@@ -241,5 +235,5 @@
   document.addEventListener('eb:profile', renderHeaderAvatar);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountHeader); else mountHeader();
 
-  window.EBProfile = { open };
+  window.EBProfile = { open, close: () => el && close(), isOpen: () => !!el };
 })();

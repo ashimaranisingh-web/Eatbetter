@@ -587,7 +587,8 @@
     el && el.remove(); el = null;
     document.documentElement.classList.remove('eb-locked');
   }
-  function themeBtn() {
+  function themeBtn() { return '<span class="eb-icon-btn" aria-hidden="true"></span>'; }
+  function themeBtnOld() {
     const light = document.documentElement.dataset.theme === 'light';
     return `<button type="button" class="eb-icon-btn" data-ob="theme" aria-label="Switch to ${light ? 'dark' : 'light'} mode">${light ? ICONS.moon : ICONS.sun}</button>`;
   }
@@ -608,12 +609,15 @@
         <button type="button" class="eb-btn primary" data-ob="start">Get started</button>
         ${EB.voice.canListen ? `<button type="button" class="eb-btn ghost" data-ob="voice">${ICONS.mic}<span>Answer by voice</span></button>` : ''}
         <p class="eb-privacy center">About 3 minutes · answers stay on this device</p>
+        <button type="button" class="eb-link center ob-dev" data-ob="dummy">Add dummy data</button>
       </div>`;
     el.onclick = (e) => {
       const a = e.target.closest('[data-ob]'); if (!a) return;
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); renderWelcome(); }
       if (a.dataset.ob === 'start') { idx = 0; renderStep(); }
       if (a.dataset.ob === 'voice') startVoice();
+      // For building and testing: fill the app with sample data and skip onboarding.
+      if (a.dataset.ob === 'dummy' && window.EBApp) { close(); EBApp.seedDummy(); }
     };
   }
 
