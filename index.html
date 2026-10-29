@@ -4194,7 +4194,7 @@ function renderActivity() {
   const presetsEl = document.getElementById('activityPresets');
   if (!presetsEl) return;
   presetsEl.innerHTML = ACTIVITY_PRESETS.map((p, i) =>
-    `<button type="button" class="activity-preset" data-preset-idx="${i}">${p.emoji || ''} ${escapeHtml(p.name)}<span class="preset-cal">−${p.cal} cal</span></button>`
+    `<button type="button" class="activity-preset" data-preset-idx="${i}">${escapeHtml(p.name)}<span class="preset-cal">−${p.cal} cal</span></button>`
   ).join('');
   presetsEl.querySelectorAll('[data-preset-idx]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -4207,6 +4207,7 @@ function renderActivity() {
   if (!listEl) return;
   listEl.innerHTML = list.map((a, i) =>
     `<li class="activity-item">
+      <span class="activity-item-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 01-10 0c0-2.5 1.5-3.8 2.5-5 .3 1.6 1.1 2.6 2 3 0-3-.2-5.2.5-8z"/></svg></span>
       <span class="activity-item-name">${escapeHtml(a.name)}</span>
       <span class="activity-item-cal">−${(parseInt(a.cal)||0).toLocaleString()} cal</span>
       <button type="button" class="activity-item-remove" data-remove-idx="${i}" aria-label="Remove">×</button>
@@ -4338,7 +4339,7 @@ function renderFitness() {
 
     return `<div class="fitness-row${isMet ? ' met' : ''}">
       <div class="fitness-row-top">
-        <p class="fitness-name">${g.emoji || ''} ${escapeHtml(g.name)} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400">${g.note || ''}</span></p>
+        <p class="fitness-name">${escapeHtml(g.name)} <span style="font-size:11px;color:var(--text-tertiary);font-weight:400">${g.note || ''}</span></p>
         <span class="fitness-tally">${tallyHtml}</span>
       </div>
       <div class="fitness-stubs">${stubsHtml}</div>
@@ -4635,7 +4636,14 @@ function renderCycleCalendar() {
   }).join('');
 
   section.innerHTML = `
-    <div class="cycle-month" id="cycleMonth" aria-live="polite"></div>
+    <div class="cycle-month-row">
+      <div class="cycle-month-nav">
+        <button type="button" class="cycle-month-btn" onclick="jumpCycleMonth(-1)" aria-label="Previous month">‹</button>
+        <div class="cycle-month" id="cycleMonth" aria-live="polite"></div>
+        <button type="button" class="cycle-month-btn" onclick="jumpCycleMonth(1)" aria-label="Next month">›</button>
+      </div>
+      <button type="button" class="cycle-today-btn" onclick="jumpCycleToToday()">Jump to today</button>
+    </div>
     <div class="cycle-calendar-wrap" id="cycleCalWrap">
       <div class="cycle-calendar">${cells}</div>
     </div>
@@ -4651,6 +4659,30 @@ function renderCycleCalendar() {
     wrap.addEventListener('scroll', updateCycleMonth, { passive: true });
   });
   updateCycleMonth();
+}
+
+function scrollCycleTo(cell) {
+  const wrap = document.getElementById('cycleCalWrap');
+  const left = wrap.scrollLeft + cell.getBoundingClientRect().left - wrap.getBoundingClientRect().left - (wrap.clientWidth - cell.offsetWidth) / 2;
+  wrap.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+}
+function jumpCycleToToday() {
+  const wrap = document.getElementById('cycleCalWrap');
+  const cell = wrap && wrap.querySelector('.cycle-day-cell.today');
+  if (cell) scrollCycleTo(cell);
+}
+// ‹ › next to the month: centre the 1st of the previous/next month (or the strip's end)
+function jumpCycleMonth(dir) {
+  const wrap = document.getElementById('cycleCalWrap');
+  if (!wrap) return;
+  const cells = [...wrap.querySelectorAll('.cycle-day-cell')];
+  const mid = wrap.getBoundingClientRect().left + wrap.clientWidth / 2;
+  const cur = cells.find(c => c.getBoundingClientRect().right >= mid) || cells[cells.length - 1];
+  const [y, m] = cur.dataset.date.split('-').map(Number);
+  const t = new Date(y, m - 1 + dir, 1);
+  const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`;
+  const target = cells.find(c => c.dataset.date.startsWith(key)) || (dir < 0 ? cells[0] : cells[cells.length - 1]);
+  scrollCycleTo(target);
 }
 
 // Month label above the strip follows whichever day sits in the middle.
@@ -6248,24 +6280,21 @@ function renderWeeklyTracker() {
       <div class="week-insight">${sundayLine}</div>`;
 
   el.innerHTML = `
-    <div class="week-nav">
-      <button class="week-nav-btn" onclick="changeWeek(-1)" ${currentViewWeek <= 1 ? 'disabled' : ''}>‹</button>
-      <span class="week-nav-label">Week ${currentViewWeek} of ${maxWeek}</span>
-      <button class="week-nav-btn" onclick="changeWeek(1)" ${currentViewWeek >= maxWeek ? 'disabled' : ''}>›</button>
-      <button class="week-reset-ghost" onclick="resetWeek(${currentViewWeek})" title="Reset Week ${currentViewWeek}">Reset</button>
-    </div>
     <div class="week-card">
-      <button class="week-summary" onclick="toggleWeekExpanded()">
-        <span class="week-summary-left">
-          <span class="week-card-label">This week</span>
-          <span class="week-summary-nums">
-            <span class="week-card-val">${fmt(netWeek)}</span>
-            <span class="week-card-sub">of ${fmt(weeklyTarget)} net</span>
-          </span>
-        </span>
-        <span class="week-caret${expanded ? ' open' : ''}">▾</span>
-      </button>
-      ${expanded ? details : `<div class="week-bar" style="margin-top:10px"><div class="week-bar-fill${overTarget ? ' over' : ''}" style="width:${pct}%"></div></div>`}
+      <div class="week-top">
+        <div class="week-nav">
+          <button class="week-nav-btn" onclick="changeWeek(-1)" ${currentViewWeek <= 1 ? 'disabled' : ''} aria-label="Previous week">‹</button>
+          <span class="week-nav-label">Week ${currentViewWeek} of ${maxWeek}</span>
+          <button class="week-nav-btn" onclick="changeWeek(1)" ${currentViewWeek >= maxWeek ? 'disabled' : ''} aria-label="Next week">›</button>
+          <button class="week-reset-ghost" onclick="resetWeek(${currentViewWeek})" title="Reset Week ${currentViewWeek}">Reset</button>
+        </div>
+        <button class="week-caret${expanded ? ' open' : ''}" onclick="toggleWeekExpanded()" aria-expanded="${expanded}">▾</button>
+      </div>
+      <div class="week-summary-nums">
+        <span class="week-card-val">${fmt(netWeek)}</span>
+        <span class="week-card-sub">of ${fmt(weeklyTarget)} net</span>
+      </div>
+      ${expanded ? `<div class="week-detail-panel">${details}</div>` : `<div class="week-bar" style="margin-top:10px"><div class="week-bar-fill${overTarget ? ' over' : ''}" style="width:${pct}%"></div></div>`}
     </div>`;
 
   renderWeight();

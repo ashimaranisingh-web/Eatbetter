@@ -188,10 +188,14 @@
     window.renderQuickPick = term => { open = null; pre = {}; render(term); };
   }
 
-  function openSearch() {
+  function openSearch(term) {
     try { openAddModal(); } catch { return; }
     const acc = $('quickPickAcc'); if (acc) acc.open = true;
-    setTimeout(() => { const s = $('quickPickSearch'); if (s) s.focus(); }, 50);
+    setTimeout(() => {
+      const s = $('quickPickSearch'); if (!s) return;
+      if (term) { s.value = term; s.dispatchEvent(new Event('input', { bubbles: true })); }
+      s.focus();
+    }, 50);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();

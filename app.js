@@ -49,23 +49,23 @@
     const info = phaseOf(ds), phase = info && info.phase;
     let kinds, mins, why;
     if (energy === 1 || (phase === 'menstrual' && info.dayNum <= 2)) {
-      kinds = ['yoga', 'walking', 'stretching']; mins = 25;
+      kinds = ['yoga', 'walking', 'stretching', 'pilates', 'swimming']; mins = 25;
       why = phase === 'menstrual' ? 'Low energy and early in your period. Keep it gentle.' : 'Low energy today. Gentle movement still counts.';
     } else if (phase === 'luteal' || (typeof isPMSMode === 'function' && isPMSMode())) {
-      kinds = energy >= 3 ? ['strength', 'pilates', 'cycling', 'walking'] : ['pilates', 'walking', 'yoga'];
+      kinds = energy >= 3 ? ['strength', 'pilates', 'cycling', 'swimming', 'walking'] : ['pilates', 'walking', 'yoga', 'swimming', 'stretching'];
       mins = energy >= 3 ? 35 : 30;
       why = 'PMS phase: moderate effort, lighter weights, more rest.';
     } else if ((phase === 'follicular' || phase === 'ovulation') && energy >= 3) {
       kinds = ['strength', 'hiit', 'running', 'dance', 'sports']; mins = energy === 4 ? 50 : 45;
       why = phase === 'ovulation' ? 'Peak-energy days. A good time to push harder.' : 'Energy is rising this phase. Build strength.';
     } else {
-      kinds = energy >= 3 ? ['strength', 'dance', 'cycling', 'running'] : ['walking', 'pilates', 'yoga'];
+      kinds = energy >= 3 ? ['strength', 'dance', 'cycling', 'running', 'swimming'] : ['walking', 'pilates', 'yoga', 'cycling', 'dance'];
       mins = energy >= 3 ? 40 : 30;
       why = energy >= 3 ? 'Good energy. A solid session.' : 'A steady day. Something moderate.';
     }
     // Activities she picked in onboarding come first.
     const likes = EB.getProfile().activity.types || [];
-    kinds = [...kinds.filter(k => likes.includes(k)), ...kinds.filter(k => !likes.includes(k))].slice(0, 3);
+    kinds = [...kinds.filter(k => likes.includes(k)), ...kinds.filter(k => !likes.includes(k))].slice(0, 5);
     const options = kinds.map(k => {
       const m = MINS[k] && MINS[k] < mins ? MINS[k] : mins;
       return { kind: k, name: NAMES[k], mins: m, kcal: Math.round(KCAL_PER_MIN[k] * m) };
@@ -73,23 +73,51 @@
     return { why, options };
   }
 
+  // ── Food picks: three easy foods to lift or hold energy, by energy + phase + diet ──
+  function foodIdeas(ds) {
+    const energy = energyFor(ds);
+    if (!energy) return [];
+    const info = phaseOf(ds), phase = info && info.phase;
+    const diet = EB.getProfile().food.diet || 'veg';
+    const protein = { vegan: ['Tofu', 'Protein from soya, keeps you full'], jain: ['Paneer', 'Protein that keeps energy steady'],
+      egg: ['Boiled egg', 'Protein that keeps energy steady'], pescatarian: ['Boiled egg', 'Protein that keeps energy steady'],
+      nonveg: ['Chicken', 'Lean protein for recovery'] }[diet] || ['Paneer', 'Protein that keeps energy steady'];
+    let picks;
+    if (phase === 'menstrual') picks = [['Dates', 'Quick energy and a little iron'], ['Banana', 'Easy carbs and potassium for cramps'], ['Khichdi', 'Warm and easy to digest'], ['Palak', 'Iron to replace what you lose'], ['Ginger tea', 'Warm, settles the stomach']];
+    else if (phase === 'luteal' || (typeof isPMSMode === 'function' && isPMSMode())) picks = [['Oats', 'Slow carbs, fewer sugar crashes'], ['Almonds', 'Magnesium can ease cramps and mood'], ['Banana', 'B6 and easy energy'], ['Roasted chana', 'Protein and fibre for cravings'], ['Curd', 'Calcium may ease PMS']];
+    else if (energy <= 2) picks = [['Banana', 'Fast, easy energy'], ['Dates', 'A natural sugar lift'], ['Coconut water', 'Tiredness is often thirst'], ['Peanuts', 'Protein and fat that last'], ['Poha', 'Light carbs that don’t weigh you down']];
+    else picks = [protein, ['Sprouts', 'Fibre and protein, slow release'], ['Coconut water', 'Fluids and electrolytes for training'], ['Curd', 'Protein and gut-friendly'], ['Apple', 'Fibre for steady energy']];
+    const all = window.EBMeals ? EBMeals.foods() : [];
+    return picks.map(([n, why]) => {
+      const f = all.find(x => x.n.toLowerCase().startsWith(n.toLowerCase())) || all.find(x => x.n.toLowerCase().includes(n.toLowerCase()));
+      return { n, why, cal: f ? f.cal : null };
+    });
+  }
+
   function energyHTML(ds) {
     const cur = energyFor(ds);
     const s = suggest(ds);
+    const foods = foodIdeas(ds);
     const logged = getActivities(ds).filter(a => a.suggested === ds);
     return `<div class="app-card app-energy-card">
       <p class="app-card-label">How’s your energy?</p>
-      <p class="app-muted">${s ? esc(s.why) : 'Tap how you feel and I’ll suggest a workout for your energy and cycle.'}</p>
+      <p class="app-muted">${s ? esc(s.why) : 'Tap how you feel and I’ll suggest workouts and foods for your energy and cycle.'}</p>
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${cur === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${cur === e.v}">${e.t}</button>`).join('')}
       </div>
-      ${s ? `<div class="app-opts">${s.options.map(o => {
+      ${s ? `<p class="app-rail-label">Workouts</p>
+      <div class="app-rail">${s.options.map(o => {
         const done = logged.find(a => a.name === o.name);
-        return `<div class="app-opt">
-          <div><b>${esc(o.name)} · ${o.mins} min</b><span>about ${done ? done.cal : o.kcal} cal</span></div>
-          <button type="button" class="app-opt-btn${done ? ' done' : ''}" data-log-opt="${o.kind}" ${done ? 'disabled' : ''}>${done ? ICONS.check + ' Logged' : 'Log'}</button>
+        return `<div class="app-rail-tile">
+          <div><b>${esc(o.name)}</b><span>${o.mins} min · about ${done ? done.cal : o.kcal} cal</span></div>
+          <button type="button" class="app-opt-btn${done ? ' done' : ''}" data-log-opt="${o.kind}" ${done ? 'disabled' : ''}>${done ? 'Logged' : 'Log'}</button>
         </div>`;
       }).join('')}</div>` : ''}
+      ${foods.length ? `<p class="app-rail-label">Foods for energy</p>
+      <div class="app-rail">${foods.map(f => `<div class="app-rail-tile">
+          <div><b>${esc(f.n)}</b><span>${esc(f.why)}${f.cal != null ? ` · ${f.cal} cal` : ''}</span></div>
+          <button type="button" class="app-opt-btn" data-food-idea="${esc(f.n)}">Add</button>
+        </div>`).join('')}</div>` : ''}
     </div>`;
   }
 
@@ -101,7 +129,8 @@
     bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
     spark: '<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/>',
     run: '<circle cx="14" cy="4.5" r="2"/><path d="M7 21l3-6 3 2v5M10 15l1.5-5 3.5 2 3 0M6.5 11l3-2"/>',
-    search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'
+    search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+    heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>'
   };
   const icon = (k, cls) => `<span class="app-ico ${cls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${GLYPH[k]}</svg></span>`;
   // "1,690" → big digits; units / decimals dimmed, like $8.98
@@ -141,41 +170,66 @@
     const initial = (p.name || '').trim().charAt(0).toUpperCase();
     page.querySelector('.app-home-head').innerHTML = `
       <div class="app-head-row app-head-top">
-        <div><p class="app-date">${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}${meta
-            ? ` <button type="button" class="app-date-cycle" data-go="cycle"><i style="background:${meta.color}"></i>Day ${info.dayNum} · ${meta.label === 'PMS' ? 'Luteal' : meta.label}</button>` : ''}</p>
+        <div><p class="app-date">${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         <h1>${greeting(p.name)}</h1></div>
         <button type="button" class="app-avatar" data-go="profile" aria-label="Profile">${p.photo ? `<img src="${p.photo}" alt="">` : initial ? esc(initial) : TAB_ICONS.profile}</button>
       </div>`;
     page.querySelector('.app-home-body').innerHTML = `
-      <div class="app-grid">
-        <button type="button" class="app-tile2" data-go="food">
+      ${energyHTML(ds)}
+      ${meta ? (() => {
+        const g = phaseGuide(p.food.diet).find(x => x.k === info.phase);
+        return `<details class="app-card app-expect">
+          <summary><span class="app-date-cycle"><i style="background:${meta.color}"></i>Day ${info.dayNum} · ${meta.label === 'PMS' ? 'Luteal (PMS)' : meta.label}</span>
+            <span class="app-expect-toggle">What to expect</span></summary>
+          <p class="app-expect-text">${esc(g.body)} ${esc(g.move.split('.')[0])}.</p>
+          <button type="button" class="app-expect-more" data-go="cycle">More on your cycle</button>
+        </details>`;
+      })() : ''}
+      <div class="app-card app-today">
+        <button type="button" class="app-today-row" data-go="food">
           ${icon('eat', 'green')}
-          <span class="app-tile2-label">Eaten</span>${big(eaten.toLocaleString(), 'cal')}
-          <span class="app-tile2-sub">${left < 0 ? `${Math.abs(left).toLocaleString()} over` : `${left.toLocaleString()} left`} of ${target.toLocaleString()}</span>
-          <span class="app-tile2-bar"><i style="width:${pct}%"></i></span>
+          <span class="app-today-text">${big(eaten.toLocaleString(), `of ${target.toLocaleString()} eaten`)}</span>
+          <span class="app-today-side">${left < 0 ? `${Math.abs(left).toLocaleString()} over` : `${left.toLocaleString()} left`}</span>
         </button>
-        <button type="button" class="app-tile2${burned ? '' : ' empty'}" data-go="fitness">
-          ${icon('burn', 'black')}
-          <span class="app-tile2-label">${burned ? 'Burned' : 'Workout'}</span>
-          ${burned ? big(burned.toLocaleString(), 'cal') : '<span class="app-tile2-cta">Log a workout</span>'}
-        </button>
+        <span class="app-tile2-bar"><i style="width:${pct}%"></i></span>
+        ${nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="Up next: ${esc(nm.name)}">
+            <div class="app-next-text">
+              <span class="app-meta">Up next · ${esc(nm.slot)} · ${esc(nm.time)}</span>
+              <b class="app-next-name">${esc(nm.name)}</b>
+              <span class="app-meta">${Math.round(nm.cal)} cal${nm.p ? ` · ${Math.round(nm.p)}g protein` : ''}</span>
+            </div>
+            <button type="button" class="app-opt-btn" data-log-next="${nm.slotId}">Log it</button>
+          </div>`
+          : '<div class="app-today-next"><span class="app-meta">All of today’s meals are logged.</span></div>'}
       </div>
-      ${nm ? `<div class="app-card app-next-card" data-go="food" role="button" tabindex="0" aria-label="Up next: ${esc(nm.name)}">
-          ${icon('eat', 'green')}
-          <div class="app-next-text">
-            <span class="app-meta">Up next · ${esc(nm.slot)} · ${esc(nm.time)}</span>
-            <b class="app-next-name">${esc(nm.name)}</b>
-            <span class="app-meta">${Math.round(nm.cal)} cal${nm.p ? ` · ${Math.round(nm.p)}g protein` : ''}</span>
-          </div>
-          <button type="button" class="app-opt-btn" data-log-next="${nm.slotId}">Log it</button>
-        </div>`
-        : `<div class="app-card"><p class="app-card-label">Up next</p><p class="app-muted">All of today’s meals are logged.</p></div>`}
-      ${energyHTML(ds)}`;
+      <div class="app-card app-today">
+        <button type="button" class="app-today-row" data-go="fitness">
+          ${icon('burn', 'black')}
+          <span class="app-today-text">${burned ? big(burned.toLocaleString(), 'cal burned') : '<span class="app-tile2-cta">Nothing burned yet</span>'}</span>
+        </button>
+        ${(() => {
+          const s = suggest(ds);
+          if (!s) return `<div class="app-today-next"><div class="app-next-text"><span class="app-meta">Today’s workout</span>
+            <b class="app-next-name">Tell me your energy</b><span class="app-meta">I’ll pick one for your energy and cycle</span></div>
+            <button type="button" class="app-opt-btn" data-scroll-energy>Pick</button></div>`;
+          const logged = getActivities(ds).filter(a => a.suggested === ds);
+          const o = s.options.find(x => !logged.some(a => a.name === x.name)) || s.options[0];
+          const done = logged.find(a => a.name === o.name);
+          return `<div class="app-today-next" data-go="fitness" role="button" tabindex="0">
+            <div class="app-next-text"><span class="app-meta">Today’s workout</span>
+              <b class="app-next-name">${esc(o.name)} · ${o.mins} min</b>
+              <span class="app-meta">about ${done ? done.cal : o.kcal} cal${logged.length ? ` · ${logged.length} done today` : ''}</span></div>
+            <button type="button" class="app-opt-btn${done ? ' done' : ''}" data-log-opt="${o.kind}" ${done ? 'disabled' : ''}>${done ? 'Logged' : 'Log'}</button>
+          </div>`;
+        })()}
+      </div>`;
   }
 
   // ── Menstruation ──
-  const SYMPTOMS = [['cramps', 'Cramps'], ['bloating', 'Bloating'], ['cravings', 'Cravings'], ['mood', 'Mood swings'],
-    ['fatigue', 'Fatigue'], ['headache', 'Headache'], ['acne', 'Acne'], ['back', 'Back pain'], ['tender', 'Breast tenderness'], ['none', 'Feeling fine']];
+  // Ordered so short and long words share rows (three rows on a phone, no gaps).
+  const SYMPTOMS = [['cramps', 'Cramps'], ['bloating', 'Bloating'], ['cravings', 'Cravings'], ['acne', 'Acne'],
+    ['mood', 'Mood swings'], ['fatigue', 'Fatigue'], ['headache', 'Headache'], ['back', 'Back pain'],
+    ['tender', 'Breast tenderness'], ['none', 'Feeling fine']];
   const SKEY = 'eb_symptoms';
   function symLog() { try { return JSON.parse(localStorage.getItem(SKEY) || '{}'); } catch { return {}; } }
   function toggleSym(ds, v) {
@@ -226,7 +280,6 @@
     const info = phaseOf(ds), meta = info && PHASE_META[info.phase];
     const sub = page.querySelector('.app-cycle-sub');
     const body = page.querySelector('.app-cycle-body');
-    sub.textContent = meta ? `Day ${info.dayNum} · ${meta.label === 'PMS' ? 'Luteal (PMS)' : meta.label} phase` : 'Add your last period date to start';
     let next = null, pms = null, until = null;
     const cs = getCycleStart();
     if (cs) {
@@ -236,6 +289,10 @@
       const lead = { '1-3': 3, '4-7': 7, '7+': 10 }[p.cycle.pmsStart] || 5;
       pms = new Date(next); pms.setDate(pms.getDate() - lead);
     }
+    sub.innerHTML = meta
+      ? `<span class="app-hero"><b>Day ${info.dayNum}</b><span>${meta.label === 'PMS' ? 'Luteal (PMS)' : meta.label} phase</span></span>
+         ${until != null ? `<span class="app-hero-sub">Next period in ${until} day${until === 1 ? '' : 's'}</span>` : ''}`
+      : '<span class="app-hero-sub">Add your last period date to start</span>';
     const syms = symLog()[ds] || [];
     const iron = ({ vegan: 'palak, rajma, tofu, dates', veg: 'palak, rajma, chana, dates', jain: 'chana, moong, sesame, dates',
       egg: 'eggs, palak, rajma, dates', pescatarian: 'fish, eggs, palak, rajma', nonveg: 'chicken, eggs, palak, rajma' })[p.food.diet] || 'palak, rajma, dates';
@@ -243,7 +300,7 @@
     const tips = syms.filter(v => SYM_TIPS[v]);
     const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
     body.innerHTML = `
-      <div class="app-card">
+      <div class="app-card app-dark">
         <div class="app-row"><p class="app-card-label">Your cycle</p>${meta ? `<span class="app-phase"><i style="background:${meta.color}"></i>${meta.label}</span>` : ''}</div>
         ${next ? `<div class="app-cycle-stats">
             <div><span>Next period</span><b>${fmtDay(next)}</b><small>in ${until} day${until === 1 ? '' : 's'}</small></div>
@@ -277,23 +334,25 @@
   // ── Fitness ──
   function healthHTML() {
     const H = window.EBHealth;
+    const row = (sub, btn) => `<div class="app-card app-health"><div class="app-health-row">${icon('heart', 'pink')}
+      <div class="app-health-text"><b>Apple Health</b><span>${sub}</span></div>${btn}</div></div>`;
     if (H && H.native) {
       return H.isConnected()
-        ? `<div class="app-card app-health"><div class="app-row"><div><b>Apple Health</b><span>Connected · weight, periods and workouts sync in</span></div>
-             <button type="button" class="app-opt-btn" data-health="sync">Sync</button></div></div>`
-        : `<div class="app-card app-health"><div class="app-row"><div><b>Apple Health</b><span>Bring in workouts, weight and period days</span></div>
-             <button type="button" class="app-opt-btn primary" data-health="connect">Connect</button></div></div>`;
+        ? row('Connected · workouts, weight and periods sync in', '<button type="button" class="app-opt-btn" data-health="sync">Sync</button>')
+        : row('Bring in workouts, weight and period days', '<button type="button" class="app-opt-btn" data-health="connect">Connect</button>');
     }
-    return `<div class="app-card app-health"><div class="app-row"><div><b>Apple Health</b><span>Connect from the iPhone app to bring in workouts, weight and periods</span></div>
-      <button type="button" class="app-opt-btn" disabled>Connect</button></div></div>`;
+    return row('Available in the iPhone app', '');
   }
   function renderFitnessPage() {
     const page = $('pageFitness'); if (!page) return;
     const ds = selectedDateStr();
     page.querySelector('.app-fit-energy').innerHTML = energyHTML(ds) + healthHTML();
     const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
-    page.querySelector('.app-fit-sub').textContent =
-      `${DAY_NAMES[currentDay]} · ${burned ? burned.toLocaleString() + ' cal burned' : 'nothing logged yet'}`;
+    let week = 0;
+    ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(d => { try { week += getActivities(dateStrForDay(d)).length; } catch {} });
+    page.querySelector('.app-fit-sub').innerHTML =
+      `<span class="app-hero"><b>${burned.toLocaleString()}</b><span>cal burned · ${DAY_NAMES[currentDay]}</span></span>
+       <span class="app-hero-sub">${week ? `${week} workout${week === 1 ? '' : 's'} logged this week` : 'No workouts logged this week yet'}</span>`;
   }
 
   // ── Food: a line that reacts to how the day is going ──
@@ -306,6 +365,15 @@
     return cal;
   }
   function pickLine(lines, ds) { let h = 0; for (const c of ds) h = (h * 31 + c.charCodeAt(0)) >>> 0; return lines[h % lines.length]; }
+  function foodHero() {
+    const eaten = Math.round(computeConsumed(currentDay).cal);
+    const target = isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal;
+    return `<b>${eaten.toLocaleString()}</b><span>of ${target.toLocaleString()} cal eaten · ${DAY_NAMES[currentDay]}</span>`;
+  }
+  function paintFoodHead() {
+    const m = $('foodMotto'); if (m) m.textContent = motto();
+    const h = $('foodHero'); if (h) h.innerHTML = foodHero();
+  }
   function motto() {
     const ds = selectedDateStr();
     const eaten = computeConsumed(currentDay).cal;
@@ -457,7 +525,7 @@
     // Nutrition (food)
     const food = mk('pageFood');
     const foodHead = document.createElement('header'); foodHead.className = 'app-head';
-    foodHead.innerHTML = '<div class="app-head-row"><h1>Nutrition</h1></div><p class="app-motto" id="foodMotto"></p>';
+    foodHead.innerHTML = '<div class="app-head-row"><h1>Nutrition</h1></div><p class="app-hero" id="foodHero"></p><p class="app-motto" id="foodMotto"></p>';
     const reset = $('resetBtn'); if (reset) foodHead.firstChild.appendChild(reset);
     park.appendChild($('modeSubtitle'));            // targets now live in the day card
     food.appendChild(foodHead);
@@ -495,6 +563,9 @@
       const det = activityGroup.querySelector('#activityBlock');
       if (det) {
         det.open = true;
+        activityGroup.classList.add('app-log-card');
+        const title = document.createElement('p'); title.className = 'app-card-label app-log-title'; title.textContent = 'Log a workout';
+        det.before(title);
         const body = det.querySelector('.activity-body');
         // Name + calories first, then the preset chips, then what's logged.
         // (not in the document yet, so look inside the card rather than by id)
@@ -564,7 +635,7 @@
     if (painting) return; painting = true;
     try {
       updateMini();
-      const m = $('foodMotto'); if (m) m.textContent = motto();
+      paintFoodHead();
       if (active === 'home') renderHome();
       if (active === 'fitness') renderFitnessPage();
       if (active === 'cycle') renderCyclePage();
@@ -574,9 +645,12 @@
   // Move the calendar and day tabs into the open page.
   function placeShared(page) {
     const slot = page.id === 'appParking' ? page : page.querySelector('.app-shared'); if (!slot) return;
-    slot.appendChild($('cycleSection'));
+    // One date picker per page: the cycle strip on Menstruation, the Mon–Sun
+    // day tabs (which pick the day to log) on Nutrition and Fitness.
+    const park = $('appParking');
+    (page.id === 'pageCycle' || page === park ? slot : park).appendChild($('cycleSection'));
     const days = document.querySelector('.day-tabs');
-    if (days) (page.id === 'pageCycle' ? $('appParking') : slot).appendChild(days);
+    if (days) (page.id === 'pageCycle' ? park : slot).appendChild(days);
     // Moving the strip resets its scroll; repaint so today is centred again.
     if (page.id !== 'appParking') { try { renderCycleCalendar(); } catch {} }
   }
@@ -597,7 +671,7 @@
     if (tab === 'cycle') renderCyclePage();
     if (tab === 'home') { renderHome(); try { renderWeeklyTracker(); } catch {} survivalBadge(); }
     if (tab === 'fitness') { renderFitnessPage(); try { renderActivity(); } catch {} }
-    if (tab === 'food') { try { renderTracker(); renderSlotSection(); } catch {} const m = $('foodMotto'); if (m) m.textContent = motto(); }
+    if (tab === 'food') { try { renderTracker(); renderSlotSection(); } catch {} paintFoodHead(); }
     const mini = $('trackerMini'); if (mini && tab !== 'food') mini.classList.remove('show');
     history.replaceState(null, '', '#' + tab);
     if (!initial) window.scrollTo(0, 0);
@@ -632,6 +706,8 @@
     if (t.closest('[data-scroll-energy]')) { const c = document.querySelector('#pageHome .app-energy-card'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     const en = t.closest('[data-energy]');
     if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); return repaint(); }
+    const fi = t.closest('[data-food-idea]');
+    if (fi) { if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
     const lo = t.closest('[data-log-opt]');
     if (lo && !lo.disabled) {
       const ds = selectedDateStr(), s = suggest(ds); if (!s) return;
