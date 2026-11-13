@@ -278,6 +278,74 @@
     return ok(p.weight.current) && ok(p.weight.goal);
   }
 
+  function bodyValid(p) {
+    const h = +p.body.height, a = +p.body.age;
+    return h >= 120 && h <= 220 && a >= 13 && a <= 90;
+  }
+
+  // ── Your numbers ──
+  // Shown after activity: a short "working it out" loader, then how BMI,
+  // BMR, maintenance and the deficit are calculated, with the deficit
+  // adjustable in 50 cal steps and a nudge back if it gets too steep.
+  let numbersSeen = false;
+  const BMI_WORDS = { underweight: 'Below range', healthy: 'Healthy', overweight: 'Above range', obese: 'Well above range' };
+  const fmt = n => Math.round(n).toLocaleString();
+  function numbersView(p) {
+    const n = window.EBPlanner && EBPlanner.numbers(p);
+    if (!n) return '<p class="eb-hint">Add your weight first.</p>';
+    const u = p.weight.unit, w = v => `${Math.round((u === 'lb' ? v * 2.20462 : v) * 10) / 10} ${u}`;
+    const done = n.weeks ? (() => { const d = new Date(); d.setDate(d.getDate() + n.weeks * 7);
+      return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); })() : '';
+    const rows = [
+      n.bmi != null && { k: 'BMI', v: `${n.bmi}`, tag: n.bmiCat,
+        d: `Weight ÷ height². ${w(n.kg)} ÷ (${(n.cm / 100).toFixed(2)} m)². For South Asians, healthy is 18.5–22.9 (lower than the usual 24.9, because risk starts at a lower weight).` },
+      n.bmr && { k: 'Calories at rest (BMR)', v: fmt(n.bmr),
+        d: `What your body burns doing nothing. 10 × weight + 6.25 × height − 5 × age − 161 (the Mifflin-St Jeor formula for women).` },
+      { k: 'Maintenance', v: fmt(n.tdee),
+        d: n.bmr ? `BMR × ${n.factor} because you’re ${n.actLabel}. Eat this much and your weight stays the same.`
+                 : `About ${Math.round(n.tdee / n.kg)} cal per kg for someone ${n.actLabel}. Add height and age for a sharper number.` }
+    ].filter(Boolean);
+    const step = n.losing ? 50 : n.gaining ? -50 : 0;
+    const label = n.losing ? 'Daily deficit' : 'Daily surplus';
+    const amount = Math.abs(n.deficit);
+    const rec = Math.abs(n.recommended);
+    const warn = {
+      steep: `That’s more than 25% under maintenance. Cutting this hard usually costs muscle and energy, and can delay or skip your period. I recommend ${fmt(rec)} cal.`,
+      below: `This puts you under your BMR of ${fmt(n.bmr || n.floor)} cal. Please don’t go this low without a nutritionist. I recommend ${fmt(rec)} cal.`,
+      slow: `Gentle is fine. You’ll lose weight slowly, and it’s easier to keep up.`
+    }[n.warn] || '';
+    return `
+      <div class="ob-calc${numbersSeen ? ' seen' : ''}">
+        <div class="ob-calc-load" aria-hidden="${numbersSeen}">
+          <div class="ob-calc-spin"></div>
+          <p>Working out your numbers</p>
+          <ul><li>Calculating your BMI</li><li>Finding your calories at rest</li><li>Adding your activity</li><li>Setting a safe daily target</li></ul>
+        </div>
+        <div class="ob-calc-out">
+          <div class="ob-nums">${rows.map(x => `<div class="ob-num">
+            <div class="ob-num-top"><span>${x.k}</span><b>${x.v}${x.tag ? ` <em class="ob-num-tag ${x.tag}">${BMI_WORDS[x.tag]}</em>` : ''}</b></div>
+            <p>${x.d}</p></div>`).join('')}</div>
+          ${step ? `<div class="ob-num ob-num-deficit">
+            <div class="ob-num-top"><span>${label}</span>
+              <div class="eb-stepper">
+                <button type="button" class="eb-step-btn" data-step="plan.deficit" data-delta="${-step}" data-min="${n.losing ? 0 : -500}" data-max="${n.losing ? Math.max(0, n.tdee - 1200) : 0}" data-from="${n.deficit}" aria-label="Less">−</button>
+                <span class="eb-step-val" aria-live="polite"><b>${fmt(amount)}</b> cal</span>
+                <button type="button" class="eb-step-btn" data-step="plan.deficit" data-delta="${step}" data-min="${n.losing ? 0 : -500}" data-max="${n.losing ? Math.max(0, n.tdee - 1200) : 0}" data-from="${n.deficit}" aria-label="More">+</button>
+              </div></div>
+            <p>${amount === rec ? 'Recommended for you: about 20% under maintenance, never below your BMR.' : `Recommended: ${fmt(rec)} cal.`}
+              ${amount !== rec ? `<button type="button" class="eb-link" data-action="recDeficit">Use ${fmt(rec)}</button>` : ''}</p>
+            ${warn ? `<p class="ob-num-warn ${n.warn}">${warn}</p>` : ''}
+          </div>` : ''}
+          <div class="ob-num-result">
+            <span>Your daily target</span><b>${fmt(n.target)} cal</b>
+            <p>${n.perWeekKg ? `About ${w(Math.abs(n.perWeekKg))} ${n.losing ? 'lost' : 'gained'} a week${n.weeks ? `, reaching ${w(n.goalKg)} around ${done}` : ''}. ` : 'Your weight should stay steady. '}
+            ${p.cycle.tracks === false ? '' : 'On PMS days I add about 150 cal, because your body burns a little more before your period.'}</p>
+          </div>
+          <p class="eb-privacy">An estimate to start from, not medical advice. It updates as you log your weight.</p>
+        </div>
+      </div>`;
+  }
+
   // ── Steps ──
   // Question steps edit the draft. `info` steps are content screens between
   // questions (no answers, not shown on the review or profile pages).
@@ -326,8 +394,13 @@
       ])
     },
     {
-      id: 'weight', short: 'Weight', title: 'Your weight',
+      id: 'weight', short: 'Body', title: 'About you',
       render: p => `
+        <p class="eb-field-note">Used to work out your BMI and how many calories your body needs.</p>
+        <div class="eb-pair">
+          ${field('Height', `<div class="eb-num"><input class="eb-input" data-path="body.height" inputmode="numeric" placeholder="0" value="${esc(p.body.height)}" aria-label="Height in centimetres"><span>cm</span></div>`)}
+          ${field('Age', `<div class="eb-num"><input class="eb-input" data-path="body.age" inputmode="numeric" placeholder="0" value="${esc(p.body.age)}" aria-label="Age in years"><span>yrs</span></div>`)}
+        </div>
         ${segmented('weight.unit', [{ v: 'kg', t: 'kg' }, { v: 'lb', t: 'lb' }], p.weight.unit)}
         <div class="eb-pair">
           ${field('Current', `<div class="eb-num"><input class="eb-input" data-path="weight.current" inputmode="decimal" placeholder="0" value="${esc(p.weight.current)}" aria-label="Current weight"><span>${p.weight.unit}</span></div>`)}
@@ -335,8 +408,9 @@
         </div>
         <p class="eb-hint" data-live="weightHint">${weightHint(p)}</p>`,
       live: { weightHint },
-      valid: weightValid,
-      summary: p => p.weight.current ? `${p.weight.current} → ${p.weight.goal || '—'} ${p.weight.unit}` : ''
+      valid: p => weightValid(p) && bodyValid(p),
+      summary: p => [p.body.height && `${p.body.height} cm`, p.body.age && `${p.body.age} yrs`,
+        p.weight.current && `${p.weight.current} → ${p.weight.goal || '—'} ${p.weight.unit}`].filter(Boolean).join(' · ')
     },
     {
       id: 'food', short: 'Food', title: 'How do you eat?',
@@ -355,7 +429,7 @@
       footLink: { action: 'noPeriods', label: 'I don’t get periods' },
       render: () => `
         <p class="ob-lead">A woman’s body changes through her cycle, and what it needs to eat changes with it. I’ll adjust your meals to match.</p>
-        <p class="ob-lead">Everything you share is private. Skip anything you’d rather not answer. It all stays on this device.</p>`
+        <p class="ob-lead">Everything you share is private. Skip anything you’d rather not answer. It stays on this device unless you turn on backup.</p>`
     },
     {
       id: 'cycle', short: 'Cycle', title: 'Your cycle', optional: true,
@@ -408,6 +482,14 @@
         .filter(Boolean).join(' · ')
     },
     {
+      id: 'numbers', short: 'Your Numbers', title: 'Your numbers, explained',
+      render: p => numbersView(p),
+      onShow: () => { if (!numbersSeen) setTimeout(() => { numbersSeen = true; }, 2600); },
+      valid: () => true,
+      summary: p => { const n = window.EBPlanner && EBPlanner.numbers(p);
+        return n ? `${fmt(n.target)} cal a day${n.deficit > 0 ? ` · ${fmt(n.deficit)} deficit` : n.deficit < 0 ? ` · ${fmt(-n.deficit)} surplus` : ''}` : ''; }
+    },
+    {
       id: 'nutritionist', short: 'Nutritionist', title: 'Do you see a nutritionist?', optional: true,
       render: p => `
         ${segmented('nutritionist.has', YESNO, p.nutritionist.has)}
@@ -433,7 +515,7 @@
       render: p => `
         ${chips('health.conditions', CONDITIONS, p.health.conditions, { multi: true })}
         ${field('Medicines or supplements', textarea('health.meds', p.health.meds, 'e.g. thyroxine 50mcg, vitamin D, iron'), 'eb-field-gap')}
-        <p class="eb-privacy">Used only to tailor suggestions. Stays on this device.</p>`,
+        <p class="eb-privacy">Used only to tailor suggestions. Stays on this device unless you turn on backup.</p>`,
       valid: () => true,
       touched: p => !!(p.health.conditions.length || p.health.meds.trim()),
       summary: p => [labels(CONDITIONS, p.health.conditions), p.health.meds.trim()].filter(Boolean).join(' · ')
@@ -511,11 +593,13 @@
       const st = e.target.closest('[data-step]');
       if (st) {
         const path = st.dataset.step;
-        const n = Math.min(+st.dataset.max, Math.max(+st.dataset.min, (+getAt(p, path) || 0) + +st.dataset.delta));
+        const cur = st.dataset.from != null ? +st.dataset.from : (+getAt(p, path) || 0);
+        const n = Math.min(+st.dataset.max, Math.max(+st.dataset.min, cur + +st.dataset.delta));
         setAt(p, path, n);
         return changed(true);
       }
       const act = e.target.closest('[data-action]');
+      if (act && act.dataset.action === 'recDeficit') { p.plan.deficit = null; return changed(true); }
       if (act && act.dataset.action === 'noPeriods') { p.cycle.tracks = false; onNoPeriods && onNoPeriods(); }
       if (act && act.dataset.action === 'connectHealth') {
         EBHealth.connect()
@@ -527,7 +611,7 @@
             if (!p.cycle.lastStart && synced.cycle.lastStart) Object.assign(p.cycle, { lastStart: synced.cycle.lastStart, cycleLength: synced.cycle.cycleLength, tracks: true });
             changed(true);
           })
-          .catch(() => EB.toast('Apple Health isn’t available on this device'));
+          .catch(e => EB.toast(e && e.message === 'unavailable' ? 'Apple Health isn’t available on this device' : 'Apple Health: ' + ((e && e.message) || e)));
       }
       if (act && act.dataset.action === 'removeFile') {
         const id = act.dataset.id;
@@ -572,6 +656,7 @@
   const visible = () => STEPS.filter(s => !s.when || s.when(draft));
 
   function open() {
+    if (!EB.getProfile().completedAt) window.EBAnalytics && EBAnalytics.track('onboarding_started');
     draft = EB.getProfile();
     draft.weight._unit = draft.weight.unit;
     idx = -1; reviewReturn = false;
@@ -593,22 +678,29 @@
     return `<button type="button" class="eb-icon-btn" data-ob="theme" aria-label="Switch to ${light ? 'dark' : 'light'} mode">${light ? ICONS.moon : ICONS.sun}</button>`;
   }
 
+  // Menu-fi mark: three drops meeting in the middle — Me, Nu, Fi.
+  const LOGO = `<svg class="ob-logo" viewBox="-40 -40 80 80" aria-hidden="true"><g class="ob-logo-spin">
+    ${[0, 120, 240].map((r, i) => `<path class="ob-petal" style="--r:${r}deg;--i:${i}" d="M0 1C-13 -10 -14 -33 0 -34C14 -33 13 -10 0 1Z"/>`).join('')}
+  </g></svg>`;
+
+  // Splash → welcome: the mark springs in and turns (2s), the name rises,
+  // then the tagline (1s later), then the buttons.
   function renderWelcome() {
+    el.classList.add('ob-splash');
     el.innerHTML = `
-      <div class="ob-hero" aria-hidden="true">
-        <div class="ob-hero-ring"></div>
-        <span class="ob-hero-word">Menu-fi</span>
-        <span class="ob-hero-meaning"><b>Me</b>nstruation · <b>Nu</b>trition · <b>Fi</b>tness</span>
+      <div class="ob-splash-mark">
+        ${LOGO}
+        <p class="ob-splash-name">Menu-fi</p>
+        <p class="ob-splash-meaning"><b>Me</b>nstruation · <b>Nu</b>trition · <b>Fi</b>tness</p>
       </div>
-      <div class="ob-top ob-top-float"><span></span>${themeBtn()}</div>
       <div class="ob-body ob-welcome">
-        <h1 class="ob-title" id="obTitle">Your Menstruation, Nutrition and Fitness Tracking All in 1 Place</h1>
-        <p class="ob-sub">Built for the busy ladies trying to stay fit through it all.</p>
+        <h1 class="ob-title ob-splash-tag" id="obTitle">Your Menstruation, Nutrition and Fitness Tracking All in 1 Place</h1>
+        <p class="ob-sub ob-splash-tag">Built for the busy ladies trying to stay fit through it all.</p>
       </div>
-      <div class="ob-foot">
+      <div class="ob-foot ob-splash-cta">
         <button type="button" class="eb-btn primary" data-ob="start">Get started</button>
         ${EB.voice.canListen ? `<button type="button" class="eb-btn ghost" data-ob="voice">${ICONS.mic}<span>Answer by voice</span></button>` : ''}
-        <p class="eb-privacy center">About 3 minutes · answers stay on this device</p>
+        <p class="eb-privacy center">About 3 minutes · answers stay private</p>
         <button type="button" class="eb-link center ob-dev" data-ob="dummy">Add dummy data</button>
       </div>`;
     el.onclick = (e) => {
@@ -622,6 +714,7 @@
   }
 
   function renderStep() {
+    el.classList.remove('ob-splash');
     const steps = visible();
     if (idx >= steps.length) return renderReview();
     const step = steps[idx];
@@ -652,6 +745,7 @@
       fields.querySelectorAll('[data-dictate]').forEach(btn => EB.attachDictation(btn, btn.parentElement.querySelector('textarea')));
     }
     refresh();
+    step.onShow && step.onShow(draft);
     const next = () => {
       const btn = el.querySelector('[data-ob="next"]');
       if (btn.disabled) return;
@@ -768,10 +862,69 @@
   function finish() {
     delete draft.weight._unit;
     draft.completedAt = draft.completedAt || new Date().toISOString();
-    EB.saveProfile(draft);
+    if (!EB.getProfile().completedAt) window.EBAnalytics && EBAnalytics.track('onboarding_completed', { plan_source: draft.planSource });
+    EB.saveProfile(draft);                      // builds the plan (planner listens for eb:profile)
     if (window.EBReminders) EBReminders.apply(draft);
-    el.classList.add('ob-leaving');
-    setTimeout(() => { close(); EB.toast('You’re all set'); }, 220);
+    renderPreparing();
+  }
+
+  // Which of the foods typed on "What do you eat on a usual day?" the plan uses.
+  function usualMatches(p) {
+    const dishes = (window.EBPlanner && EBPlanner.DISHES) || [];
+    const plan = window.EBPlanner && EBPlanner.current();
+    const inPlan = new Set();
+    if (plan) ['normal', 'pms'].forEach(m => Object.values(plan[m] || {}).forEach(day =>
+      Object.values(day).forEach(meal => meal && inPlan.add(meal.name))));
+    // Split into phrases, drop timing words ("for lunch", "at night", "a few times a week"),
+    // then name the foods: dish keywords found in the text, and phrases with none.
+    const FILLER = /\b(for|at|in|on|the|a|an|i|usually|mostly|sometimes|often|daily|every|day|days|night|morning|evening|afternoon|breakfast|lunch|dinner|snacks?|few|times?|week|weekends?|eat|have|like|some|bit|of)\b/gi;
+    const phrases = (p.food.usual || '').toLowerCase().split(/\s*(?:,|;|\+|&|\/|\.|\bor\b|\band\b|\bwith\b|\n)\s*/i)
+      .map(w => w.replace(FILLER, ' ').replace(/\s+/g, ' ').trim()).filter(w => w.length > 1);
+    const used = new Set(), missing = [];
+    phrases.forEach(w => {
+      const keys = dishes.filter(d => inPlan.has(d.name)).flatMap(d => d.k).filter(k => new RegExp(`\\b${k}`, 'i').test(w));
+      if (keys.length) keys.forEach(k => used.add(k)); else missing.push(w);
+    });
+    return { used: [...used], missing: [...new Set(missing)] };
+  }
+
+  // After the last step: a short loader while the week is put together,
+  // then what the plan is built on, before landing on Home.
+  function renderPreparing() {
+    const p = draft;
+    const n = window.EBPlanner && EBPlanner.numbers(p);
+    const plan = window.EBPlanner && EBPlanner.current();
+    el.classList.remove('ob-splash');
+    el.innerHTML = `
+      <div class="ob-body ob-prep">
+        <div class="ob-calc">
+          <div class="ob-calc-load">
+            <div class="ob-calc-spin"></div>
+            <p>Preparing your meal chart</p>
+            <ul><li>Reading the foods you usually eat</li><li>Fitting them to ${n ? fmt(n.target) : 'your'} cal a day</li>
+              <li>Balancing protein, carbs and fibre</li>${p.cycle.tracks === false ? '' : '<li>Adjusting meals for each phase of your cycle</li>'}</ul>
+          </div>
+          <div class="ob-calc-out" id="obPrepOut"></div>
+        </div>
+      </div>
+      <div class="ob-foot ob-prep-foot"><button type="button" class="eb-btn primary" data-ob="done">See my plan</button></div>`;
+    const { used, missing } = usualMatches(p);
+    const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
+    el.querySelector('#obPrepOut').innerHTML = `
+      <h1 class="ob-title">Your meal chart is ready</h1>
+      ${infoList([
+        { n: 1, t: plan ? `7 days, 4 meals a day` : 'Using the starter plan',
+          d: plan ? `${n ? fmt(n.target) + ' cal and ' + plan.targets.normal.p + ' g protein a day.' : ''} Portions are sized to hit your target.` : 'Add your weight and diet in Profile and I’ll build one around you.' },
+        used.length && { n: 2, t: 'Built around food you like', d: used.map(cap).join(', ') + '.' },
+        p.cycle.tracks !== false && { n: used.length ? 3 : 2, t: 'Changes with your cycle',
+          d: 'Iron-rich meals on your period, more protein around ovulation, and warmer, comforting food with about 150 extra cal on PMS days.' },
+        missing.length && { n: '+', t: 'Not in this week yet', d: missing.map(cap).join(', ') + '. Log them when you eat them and I’ll fit them in.' }
+      ].filter(Boolean))}`;
+    el.onclick = (e) => {
+      if (!e.target.closest('[data-ob="done"]')) return;
+      el.classList.add('ob-leaving');
+      setTimeout(() => { close(); EB.toast('You’re all set'); }, 220);
+    };
   }
 
   // ── Voice mode ──────────────────────────────────────────────────────
@@ -978,7 +1131,7 @@
   function nextQ(prefix) { vIdx++; askCurrent(prefix); }
 
   // ── Public ──
-  window.EBOnboarding = { open, STEPS, titleOf, bindStep, isDone: () => !!EB.getProfile().completedAt };
+  window.EBOnboarding = { open, STEPS, titleOf, bindStep, openCalendar, isDone: () => !!EB.getProfile().completedAt };
 
   function boot() { if (!EBOnboarding.isDone()) open(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

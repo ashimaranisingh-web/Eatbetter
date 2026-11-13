@@ -22,6 +22,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
@@ -30,6 +32,8 @@
 	<string>Menu-fi saves the calories, protein, carbs, fat and fiber you log so Apple Health shows what you ate.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Menu-fi uses the microphone when you answer questions or log meals by voice.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save your weekly poster to Photos.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Menu-fi turns what you say into text when you answer by voice.</string>
 	<key>UIApplicationSceneManifest</key>

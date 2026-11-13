@@ -1,7 +1,8 @@
 // ── Eatbetter shared layer ────────────────────────────────────────────
 // Profile storage, theme, uploaded-file storage and voice helpers used by
-// onboarding.js, profile.js and assistant.js. Everything stays on-device:
-// the profile lives in localStorage, uploaded plans in IndexedDB.
+// onboarding.js, profile.js and assistant.js. Data lives on-device (profile
+// in localStorage, uploaded plans in IndexedDB); sync.js backs up the
+// localStorage part when the person signs in.
 (function () {
   const PROFILE_KEY = 'eb_profile';
   const THEME_KEY = 'eb_theme';
@@ -14,8 +15,10 @@
       name: '', birthday: '', photo: '',
       goal: '', goals: [],
       weight: { unit: 'kg', current: '', goal: '' },
+      body: { height: '', age: '' },
+      plan: { deficit: null },
       cycle: { tracks: null, lastStart: '', cycleLength: 28, periodLength: 5,
-               regular: '', symptoms: [], pmsStart: '' },
+               regular: '', symptoms: [], pmsStart: '', history: [], claimedLength: null },
       activity: { level: '', types: [] },
       trackers: [],
       food: { diet: '', cuisines: [], usual: '', files: [] },

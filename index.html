@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Daily Meal Plan</title>
+<title>Menu-fi</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1080,8 +1080,8 @@
     background: var(--border-secondary);
   }
   .cycle-dot.menstrual  { background: #ef5350; }
-  .cycle-dot.follicular { background: #43a047; }
-  .cycle-dot.ovulation  { background: #42a5f5; }
+  .cycle-dot.follicular { background: #42a5f5; }
+  .cycle-dot.ovulation  { background: #43a047; }
   .cycle-dot.luteal     { background: #ffd600; }
 
   /* ── Smart insights ── */
@@ -2305,8 +2305,8 @@
   <div class="tracker-head">
     <span class="tracker-label" id="trackerDayLabel">Monday's progress</span>
     <span style="display:flex;align-items:center;gap:10px">
-      <span class="tracker-stat"><small>Maintenance</small><b id="tdeeLabel">2,072</b></span>
       <span class="tracker-stat" id="planGapLabel"></span>
+      <span class="tracker-right"><span class="tracker-stat" id="planTargetLabel"></span><span class="tracker-stat"><small>Maintenance</small><b id="tdeeLabel">2,072</b></span></span>
       <button class="reset-btn" id="resetBtn">Reset day</button>
     </span>
   </div>
@@ -2376,9 +2376,10 @@
 
 <!-- 8. Normal & PMS tabs -->
 <div class="mode-toggle-bar" id="modeToggleBar">
-  <button type="button" class="mode-btn active" id="btnNormal" onclick="setMode(false)">Normal</button>
-  <button type="button" class="mode-btn" id="btnPMS" onclick="setMode(true)">PMS</button>
+  <button type="button" class="mode-btn active" id="btnNormal" onclick="setMode(false, true)">Normal</button>
+  <button type="button" class="mode-btn" id="btnPMS" onclick="setMode(true, true)">PMS</button>
 </div>
+<p class="mode-note" id="modeNote"></p>
 
 <!-- Craving: input shown directly, no drawer -->
 <div class="craving-wrap" id="cravingWrap">
@@ -3304,6 +3305,7 @@ function getCustomMeals(day) {
 }
 function setCustomMeals(day, meals) {
   try { localStorage.setItem('mealPlan_custom_' + day, JSON.stringify(meals)); } catch {}
+  window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'custom' });
 }
 // Ingredients the user chose to permanently save from the "Add a meal" modal
 // toggle — these get merged into the regular INGREDIENTS/SNACK_INGREDIENTS
@@ -4254,6 +4256,7 @@ function addActivity(name, cal) {
   const trimmed = String(name || '').trim();
   const c = parseInt(cal);
   if (!trimmed || !c || c <= 0) return;
+  window.EBAnalytics && EBAnalytics.track('workout_logged', { source: 'manual' });
   const current = getActivities(currentDay);
   current.push({ name: trimmed, cal: c, ts: Date.now() });
   setActivities(currentDay, current);
@@ -4515,7 +4518,6 @@ DAY_ORDER.forEach(day => {
   } catch {}
 });
 
-const CYCLE_LENGTH = 28;
 
 function getCycleStart() {
   try { return localStorage.getItem('mealPlan_cycleStart') || null; } catch { return null; }
@@ -4527,28 +4529,52 @@ function clearCycleStart() {
   try { localStorage.removeItem('mealPlan_cycleStart'); } catch {}
 }
 
-function getCyclePhase(dayNum) {
-  if (dayNum <= 5)  return 'menstrual';
-  if (dayNum <= 13) return 'follicular';
-  if (dayNum <= 16) return 'ovulation';
+// Cycle settings from the profile (onboarding / Profile), with safe defaults.
+// history: every period start the person has logged, oldest first.
+function cycleSettings() {
+  let c = {};
+  try { c = (window.EB && EB.getProfile().cycle) || {}; } catch {}
+  const len = Math.min(60, Math.max(15, +c.cycleLength || 28));
+  const period = Math.min(12, Math.max(1, +c.periodLength || 5));
+  const history = [...new Set([...(c.history || []), c.lastStart].filter(Boolean))].sort();
+  return { len, period, history };
+}
+
+// Phases scale with the cycle: the luteal phase is fairly fixed (~14 days),
+// so ovulation lands about 14 days before the next period, not on day 14.
+// A 33-day cycle ovulates around day 19; a 24-day cycle around day 10.
+function getCyclePhase(dayNum, s = cycleSettings()) {
+  const ovDay = Math.max(s.period + 2, s.len - 14);
+  if (dayNum <= s.period)    return 'menstrual';
+  if (dayNum <  ovDay - 1)   return 'follicular';
+  if (dayNum <= ovDay + 1)   return 'ovulation';
   return 'luteal';
 }
 
+// Past months follow the periods actually logged (each cycle uses its real
+// length); from the latest start on, it projects with the average length.
 function getPhaseForDate(dateStr, cycleStartStr) {
-  const start = new Date(cycleStartStr);
-  const date  = new Date(dateStr);
-  start.setHours(0,0,0,0);
-  date.setHours(0,0,0,0);
-  const diffDays = Math.round((date - start) / 86400000);
-  if (diffDays < 0) return null;
-  const dayInCycle = (diffDays % CYCLE_LENGTH) + 1;
-  return { phase: getCyclePhase(dayInCycle), dayNum: dayInCycle };
+  const s = cycleSettings();
+  const starts = s.history.length ? s.history : [cycleStartStr];
+  const day = d => new Date(d + 'T00:00');
+  const date = day(dateStr);
+  let i = -1;
+  starts.forEach((st, k) => { if (day(st) <= date) i = k; });
+  if (i < 0) return null;
+  const diffDays = Math.round((date - day(starts[i])) / 86400000);
+  const next = starts[i + 1];
+  const gap = next ? Math.round((day(next) - day(starts[i])) / 86400000) : 0;
+  const actual = gap >= 15 && gap <= 60;                 // a real logged cycle (not a missed month)
+  const len = actual ? gap : s.len;
+  const dayInCycle = (actual ? diffDays : diffDays % s.len) + 1;
+  const ss = { ...s, len };
+  return { phase: getCyclePhase(dayInCycle, ss), dayNum: dayInCycle, cycleLength: len };
 }
 
 const PHASE_META = {
   menstrual:  { dot: 'menstrual',  emoji: '🔴', label: 'Menstrual',  color: '#ef5350' },
-  follicular: { dot: 'follicular', emoji: '💚', label: 'Follicular', color: '#43a047' },
-  ovulation:  { dot: 'ovulation',  emoji: '💙', label: 'Ovulation',  color: '#42a5f5' },
+  follicular: { dot: 'follicular', emoji: '💙', label: 'Follicular', color: '#42a5f5' },
+  ovulation:  { dot: 'ovulation',  emoji: '💚', label: 'Ovulation',  color: '#43a047' },
   luteal:     { dot: 'luteal',     emoji: '🌙', label: 'PMS',        color: '#ffd600' },
 };
 
@@ -4647,7 +4673,7 @@ function renderCycleCalendar() {
     <div class="cycle-calendar-wrap" id="cycleCalWrap">
       <div class="cycle-calendar">${cells}</div>
     </div>
-    <button class="cycle-reset-btn" onclick="resetCycle()">Change period start date</button>`;
+    <button class="cycle-reset-btn" onclick="resetCycle()">Add a period date</button>`;
 
   requestAnimationFrame(() => {
     const wrap = document.getElementById('cycleCalWrap');
@@ -4701,6 +4727,16 @@ function updateCycleMonth() {
   const text = d.toLocaleDateString(undefined,
     y === new Date().getFullYear() ? { month: 'long' } : { month: 'long', year: 'numeric' });
   if (label.textContent !== text) label.textContent = text;
+  // "Jump to today" only shows once today has scrolled out of view.
+  const btn = wrap.closest('#cycleSection')?.querySelector('.cycle-today-btn');
+  const t = wrap.querySelector('.cycle-day-cell.today');
+  if (btn && t) {
+    const w = wrap.getBoundingClientRect(), r = t.getBoundingClientRect();
+    const away = r.right <= w.left + 4 || r.left >= w.right - 4;
+    btn.classList.toggle('is-away', away);
+    btn.tabIndex = away ? 0 : -1;
+    btn.setAttribute('aria-hidden', away ? 'false' : 'true');
+  }
 }
 
 function renderInsight(cycleStart, todayStrArg) {
@@ -4712,11 +4748,28 @@ function renderInsight(cycleStart, todayStrArg) {
   if (!info) return;
   const { phase } = info;
   const ins = PHASE_INSIGHTS[phase];
+  // A tap on Normal / PMS wins for the rest of that day.
+  let overridden = false; try { overridden = localStorage.getItem('mealPlan_pmsOverride') === todayStrArg; } catch {}
+  if (overridden) { updateModeNote(); return; }
   if (ins.autoMode && !isPMSMode()) {
     setMode(true);
   } else if (!ins.autoMode && isPMSMode() && phase !== 'luteal') {
     setMode(false);
   }
+  updateModeNote();
+}
+
+// Says why the mode is what it is, so the toggle never feels like a chore.
+function updateModeNote() {
+  const el = document.getElementById('modeNote'); if (!el) return;
+  const start = getCycleStart(), today = todayStr();
+  const info = start ? getPhaseForDate(today, start) : null;
+  let overridden = false; try { overridden = localStorage.getItem('mealPlan_pmsOverride') === today; } catch {}
+  const auto = info && PHASE_INSIGHTS[info.phase] && PHASE_INSIGHTS[info.phase].autoMode;
+  el.textContent = !info ? 'Add your period date and PMS meals switch on by themselves on PMS days.'
+    : overridden ? 'Set by you for today. Your cycle takes over again tomorrow.'
+    : auto ? 'On from your cycle: lighter, comforting meals for PMS days.'
+    : 'Switches to PMS meals by itself on your PMS days.';
 }
 
 function saveCycleStart() {
@@ -4757,11 +4810,11 @@ function showPhasePopup(dateStr, cycleStart) {
   const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dateLabel = `${WEEK_DAYS[d.getDay()]} ${d.getDate()} ${MONTH_NAMES_SHORT[d.getMonth()]}`;
 
-  let daysLeft = 0;
-  if (phase === 'menstrual')  daysLeft = 5  - dayNum;
-  if (phase === 'follicular') daysLeft = 13 - dayNum;
-  if (phase === 'ovulation')  daysLeft = 16 - dayNum;
-  if (phase === 'luteal')     daysLeft = CYCLE_LENGTH - dayNum;
+  // Days left in this phase, from the same cycle settings as the dots.
+  const s = { ...cycleSettings(), len: info.cycleLength };
+  let end = dayNum;
+  while (end < s.len && getCyclePhase(end + 1, s) === phase) end++;
+  const daysLeft = end - dayNum;
 
   const pillsHtml = ins.pills.map(p => `<span class="phase-popup-pill">${p}</span>`).join('');
 
@@ -5585,6 +5638,7 @@ function getSlotEaten(dateStr, slotId) {
   try { return localStorage.getItem('slotEaten_' + dateStr + '_' + slotId) === 'true'; } catch { return false; }
 }
 function setSlotEaten(dateStr, slotId, val) {
+  if (val) window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'plan' });
   try {
     if (val) localStorage.setItem('slotEaten_' + dateStr + '_' + slotId, 'true');
     else localStorage.removeItem('slotEaten_' + dateStr + '_' + slotId);
@@ -5701,7 +5755,7 @@ function renderSlotSection() {
         <div class="slot-card" data-slot="${slot.id}">
           <div class="slot-header">
             <div class="slot-left">
-              <span class="slot-emoji">${slot.emoji}</span>
+              
               <div>
                 <div class="slot-name">${slot.name}<span class="slot-time">${slot.time}</span></div>
               </div>
@@ -5732,7 +5786,7 @@ function renderSlotSection() {
         <div class="slot-card" data-slot="${slot.id}">
           <div class="slot-header">
             <div class="slot-left">
-              <span class="slot-emoji">${slot.emoji}</span>
+              
               <div>
                 <div class="slot-name">${slot.name}<span class="slot-time">${slot.time}</span></div>
               </div>
@@ -5820,7 +5874,7 @@ function renderSlotSection() {
       <div class="slot-card" data-slot="${slot.id}">
         <div class="slot-header">
           <div class="slot-left">
-            <span class="slot-emoji">${slot.emoji}</span>
+            
             <div>
               <div class="slot-name">${slot.name}<span class="slot-time">${slot.time}</span></div>
             </div>
@@ -5867,7 +5921,7 @@ function renderSlotSection() {
     <div class="slot-card">
       <div class="slot-header" style="padding-bottom:8px">
         <div class="slot-left">
-          <span class="slot-emoji">✏️</span>
+          
           <div class="slot-name">Other logged meals</div>
         </div>
         <span style="font-size:12px;color:var(--success);font-weight:600">${legacyCustoms.reduce((a,m)=>a+(m.cal||0),0)} cal</span>
@@ -6355,9 +6409,11 @@ function modeSubtitle(pms) {
     (deficit > 0 ? ` · ${deficit} cal deficit · ${r2(deficit * 7 / CAL_PER_KG)}kg/week` : '');
 }
 
-function setMode(pms) {
+function setMode(pms, manual) {
+  if (manual) { try { localStorage.setItem('mealPlan_pmsOverride', todayStr()); } catch {} }
   setPMSMode(pms);
   document.body.classList.toggle('pms-mode', pms);
+  updateModeNote();
   document.getElementById('btnNormal').classList.toggle('active', !pms);
   document.getElementById('btnPMS').classList.toggle('active', pms);
   document.getElementById('modeSubtitle').textContent = modeSubtitle(pms);
@@ -6373,6 +6429,7 @@ function setMode(pms) {
   document.getElementById('btnNormal').classList.toggle('active', !pms);
   document.getElementById('btnPMS').classList.toggle('active', pms);
   document.getElementById('modeSubtitle').textContent = modeSubtitle(pms);
+  updateModeNote();
 })();
 
 renderCycleCalendar();
@@ -6434,9 +6491,16 @@ document.addEventListener('keydown', (e) => {
 
 renderWeight();
 </script>
+<script src="config.js"></script>
+<script src="vendor/posthog.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="analytics.js"></script>
+<script src="sync.js"></script>
+<script src="native.js"></script>
 <script src="health.js"></script>
 <script src="reminders.js"></script>
 <script src="planner.js"></script>
+<script src="challenges.js"></script>
 <script src="app.js"></script>
 <script src="onboarding.js"></script>
 <script src="profile.js"></script>

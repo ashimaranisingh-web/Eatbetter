@@ -6,5 +6,6 @@ import Capacitor
 class MenufiViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(HealthPlugin())
+        bridge?.registerPluginInstance(MenufiPlugin())
     }
 }

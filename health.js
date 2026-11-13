@@ -26,9 +26,12 @@
   // Shows Apple's permission sheet. iOS never says which reads were
   // allowed, so "connected" means the sheet was answered, not granted.
   async function connect() {
-    if (!(await isAvailable())) throw new Error('unavailable');
+    if (!Health) throw new Error('unavailable');
+    const { available } = await Health.isAvailable();
+    if (!available) throw new Error('unavailable');
     await Health.requestAuthorization();
     setState({ connected: true });
+    window.EBAnalytics && EBAnalytics.track('health_connected');
     await syncIn();
     await syncOut();
   }
