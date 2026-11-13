@@ -31,6 +31,27 @@
     renderHeaderAvatar();
   }
 
+  function accountHTML() {
+    if (!EBSync.signedIn()) return `
+        <p class="eb-group-label">Account</p>
+        <div class="eb-list">
+          <button type="button" class="eb-list-row" data-pf="signIn"><span class="eb-row-text"><span class="eb-list-label">Sign In or Create Account</span>
+            <span class="eb-list-value">Back up and sync across phones</span></span>${ICONS.chevron}</button>
+        </div>
+        <p class="eb-group-note">Without an account, everything stays on this phone.</p>`;
+    const at = EBSync.lastSyncedAt();
+    return `
+        <p class="eb-group-label">Account</p>
+        <div class="eb-list">
+          <div class="eb-list-row"><span class="eb-row-text"><span class="eb-list-label">${esc(EBSync.email())}</span>
+            <span class="eb-list-value">${at ? 'Backed up ' + new Date(at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Not backed up yet'}</span></span></div>
+          <button type="button" class="eb-list-row" data-pf="syncNow"><span class="eb-list-label">Sync Now</span></button>
+          <button type="button" class="eb-list-row" data-pf="signOut"><span class="eb-list-label">Sign Out</span></button>
+          <button type="button" class="eb-list-row danger" data-pf="deleteAcct"><span class="eb-list-label">Delete Account</span></button>
+        </div>
+        <p class="eb-group-note">Your Claude API key and Apple Health connection stay on this phone.</p>`;
+  }
+
   function render() {
     const p = EB.getProfile();
     const pref = EB.getThemePref();
@@ -54,6 +75,8 @@
           <label class="eb-list-row is-input"><span class="eb-list-label">Birthday</span>
             <input type="date" class="pf-inline" data-pf="birthday" value="${esc(p.birthday)}" max="${EB.todayISO()}" autocomplete="bday"></label>
         </div>
+
+        ${window.EBSync && EBSync.enabled() ? accountHTML() : ''}
 
         <p class="eb-group-label">Meal Plan</p>
         <div class="eb-seg pf-seg" role="radiogroup" aria-label="Meal plan">
@@ -129,6 +152,17 @@
     if (se) return openEditor(se.dataset.stepEdit);
     const a = t.closest('[data-pf]'); if (!a) return;
     if (a.dataset.pf === 'close') close();
+    if (a.dataset.pf === 'signIn') EBSync.openSignIn(() => el && render());
+    if (a.dataset.pf === 'syncNow') EBSync.syncNow().then(() => { EB.toast('Synced'); el && render(); });
+    if (a.dataset.pf === 'signOut') {
+      if (!confirm('Sign out? Your data stays on this phone.')) return;
+      EBSync.signOut().then(() => { EB.toast('Signed out'); el && render(); });
+    }
+    if (a.dataset.pf === 'deleteAcct') {
+      if (!confirm('Delete your account and its backup? This can’t be undone. Data on this phone is kept.')) return;
+      EBSync.deleteAccount().then(() => { EB.toast('Account deleted'); el && render(); })
+        .catch(() => EB.toast('Couldn’t delete the account. Check your connection and try again.'));
+    }
     if (a.dataset.pf === 'healthOn') connectHealth();
     if (a.dataset.pf === 'healthSync') EBHealth.syncIn().then(() => EBHealth.syncOut()).then(() => { EB.toast('Synced with Apple Health'); render(); });
     if (a.dataset.pf === 'healthOff') { EBHealth.disconnect(); render(); }

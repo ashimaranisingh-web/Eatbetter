@@ -1,0 +1,283 @@
+<title>Menu-fi Test Round</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone-width column of numbered task cards, like the app itself; owner gets a results tab. */
+:root {
+  --bg: #f6f7f5; --card: #ffffff; --fg: #15191a; --muted: #5b6462; --line: #e1e3e7;
+  --accent: #1b7a3d; --accent-soft: #e6f2ea; --pink: #c2185b; --pink-soft: #fbe7ef;
+  --warn: #b45309; --danger: #b42318;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Figtree", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1312; --card: #181d1c; --fg: #eef1ef; --muted: #a3aca9; --line: #2b3331;
+  --accent: #5cc283; --accent-soft: #17301f; --pink: #f48fb1; --pink-soft: #3a1a26;
+  --warn: #f5b04a; --danger: #ff8a7a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1312; --card: #181d1c; --fg: #eef1ef; --muted: #a3aca9; --line: #2b3331;
+  --accent: #5cc283; --accent-soft: #17301f; --pink: #f48fb1; --pink-soft: #3a1a26;
+  --warn: #f5b04a; --danger: #ff8a7a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 16px/1.5 var(--body); }
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 16px }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.2 }
+h1 { font-size: 20px } h2 { font-size: 18px } h3 { font-size: 16px; font-family: var(--body); font-weight: 600 }
+p { margin: 0 }
+.muted { color: var(--muted); font-size: 14px }
+.head { display: flex; flex-direction: column; gap: 8px; padding-block: 8px }
+.tabs { display: flex; gap: 8px }
+.tab { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; padding: 8px 12px; font: 500 14px var(--body); cursor: pointer }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 16px }
+.sec-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+.q { display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.q > label, .q > .lbl { font-weight: 500 }
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; padding: 8px 12px; font: 14px var(--body); cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); font-weight: 600 }
+.scale { display: grid; gap: 4px }
+.scale .chip { padding: 8px 0; text-align: center; font-variant-numeric: tabular-nums }
+.ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted) }
+input[type=text], textarea { width: 100%; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; padding: 12px; font: 15px var(--body) }
+textarea { min-height: 72px; resize: vertical }
+.task { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 12px }
+.task:first-of-type { border-top: 0; padding-top: 0 }
+.task-head { display: flex; gap: 12px; align-items: baseline }
+.num { font-family: var(--display); color: var(--accent); font-size: 16px; font-variant-numeric: tabular-nums; flex: none }
+.where { font-size: 13px; color: var(--muted) }
+.btn { border: 0; background: var(--fg); color: var(--bg); border-radius: 8px; padding: 14px; font: 600 16px var(--body); cursor: pointer; width: 100% }
+.btn:disabled { opacity: .5; cursor: default }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.note { border-radius: 8px; padding: 12px; font-size: 14px; background: var(--accent-soft) }
+.note.err { background: var(--pink-soft) }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px }
+.stat b { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums }
+.stat span { font-size: 12px; color: var(--muted) }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 40px; gap: 8px; align-items: center; font-size: 14px }
+.bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px }
+.val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted) }
+.quote { border-left: 2px solid var(--line); padding-left: 12px; font-size: 14px }
+.quote small { display: block; color: var(--muted) }
+@media (max-width: 420px) { .stats { grid-template-columns: 1fr 1fr } .bar-row { grid-template-columns: minmax(0,1fr) 72px 36px } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1>Menu-fi test round</h1>
+    <p class="muted">Thanks for trying Menu-fi. Open the app from TestFlight and work through the tasks below in order. Answer as you go, and be blunt: confusion is the most useful thing you can report. Takes about 15 minutes.</p>
+    <div class="tabs" id="tabs" hidden>
+      <button class="tab" id="tab-form" aria-selected="true">Form</button>
+      <button class="tab" id="tab-results" aria-selected="false">Results <span id="count"></span></button>
+    </div>
+  </header>
+
+  <form id="form" novalidate>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <section class="card" id="sec-about"></section>
+      <section class="card" id="sec-tasks"></section>
+      <section class="card" id="sec-trust"></section>
+      <section class="card" id="sec-overall"></section>
+      <section class="card" id="sec-open"></section>
+      <div id="status" hidden></div>
+      <button class="btn" id="submit" type="submit">Send my answers</button>
+      <p class="muted" style="text-align:center">Your draft is kept on this device until you send it.</p>
+    </div>
+  </form>
+
+  <section id="results" hidden style="display:flex;flex-direction:column;gap:16px"></section>
+</div>
+
+<script>
+const SECTIONS = {
+  about: { title: 'Before you start', items: [
+    { id: 'name', type: 'text', q: 'Your first name (optional)' },
+    { id: 'age', type: 'chips', q: 'Age', opts: ['Under 20', '20–29', '30–39', '40+'] },
+    { id: 'tracker', type: 'chips', multi: true, q: 'How do you track your cycle today?', opts: ['Flo', 'Clue', 'Apple Health', 'Notes or calendar', 'I don’t'] },
+    { id: 'plan', type: 'chips', q: 'How do you decide what to eat today?', opts: ['I plan ahead', 'Whatever’s at home', 'A diet or app', 'Someone cooks for me'] },
+    { id: 'goal', type: 'chips', q: 'Main reason you’d use Menu-fi', opts: ['Lose weight', 'Eat better for my cycle', 'Manage PMS or PCOS', 'Stay active', 'Just curious'] },
+  ]},
+  tasks: { title: 'Tasks', intro: 'Try each one without asking for help. For each, say how it went and how easy it felt.', items: [
+    { id: 't1', q: 'Finish onboarding and get to your meal chart', where: 'First launch' },
+    { id: 't2', q: 'Log what you ate for your last meal', where: 'Home or Nutrition' },
+    { id: 't3', q: 'Add your last period start date, then find when your next period is due', where: 'Menstruation' },
+    { id: 't4', q: 'Log today’s flow, mood and one craving', where: 'Menstruation' },
+    { id: 't5', q: 'Find what you should eat today for your cycle phase', where: 'Anywhere' },
+    { id: 't6', q: 'Start a push-up challenge with a daily reminder', where: 'Fitness' },
+    { id: 't7', q: 'Connect Apple Health', where: 'Fitness' },
+  ]},
+  trust: { title: 'Does it fit you?', items: [
+    { id: 'acc', type: 'scale', n: 5, q: 'The period and phase predictions match my real cycle', lo: 'Not at all', hi: 'Exactly' },
+    { id: 'food', type: 'scale', n: 5, q: 'The meal suggestions fit how I actually eat', lo: 'Not at all', hi: 'Completely' },
+    { id: 'nums', type: 'scale', n: 5, q: 'I understood my calorie target and why it’s that number', lo: 'Not at all', hi: 'Completely' },
+    { id: 'notif', type: 'chips', q: 'The reminders feel…', opts: ['Helpful', 'About right', 'Too many', 'Didn’t get any'] },
+    { id: 'privacy', type: 'scale', n: 5, q: 'I’m comfortable sharing my period and weight with this app', lo: 'Not at all', hi: 'Fully' },
+  ]},
+  overall: { title: 'Overall', items: [
+    { id: 'umux1', type: 'scale', n: 7, q: 'Menu-fi does what I’d need it to do', lo: 'Strongly disagree', hi: 'Strongly agree' },
+    { id: 'umux2', type: 'scale', n: 7, q: 'Menu-fi is easy to use', lo: 'Strongly disagree', hi: 'Strongly agree' },
+    { id: 'pmf', type: 'chips', q: 'How would you feel if you could no longer use Menu-fi?', opts: ['Very disappointed', 'Somewhat disappointed', 'Not disappointed'] },
+    { id: 'nps', type: 'scale', n: 11, from: 0, q: 'How likely are you to recommend it to a friend?', lo: 'Not likely', hi: 'Very likely' },
+  ]},
+  open: { title: 'In your words', items: [
+    { id: 'confuse', type: 'long', q: 'Where did you get stuck or confused?' },
+    { id: 'change', type: 'long', q: 'If you could change one thing, what would it be?' },
+    { id: 'daily', type: 'long', q: 'What would make you open it every day?' },
+    { id: 'replace', type: 'long', q: 'What would it replace for you, if anything?' },
+    { id: 'else', type: 'long', q: 'Anything else?' },
+  ]},
+};
+const TASK_RESULT = ['Did it easily', 'Did it, with effort', 'Couldn’t do it'];
+const DRAFT = 'menufi-test-draft';
+
+let answers = {};
+try { answers = JSON.parse(localStorage.getItem(DRAFT) || '{}') || {}; } catch { answers = {}; }
+const saveDraft = () => { try { localStorage.setItem(DRAFT, JSON.stringify(answers)); } catch {} };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function chipsHTML(id, opts, multi) {
+  const cur = answers[id];
+  return `<div class="chips" role="group">${opts.map(o => {
+    const on = multi ? (cur || []).includes(o) : cur === o;
+    return `<button type="button" class="chip" data-id="${id}" data-val="${esc(o)}" ${multi ? 'data-multi="1"' : ''} aria-pressed="${on}">${esc(o)}</button>`;
+  }).join('')}</div>`;
+}
+function scaleHTML(id, n, from = 1, lo, hi) {
+  const vals = Array.from({ length: n }, (_, i) => i + from);
+  return `<div class="scale" style="grid-template-columns:repeat(${n},minmax(0,1fr))" role="group">${vals.map(v =>
+    `<button type="button" class="chip" data-id="${id}" data-val="${v}" data-num="1" aria-pressed="${answers[id] === v}">${v}</button>`).join('')}</div>
+    <div class="ends"><span>${esc(lo)}</span><span>${esc(hi)}</span></div>`;
+}
+function itemHTML(it) {
+  if (it.type === 'text') return `<div class="q"><label for="f-${it.id}">${esc(it.q)}</label><input type="text" id="f-${it.id}" data-field="${it.id}" value="${esc(answers[it.id] || '')}"></div>`;
+  if (it.type === 'long') return `<div class="q"><label for="f-${it.id}">${esc(it.q)}</label><textarea id="f-${it.id}" data-field="${it.id}">${esc(answers[it.id] || '')}</textarea></div>`;
+  if (it.type === 'chips') return `<div class="q"><span class="lbl">${esc(it.q)}</span>${chipsHTML(it.id, it.opts, it.multi)}</div>`;
+  return `<div class="q"><span class="lbl">${esc(it.q)}</span>${scaleHTML(it.id, it.n, it.from, it.lo, it.hi)}</div>`;
+}
+function taskHTML(t, i) {
+  return `<div class="task">
+    <div class="task-head"><span class="num">${i + 1}</span><div><h3>${esc(t.q)}</h3><span class="where">${esc(t.where)}</span></div></div>
+    ${chipsHTML(t.id + '_done', TASK_RESULT)}
+    <div class="q"><span class="lbl muted">How easy was it?</span>${scaleHTML(t.id + '_ease', 7, 1, 'Very hard', 'Very easy')}</div>
+    <div class="q"><label class="muted" for="f-${t.id}_note">What got in the way? (optional)</label><textarea id="f-${t.id}_note" data-field="${t.id}_note" style="min-height:48px">${esc(answers[t.id + '_note'] || '')}</textarea></div>
+  </div>`;
+}
+function renderForm() {
+  for (const [key, s] of Object.entries(SECTIONS)) {
+    const el = document.getElementById('sec-' + key);
+    el.innerHTML = `<div class="sec-label">${esc(s.title)}</div>${s.intro ? `<p class="muted">${esc(s.intro)}</p>` : ''}` +
+      (key === 'tasks' ? s.items.map(taskHTML).join('') : s.items.map(itemHTML).join(''));
+  }
+}
+renderForm();
+
+document.getElementById('form').addEventListener('click', e => {
+  const b = e.target.closest('.chip[data-id]'); if (!b) return;
+  const id = b.dataset.id, raw = b.dataset.val, val = b.dataset.num ? +raw : raw;
+  if (b.dataset.multi) {
+    const list = answers[id] || [];
+    answers[id] = list.includes(val) ? list.filter(x => x !== val) : [...list, val];
+  } else answers[id] = answers[id] === val ? undefined : val;
+  b.parentElement.querySelectorAll('.chip').forEach(c => {
+    const v = c.dataset.num ? +c.dataset.val : c.dataset.val;
+    c.setAttribute('aria-pressed', Array.isArray(answers[id]) ? answers[id].includes(v) : answers[id] === v);
+  });
+  saveDraft();
+});
+document.getElementById('form').addEventListener('input', e => {
+  const f = e.target.dataset.field; if (!f) return;
+  answers[f] = e.target.value; saveDraft();
+});
+
+const statusEl = document.getElementById('status');
+function showStatus(msg, err) { statusEl.hidden = false; statusEl.className = 'note' + (err ? ' err' : ''); statusEl.textContent = msg; }
+
+let db = null, user = null;
+const dbReady = (async () => {
+  try { db = await window.claude?.use?.('db'); } catch { db = null; }
+  try { user = await window.claude?.use?.('user'); } catch { user = null; }
+  if (user && user.canEdit()) { document.getElementById('tabs').hidden = false; watchResults(); }
+})();
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const answered = SECTIONS.tasks.items.filter(t => answers[t.id + '_done']).length;
+  if (answered === 0) return showStatus('Try at least one task and say how it went before sending.', true);
+  const btn = document.getElementById('submit'); btn.disabled = true; btn.textContent = 'Sending…';
+  await dbReady;
+  const clean = Object.fromEntries(Object.entries(answers).filter(([, v]) => v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)));
+  try {
+    if (!db) throw { code: 'unavailable' };
+    await db.collection('responses').add({ ...clean, submittedAt: new Date().toISOString() });
+    answers = {}; saveDraft(); renderForm();
+    showStatus('Sent. Thank you, this really helps shape the next build.');
+    btn.textContent = 'Sent';
+    window.scrollTo({ top: 0 });
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Send my answers';
+    showStatus('Couldn’t send from this view. Your answers are still here; try again, or ask Ashima for an invite to this page.', true);
+  }
+});
+
+// ── Results (people who can edit this page) ──
+const tabForm = document.getElementById('tab-form'), tabRes = document.getElementById('tab-results');
+function show(which) {
+  tabForm.setAttribute('aria-selected', which === 'form'); tabRes.setAttribute('aria-selected', which === 'results');
+  document.getElementById('form').hidden = which !== 'form';
+  document.getElementById('results').hidden = which !== 'results';
+}
+tabForm.onclick = () => show('form'); tabRes.onclick = () => show('results');
+
+const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+function watchResults() {
+  if (!db) return;
+  db.collection('responses').onSnapshot(snap => renderResults(snap.docs.map(d => d.data())), () => {});
+}
+function renderResults(rows) {
+  document.getElementById('count').textContent = rows.length ? `(${rows.length})` : '';
+  const el = document.getElementById('results');
+  if (!rows.length) { el.innerHTML = `<div class="card"><h2>No responses yet</h2><p class="muted">Share this page with testers. Each one appears here as soon as it’s sent.</p></div>`; return; }
+  const nums = k => rows.map(r => r[k]).filter(v => typeof v === 'number');
+  const nps = nums('nps'), npsScore = nps.length ? Math.round(100 * (nps.filter(v => v >= 9).length - nps.filter(v => v <= 6).length) / nps.length) : null;
+  const pmf = rows.filter(r => r.pmf), very = pmf.length ? Math.round(100 * pmf.filter(r => r.pmf === 'Very disappointed').length / pmf.length) : null;
+  const u1 = nums('umux1'), u2 = nums('umux2');
+  const umux = u1.length && u2.length ? Math.round(((avg(u1) - 1) + (avg(u2) - 1)) / 12 * 100) : null;
+  const fmt = (v, s = '') => v === null ? '–' : v + s;
+
+  const taskRows = SECTIONS.tasks.items.map((t, i) => {
+    const done = rows.filter(r => r[t.id + '_done']), ok = done.filter(r => r[t.id + '_done'] !== 'Couldn’t do it').length;
+    const ease = avg(nums(t.id + '_ease'));
+    return `<div class="bar-row"><span>${i + 1}. ${esc(t.q)}</span><div class="bar"><i style="width:${ease ? (ease / 7) * 100 : 0}%"></i></div><span class="val">${ease ? ease.toFixed(1) : '–'}</span></div>
+      <p class="muted" style="margin-top:-4px">${done.length ? `${ok} of ${done.length} completed` : 'Not tried yet'}</p>`;
+  }).join('');
+  const trustRows = SECTIONS.trust.items.filter(i => i.type === 'scale').map(it => {
+    const a = avg(nums(it.id));
+    return `<div class="bar-row"><span>${esc(it.q)}</span><div class="bar"><i style="width:${a ? (a / 5) * 100 : 0}%"></i></div><span class="val">${a ? a.toFixed(1) : '–'}</span></div>`;
+  }).join('');
+  const quotes = (k, label) => {
+    const list = rows.filter(r => r[k]).map(r => `<div class="quote">${esc(r[k])}<small>${esc(r.name || 'Anonymous')}</small></div>`);
+    return list.length ? `<div class="q"><span class="lbl">${esc(label)}</span>${list.join('')}</div>` : '';
+  };
+  const stuck = SECTIONS.tasks.items.map((t, i) => quotes(t.id + '_note', `Task ${i + 1}: what got in the way`)).join('');
+
+  el.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${rows.length}</b><span>Responses</span></div>
+      <div class="stat"><b>${fmt(very, '%')}</b><span>Very disappointed without it (aim 40%+)</span></div>
+      <div class="stat"><b>${fmt(npsScore)}</b><span>Recommend score (−100 to 100)</span></div>
+      <div class="stat"><b>${fmt(umux)}</b><span>Usability out of 100 (68 is average)</span></div>
+    </div>
+    <div class="card"><div class="sec-label">Tasks · average ease out of 7</div>${taskRows}</div>
+    <div class="card"><div class="sec-label">Fit · average out of 5</div>${trustRows}</div>
+    <div class="card"><div class="sec-label">In their words</div>
+      ${quotes('confuse', 'Where they got stuck')}${quotes('change', 'One thing to change')}${quotes('daily', 'What would make it daily')}${quotes('replace', 'What it would replace')}${quotes('else', 'Anything else')}${stuck}
+    </div>`;
+}
+</script>

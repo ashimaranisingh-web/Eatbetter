@@ -5,12 +5,12 @@
 :root[data-theme="light"] {
   --bg-page: #f6f6f4;
   --bg-primary: #ffffff;
-  --bg-secondary: #efefec;
+  --bg-secondary: #f3f3f2;
   --bg-info: #f2f2ef;
   --bg-warning: #fbf5e9;
-  --text-primary: #111111;
-  --text-secondary: #525252;
-  --text-tertiary: #7d7d7d;
+  --text-primary: #141414;
+  --text-secondary: #424242;
+  --text-tertiary: #6f6f6f;
   --text-info: #2b2b2b;
   --text-warning: #84601c;
   --border-tertiary: rgba(0,0,0,0.07);
@@ -28,10 +28,10 @@
   --danger: #d93636;
   --partial: #c7731f;
   --partial-light: #a85f16;
-  --pill-p-bg: #ececef; --pill-p-tx: #46464f;
-  --pill-c-bg: #f0f0f2; --pill-c-tx: #55555e;
-  --pill-f-bg: #ececef; --pill-f-tx: #46464f;
-  --pill-fib-bg: #f0f0f2; --pill-fib-tx: #55555e;
+  --pill-p-bg: #f3f3f2; --pill-p-tx: #46464f;
+  --pill-c-bg: #f3f3f2; --pill-c-tx: #55555e;
+  --pill-f-bg: #f3f3f2; --pill-f-tx: #46464f;
+  --pill-fib-bg: #f3f3f2; --pill-fib-tx: #55555e;
   color-scheme: light;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
@@ -522,7 +522,7 @@ body.has-tabs .tracker-head { justify-content: space-between; }
 .tracker-stat { display: grid; gap: 1px; }
 .tracker-stat small { font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--text-tertiary); }
 .tracker-stat b { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
-#planGapLabel { display: flex; gap: 18px; text-align: right; }
+#planGapLabel { display: grid; gap: 1px; text-align: left; }
 body.has-tabs .tracker-head > span:last-child { flex: 1; justify-content: space-between; }
 /* Reset day sits beside the Food heading */
 .app-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -729,14 +729,14 @@ body:has(.app-sheet-overlay) .app-food-search, body:has(.phase-popup-overlay) .e
 :root[data-theme="light"] {
   --bg-page: #f2f3f5;
   --bg-primary: #ffffff;
-  --bg-secondary: #f4f5f7;
-  --bg-info: #f4f5f7;
+  --bg-secondary: #f3f3f2;
+  --bg-info: #f3f3f2;
   --counter-bg: #ffffff;
-  --text-primary: #111214;
-  --text-secondary: #6b6e76;
-  --text-tertiary: #9a9da5;
-  --border-tertiary: #eceef1;
-  --border-secondary: #dfe1e6;
+  --text-primary: #141414;
+  --text-secondary: #6f6f6f;
+  --text-tertiary: #6f6f6f;
+  --border-tertiary: #f3f3f2;
+  --border-secondary: rgba(20,20,20,.09);
   --card-stroke: transparent;
   --card-shadow: 0 1px 2px rgba(16,24,40,.04), 0 6px 20px rgba(16,24,40,.06);
   --sheet-shadow: 0 -8px 40px rgba(16,24,40,.12);
@@ -912,7 +912,7 @@ body:has(> .ob.pf) .eb-tabbar { display: none; }
   --bg-page: #ffffff;
   --counter-bg: #f7f7f8;
   --bg-primary: #ffffff;
-  --bg-secondary: #f1f1f3;
+  --bg-secondary: #f3f3f2;
   --card-stroke: #eeeef0;
   --card-shadow: none;
 }
@@ -966,7 +966,7 @@ body:has(> .ob.pf) .eb-tabbar { display: none; }
 .app-tile2-bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
 
 /* "+" button and blurred quick actions */
-.eb-tabbar .eb-plus-btn { color: #fff; background: #111214; }
+.eb-tabbar .eb-plus-btn { color: #fff; background: #141414; }
 :root[data-theme="dark"] .eb-tabbar .eb-plus-btn { background: #fff; color: #111; }
 .eb-plus-btn svg { transition: transform .25s var(--eb-ease); }
 .eb-plus-btn.on svg { transform: rotate(45deg); }
@@ -1002,12 +1002,12 @@ body:has(.app-quick) .eb-tabbar { z-index: 240; }
 .eb-tabbar { gap: 8px; }
 .eb-tabbar .eb-mira-btn { width: 58px; height: 58px; }
 .eb-tabbar-pill button { height: 50px; padding: 0 2px; }
-.eb-tabbar .eb-plus-btn.on { background: #111214; color: #fff; }
+.eb-tabbar .eb-plus-btn.on { background: #141414; color: #fff; }
 :root[data-theme="dark"] .eb-tabbar .eb-plus-btn.on { background: #fff; color: #111; }
 
 /* ══ v6: one palette (Fuse) — white, black, green accent; pink in PMS mode ══ */
 :root {
-  --ink: #111214;
+  --ink: #141414;
   --pink: #e8417f;
   --green: #1f9d57;
 }
@@ -1029,7 +1029,7 @@ body.pms-mode .mode-btn#btnPMS.active { background: var(--pink) !important; }
 .day-tab.active { background: var(--ink) !important; color: #fff !important; }
 .eb-tabbar-pill button.on { color: var(--ink); }
 .eb-tabbar-pill button b { color: var(--pink); font-weight: 700; }
-.app-ico.black { background: linear-gradient(145deg, #3a3b3f, #111214); }
+.app-ico.black { background: linear-gradient(145deg, #3a3b3f, #141414); }
 .app-ico.green { background: linear-gradient(145deg, #4fd98a, #1f9d57); }
 .app-ico.pink  { background: linear-gradient(145deg, #ff86b3, #e8417f); }
 .ob-hero-ring { border-color: color-mix(in srgb, var(--green) 40%, transparent); border-right-color: color-mix(in srgb, var(--pink) 50%, transparent); border-bottom-color: color-mix(in srgb, var(--ink) 15%, transparent); }
@@ -1203,14 +1203,14 @@ body.has-tabs[data-tab="home"] {
 
 /* ── Home: energy is the black contrast card; This week goes white ── */
 #pageHome .week-card {
-  --text-primary: #111214; --text-secondary: #6b6e76; --text-tertiary: #9a9da5;
-  --bg-secondary: #f1f1f3; --border-tertiary: #eceef1; --border-secondary: #dfe1e6;
+  --text-primary: #141414; --text-secondary: #6f6f6f; --text-tertiary: #6f6f6f;
+  --bg-secondary: #f3f3f2; --border-tertiary: #f3f3f2; --border-secondary: rgba(20,20,20,.09);
   background: rgba(255,255,255,.82) !important; border-color: rgba(255,255,255,.9) !important; color: var(--ink);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 #pageHome .week-card .week-card-label, #pageHome .week-card .week-card-val { color: var(--ink) !important; }
-#pageHome .week-card .week-bar { background: #ececef !important; }
-#pageHome .week-card .week-caret { background: #f1f1f3 !important; }
+#pageHome .week-card .week-bar { background: #f3f3f2 !important; }
+#pageHome .week-card .week-caret { background: #f3f3f2 !important; }
 #pageHome .week-card .week-caret::before { color: var(--text-secondary) !important; }
 
 #pageHome .app-energy-card {
@@ -1274,7 +1274,7 @@ body.has-tabs[data-tab="home"] {
 
 /* Home: stronger contrast on the week card and week nav */
 #pageHome .week-card { background: rgba(255,255,255,.95) !important; }
-#pageHome .week-card .week-bar { background: rgba(17,18,20,.1) !important; }
+#pageHome .week-card .week-bar { background: rgba(20,20,20,.1) !important; }
 #pageHome .week-card .week-caret { background: var(--ink) !important; }
 #pageHome .week-card .week-caret::before { color: #fff !important; }
 #pageHome .week-nav { gap: 24px; }
@@ -1305,7 +1305,7 @@ body.has-tabs[data-tab="home"] {
 .slot-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Nutrition: smaller Maintenance / Weight loss / Deficit row with a hairline below */
-body.has-tabs .tracker-head { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 0.5px solid var(--border-secondary, #dfe1e6); }
+body.has-tabs .tracker-head { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 0.5px solid var(--border-secondary, rgba(20,20,20,.09)); }
 .tracker-stat small { font-size: 11px !important; }
 .tracker-stat b { font-size: 14px !important; }
 .app-rail-tile .app-rail-cal { flex: 0 0 auto; margin-top: 4px; }
@@ -1357,7 +1357,7 @@ body.has-tabs .tracker-head { padding-bottom: 12px; margin-bottom: 12px; border-
 #pageHome .week-card .week-caret::before { color: var(--ink) !important; }
 #pageHome .week-detail-panel {
   margin-top: 12px; padding: 12px 16px; border-radius: 20px; background: #fff; color: var(--ink);
-  --text-primary: #111214; --text-secondary: #6b6e76; --text-tertiary: #9a9da5;
+  --text-primary: #141414; --text-secondary: #6f6f6f; --text-tertiary: #6f6f6f;
 }
 
 /* Calendar: month on the left, Jump to today on the right */
@@ -1423,8 +1423,8 @@ body.has-tabs .tracker-head { padding-bottom: 12px; margin-bottom: 12px; border-
 
 /* Home: white cards need an edge once the gradient fades to white */
 #pageHome .app-home-body > .app-card:not(.app-energy-card) {
-  background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important;
-  box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06) !important;
+  background: #fff !important; border: 1px solid rgba(20,20,20,.06) !important;
+  box-shadow: 0 1px 2px rgba(20,20,20,.04), 0 6px 20px rgba(20,20,20,.06) !important;
 }
 /* Rail links on light cards (Fitness) were white-on-grey */
 .app-rail-tile .app-opt-btn, .app-rail-tile .app-opt-btn:not(.done):not(:disabled) { color: var(--ink) !important; }
@@ -1473,8 +1473,8 @@ body.has-tabs {
 /* White cards with an edge on every page */
 .app-page .app-card:not(.app-energy-card), .app-page .tracker, .app-page .slot-card, .app-page .drawer-group,
 .app-page .app-goals, .app-page .app-tile, .app-page .insight-card, .app-page .daily-msg-card, .app-page .craving-result {
-  background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important;
-  box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06) !important;
+  background: #fff !important; border: 1px solid rgba(20,20,20,.06) !important;
+  box-shadow: 0 1px 2px rgba(20,20,20,.04), 0 6px 20px rgba(20,20,20,.06) !important;
 }
 /* …so fills inside them go light grey instead of white */
 :root[data-theme="light"] .app-page .app-card .app-cycle-stats > div, :root[data-theme="light"] .app-page .app-card:not(.app-energy-card) .eb-seg,
@@ -1521,10 +1521,10 @@ body.has-tabs {
 .app-log-card .activity-list { margin: 12px 0 0; padding: 0; display: grid; gap: 0; }
 .app-log-card .activity-item {
   display: flex; align-items: center; gap: 12px; padding: 10px 0 !important; background: none !important;
-  border: 0 !important; border-top: 1px solid rgba(17,18,20,.06) !important; border-radius: 0 !important;
+  border: 0 !important; border-top: 1px solid rgba(20,20,20,.06) !important; border-radius: 0 !important;
 }
 .activity-item-ico { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; color: #fff;
-  background: linear-gradient(145deg, #3a3b3f, #111214); }
+  background: linear-gradient(145deg, #3a3b3f, #141414); }
 .app-log-card .activity-item-name { flex: 1; font-size: 15px; font-weight: 500; }
 .app-log-card .activity-item-cal { font-size: 14px; font-weight: 600; color: var(--ink); }
 :root[data-theme="light"] .app-page .app-card.app-energy-card .eb-seg { background: rgba(255,255,255,.1) !important; }
@@ -1534,7 +1534,7 @@ body.has-tabs {
 :root[data-theme="light"] body .app-page .app-card.app-energy-card .eb-seg-btn:not(.on) { background: none !important; color: rgba(255,255,255,.7) !important; }
 /* Weekly goals: flat rows with hairlines, no boxes-in-a-box */
 .app-page .app-goals { padding: 16px !important; }
-.app-page .app-goals .fitness-row { background: none !important; border: 0 !important; border-top: 1px solid rgba(17,18,20,.06) !important; border-radius: 0 !important; padding: 12px 0 !important; margin: 0 !important; }
+.app-page .app-goals .fitness-row { background: none !important; border: 0 !important; border-top: 1px solid rgba(20,20,20,.06) !important; border-radius: 0 !important; padding: 12px 0 !important; margin: 0 !important; }
 .app-page .app-goals .fitness-row:first-child { border-top: 0 !important; }
 .app-page .app-goals #fitnessSummaryText, .app-page .app-goals .fitness-divider { display: none; }
 .app-log-card .activity-list, .app-log-card .activity-list li { background: none !important; }
@@ -1551,15 +1551,15 @@ body.has-tabs {
 .app-page .app-card.app-dark .app-cycle-stats span, .app-page .app-card.app-dark .app-cycle-stats small { color: rgba(255,255,255,.6); }
 :root[data-theme="light"] .app-page .app-card.app-dark .eb-btn.secondary { background: #fff !important; color: var(--ink) !important; }
 /* Nutrition: craving box sits on the gradient, so it's white with an edge */
-.app-page .craving-input { background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06); }
-.app-page .mode-toggle-bar { background: #fff !important; border: 1px solid rgba(17,18,20,.06) !important; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 6px 20px rgba(17,18,20,.06); }
+.app-page .craving-input { background: #fff !important; border: 1px solid rgba(20,20,20,.06) !important; box-shadow: 0 1px 2px rgba(20,20,20,.04), 0 6px 20px rgba(20,20,20,.06); }
+.app-page .mode-toggle-bar { background: #fff !important; border: 1px solid rgba(20,20,20,.06) !important; box-shadow: 0 1px 2px rgba(20,20,20,.04), 0 6px 20px rgba(20,20,20,.06); }
 
 /* ══ Contrast pass (WCAG AA 4.5:1 for text) ══ */
 :root[data-theme="light"] {
   --accent: #16803f; --accent-light: #12703f; --accent-dim: #e5f5ec;
   --success: #16803f; --success-light: #12703f; --success-dim: #e5f5ec;
   --green: #16803f;
-  --text-secondary: #4f525a; --text-tertiary: #6b6e76;
+  --text-secondary: #424242; --text-tertiary: #6f6f6f;
 }
 :root[data-theme="light"] body.pms-mode {
   --accent: #d22f6c; --accent-light: #b0265b; --accent-dim: #fde8f0;
@@ -1576,7 +1576,7 @@ body.has-tabs {
       color-mix(in srgb, var(--accent) 10%, #fff) 560px,
       #fff 720px) no-repeat, #fff !important;
 }
-#pageHome .week-card { --text-secondary: #4f525a; --text-tertiary: #6b6e76; }
+#pageHome .week-card { --text-secondary: #424242; --text-tertiary: #6f6f6f; }
 /* Text on the gradient: solid white (no translucent greys); tints darken instead of lighten */
 .app-page .app-motto, .app-page .app-head .reset-btn, .app-hero span, .app-hero-sub,
 #pageHome .app-date, #pageHome .week-card .week-card-sub,
@@ -1594,3 +1594,830 @@ body.has-tabs {
 :root[data-theme="light"] .app-page .app-card.app-dark .eb-btn.secondary {
   background: rgba(255,255,255,.12) !important; color: #fff !important; min-height: 44px; font-size: 15px;
 }
+
+/* Page heroes: title, big number, one supporting line — stacked on one left edge */
+.app-page .app-head { padding: 8px 4px 0 !important; margin-bottom: 16px !important; }
+.app-page .app-head h1 { margin: 0 0 12px !important; }
+.app-hero { display: grid !important; gap: 4px; margin: 0 !important; }
+.app-hero b { font-size: 40px; line-height: 1; }
+.app-hero span { font-size: 15px; font-weight: 500; line-height: 1.35; color: #fff !important; }
+.app-page .app-motto { margin-top: 4px !important; font-size: 14px; }
+
+/* ══ Splash welcome: black screen, Menu-fi mark springs in and turns, then name → tagline → CTA ══ */
+.ob.ob-splash { background: #0b0b0c !important; color: #fff; }
+.ob-splash .ob-splash-mark {
+  position: absolute; left: 0; right: 0; top: 30%; transform: translateY(-50%);
+  display: grid; justify-items: center; gap: 14px; text-align: center; pointer-events: none;
+}
+.ob-logo { width: 96px; height: 96px; overflow: visible; }
+.ob-petal { fill: #fff; transform: rotate(var(--r)) scale(0); transform-origin: 0 0; opacity: 0;
+  animation: ob-petal-in .7s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: calc(var(--i) * 120ms); }
+.ob-petal:nth-child(2) { fill: rgba(255,255,255,.82); }
+.ob-petal:nth-child(3) { fill: rgba(255,255,255,.64); }
+@keyframes ob-petal-in { to { transform: rotate(var(--r)) scale(1); opacity: 1; } }
+/* One spring-y turn over 2s: overshoots a little, settles at 240° */
+.ob-logo-spin { transform-origin: 0 0; animation: ob-spin 2s cubic-bezier(.5,0,.2,1) forwards; }
+@keyframes ob-spin { 0% { transform: rotate(-60deg) scale(.85); } 70% { transform: rotate(250deg) scale(1.04); } 100% { transform: rotate(240deg) scale(1); } }
+
+.ob-splash-name, .ob-splash-meaning, .ob-splash .ob-splash-tag, .ob-splash .ob-splash-cta {
+  opacity: 0; transform: translateY(10px); filter: blur(6px);
+  animation: ob-rise .6s cubic-bezier(.22,1,.36,1) forwards;
+}
+.ob-splash-name { margin: 6px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: #fff; animation-delay: 2s; }
+.ob-splash-meaning { margin: 0; font-size: 13px; letter-spacing: .04em; color: rgba(255,255,255,.75); animation-delay: 2.15s; }
+.ob-splash-meaning b { color: #fff; font-weight: 700; }
+.ob-splash .ob-title.ob-splash-tag { color: #fff; font-size: 28px !important; animation-delay: 3s; }
+.ob-splash .ob-sub.ob-splash-tag { color: rgba(255,255,255,.75); animation-delay: 3.15s; }
+.ob-splash .ob-splash-cta { animation-delay: 3.6s; }
+@keyframes ob-rise { to { opacity: 1; transform: none; filter: none; } }
+
+/* Buttons on black */
+.ob-splash .eb-btn.primary { background: #fff !important; color: #0b0b0c !important; }
+.ob-splash .eb-btn.ghost { background: rgba(255,255,255,.1) !important; color: #fff !important; border: 0 !important; }
+.ob-splash .eb-privacy, .ob-splash .ob-dev { color: rgba(255,255,255,.7) !important; }
+.ob-splash .ob-hero, .ob-splash .ob-top-float { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-petal, .ob-logo-spin, .ob-splash-name, .ob-splash-meaning, .ob-splash .ob-splash-tag, .ob-splash .ob-splash-cta {
+    animation: none !important; opacity: 1 !important; filter: none !important; transform: none;
+  }
+  .ob-petal { transform: rotate(var(--r)); }
+}
+.ob-splash .ob-foot { background: #0b0b0c !important; box-shadow: none !important; }
+.ob-splash .ob-body { background: none !important; }
+.ob-splash .ob-splash-mark { z-index: 2; }
+.ob-splash .ob-foot::before, .ob-splash .ob-foot::after { display: none !important; }
+.ob-logo { width: 120px; height: 120px; }
+
+/* ══ Nutrition: meals as a timeline — check in a left gutter, dashed line between ══ */
+#slotSection .slot-card { position: relative; margin-left: 44px !important; overflow: visible !important; }
+#slotSection .slot-gutter { position: absolute; left: -44px; top: 16px; width: 28px; display: grid; justify-items: center; }
+#slotSection .slot-gutter .slot-check { margin: 0 !important; width: 26px; height: 26px; }
+#slotSection .slot-card::before {
+  content: ''; position: absolute; left: -31px; top: 50px; bottom: -12px; border-left: 2px dashed rgba(20,20,20,.16);
+}
+#slotSection .slot-card:last-of-type::before { display: none; }
+.slot-mark { width: 26px; height: 26px; border-radius: 8px; border: 2px dashed #a9adb5; box-sizing: border-box; display: grid; place-content: center; }
+.slot-mark.done { border: 0; background: var(--accent); }
+.slot-mark.done::after { content: ''; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+
+/* Nutrition: floating food search removed for now (Add a meal stays in the + menu) */
+.app-food-search { display: none !important; }
+
+/* ══ Type: light but readable (Superpower-style) — big sizes, 400/500 weights, tight tracking on headings ══ */
+body.has-tabs, .ob, .as-overlay, .pf { -webkit-font-smoothing: antialiased; }
+.app-head h1, .ob-title, .pf-title, .as-head h2, .app-lsheet h2, .app-lsheet-title {
+  font-weight: 500 !important; letter-spacing: -0.03em !important;
+}
+.app-head h1 { font-size: 30px !important; }
+.ob .ob-title { font-size: 32px !important; line-height: 1.12; }
+.app-hero b, .app-big, #pageHome .app-head h1, .week-card-val, .app-cycle-stats b, .cal-term-val, .metric-val, .tracker-stat b {
+  font-weight: 500 !important; letter-spacing: -0.03em;
+}
+.app-hero b { font-size: 44px !important; }
+.app-card-label, .app-next-name, .app-rail-tile b, .app-health-text b, .slot-name, .app-phase-row summary b,
+.app-tip summary, .fitness-name, .activity-item-name, .eb-list-label, .app-opt b, .week-nav-label {
+  font-weight: 500 !important; letter-spacing: -0.01em;
+}
+.app-card-label { font-size: 17px !important; }
+.app-muted, .app-meta, .app-rail-tile span, .app-health-text span, .app-expect-text, .app-tip p, .app-phase-row p,
+.ob-sub, .app-motto, .app-hero span { font-weight: 400 !important; }
+.eb-btn, .app-opt-btn, .eb-seg-btn, .mode-btn, .eb-chip, .day-tab { font-weight: 500 !important; }
+.app-rail-label { font-weight: 500 !important; letter-spacing: .04em; }
+
+/* ══ Header hierarchy on the gradient: primary white, secondary 78% white.
+   The header band is the accent darkened 20%, so 78% white still passes AA. ══ */
+body.has-tabs {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 76%, #000) 0px,
+      color-mix(in srgb, var(--accent) 80%, #000) 320px,
+      color-mix(in srgb, var(--accent) 35%, #fff) 470px,
+      color-mix(in srgb, var(--accent) 10%, #fff) 610px,
+      #fff 760px) no-repeat, #fff !important;
+}
+.app-page .app-motto, .app-page .app-head .reset-btn, .app-hero span, .app-hero-sub,
+#pageHome .app-date, #pageHome .week-card .week-card-sub, #pageHome .week-nav-btn,
+#pageCycle .cycle-day-name, #pageCycle .cycle-reset-btn, #pageCycle .cycle-month-btn,
+.app-page .day-tab:not(.active) { color: rgba(255,255,255,.78) !important; }
+#pageHome .week-nav-btn:disabled { color: rgba(255,255,255,.45) !important; }
+.app-hero span { font-size: 16px !important; }
+.app-page .app-motto { font-size: 16px !important; margin-top: 2px !important; }
+
+/* ══ Timeline, quieter (Superpower-style): soft filled boxes, hairline dashed rail ══
+   The reference reads as subtle because the box is a light fill with a 1px edge
+   (not a 2px dark dash) and the rail is 1px, very light. */
+.slot-check, .slot-mark {
+  border: 1px solid rgba(20,20,20,.09) !important; background: #f3f4f6 !important; border-radius: 8px !important;
+}
+.slot-check:checked, .slot-mark.done { border-color: var(--accent) !important; background: var(--accent) !important; }
+#slotSection .slot-card::before { border-left: 1px dashed rgba(20,20,20,.16) !important; left: -30.5px !important; }
+/* Ticks inside a card sit on the right */
+.wake-row { display: flex !important; align-items: center; gap: 12px; }
+.wake-row .slot-check { order: 3; margin: 0 0 0 4px !important; width: 24px; height: 24px; flex-shrink: 0; }
+.wake-row .wake-info { flex: 1; min-width: 0; }
+.wake-row .wake-macros { order: 2; }
+
+/* ══ Clean colour band instead of a long fade (Superpower ref 2):
+   accent band behind the header, then a light sheet with a rounded top ══ */
+body.has-tabs { background: #ffffff !important; }
+.app-band {
+  position: relative; margin: -16px -12px 16px; padding: calc(env(safe-area-inset-top) + 16px) 16px 32px;
+  background:
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--accent) 70%, #fff 30%) 0%, transparent 60%),
+    linear-gradient(170deg, color-mix(in srgb, var(--accent) 74%, #000), color-mix(in srgb, var(--accent) 84%, #000));
+  overflow: hidden;
+}
+.app-band::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 16px;
+  background: #ffffff; border-radius: 12px 12px 0 0;
+}
+.app-band .app-head, .app-band #weeklyTrackerSection, .app-band .app-shared { margin-bottom: 0 !important; }
+.app-band .app-shared { margin-top: 4px; }
+#pageHome .app-band .app-home-head { margin-bottom: 28px !important; }
+
+/* Cycle strip on Nutrition / Fitness: the picked logging day is a white pill */
+.app-band .cycle-day-cell.picked { background: #fff !important; }
+.app-band .cycle-day-cell.picked .cycle-day-name, .app-band .cycle-day-cell.picked .cycle-day-num { color: var(--ink) !important; }
+.app-band .cycle-day-cell.in-week { cursor: pointer; }
+/* Strip text on the band, every page */
+.app-band .cycle-month, .app-band .cycle-day-num, .app-band .cycle-today-btn { color: #fff !important; }
+.app-band .cycle-day-name, .app-band .cycle-reset-btn, .app-band .cycle-month-btn { color: rgba(255,255,255,.78) !important; }
+.app-band .cycle-day-cell.today:not(.picked) { background: rgba(0,0,0,.18) !important; }
+.app-band .cycle-dot { box-shadow: 0 0 0 1.5px rgba(255,255,255,.85); }
+
+/* Home: pinned weekly progress once the week row scrolls away */
+.week-mini {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30; max-width: var(--phone-w, 430px); margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; color: #fff;
+  background: color-mix(in srgb, var(--accent) 76%, #000);
+  box-shadow: 0 8px 20px -12px rgba(0,0,0,.5);
+  transform: translateY(-100%); opacity: 0; pointer-events: none;
+  transition: transform .28s var(--eb-ease, ease), opacity .2s ease;
+}
+.week-mini.show { transform: none; opacity: 1; }
+.week-mini-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; }
+.week-mini-row b { font-weight: 500; }
+.week-mini-row span { color: rgba(255,255,255,.78); }
+.week-mini-row span b { color: #fff; font-size: 16px; }
+.week-mini-bar { height: 4px; margin-top: 8px; border-radius: 4px; background: rgba(0,0,0,.2); overflow: hidden; }
+.week-mini-bar i { display: block; height: 100%; background: #fff; border-radius: 4px; }
+
+/* ══ Colour band on Home only; Menstruation / Nutrition / Fitness go back to plain ══ */
+body .app-page:not(#pageHome) .app-band { background: none !important; padding-top: 16px !important; padding-bottom: 8px !important; }
+body .app-page:not(#pageHome) .app-band::after { display: none; }
+body .app-page:not(#pageHome) .app-head h1, body .app-page:not(#pageHome) .app-hero b,
+body .app-page:not(#pageHome) .app-band .cycle-month, body .app-page:not(#pageHome) .app-band .cycle-day-num { color: var(--ink) !important; }
+body .app-page:not(#pageHome) .app-hero span, body .app-page:not(#pageHome) .app-motto,
+body .app-page:not(#pageHome) .app-head .reset-btn, body .app-page:not(#pageHome) .app-band .cycle-day-name,
+body .app-page:not(#pageHome) .app-band .cycle-reset-btn, body .app-page:not(#pageHome) .app-band .cycle-month-btn { color: var(--text-secondary) !important; }
+body .app-page:not(#pageHome) .app-band .cycle-today-btn { color: var(--accent-light) !important; }
+body .app-page:not(#pageHome) .app-band .cycle-dot { box-shadow: none; }
+body .app-page:not(#pageHome) .app-band .cycle-day-cell.today:not(.picked) { background: #f3f3f2 !important; }
+body .app-page:not(#pageHome) .app-band .cycle-day-cell.picked { background: var(--ink) !important; }
+body .app-page:not(#pageHome) .app-band .cycle-day-cell.picked .cycle-day-name,
+body .app-page:not(#pageHome) .app-band .cycle-day-cell.picked .cycle-day-num { color: #fff !important; }
+/* Me·Nu·Fi letters follow the mode too: green normally, pink in PMS */
+.eb-tabbar-pill button b { color: var(--accent-light) !important; }
+/* Page hero number: smaller now the plain pages have no band */
+.app-hero b { font-size: 28px !important; line-height: 1.15; }
+.app-hero span { font-size: 15px !important; }
+
+/* ══ Type scale (mobile guidelines, capped at 20px) ══
+   20  page / screen titles, headline numbers
+   17  card titles, emphasised values
+   15  body, list rows, buttons
+   13  secondary / meta
+   11  captions, tags (minimum) */
+.app-head h1, #pageHome .app-head h1, body.has-tabs .as-head h2, body.has-tabs .pf .pf-title, .pf-title,
+.ob-title, .ob .ob-title, .ob .ob-welcome .ob-title, .ob-splash .ob-title.ob-splash-tag, .ob-voice-q, .ob-splash-name,
+.app-hero b, .app-cal b, .app-stats b, .app-big, .week-card-val, .weekly-stat-val, .builder-total-cal,
+.eb-input-lg, .eb-num .eb-input, .eb-step-btn, h1 { font-size: 20px !important; line-height: 1.25 !important; }
+.app-today-row .app-big, .app-today-row .app-big span { font-size: 17px !important; }
+.app-card-label { font-size: 17px !important; }
+.app-hero span, .app-motto { font-size: 15px !important; }
+/* emoji glyphs follow the same cap */
+.app-tile-emoji, .insight-emoji, .supp-emoji, .daily-msg-emoji, .talk-btn-icon, .prep-jar-emoji,
+.phase-popup-emoji, .talk-toast-emoji, .survival-badge-trophy { font-size: 20px !important; }
+
+/* Home: Details pill — light green glass, dark green text (pink in PMS) */
+#pageHome .week-card .week-caret {
+  background: color-mix(in srgb, var(--accent-dim) 82%, transparent) !important;
+  backdrop-filter: blur(10px) saturate(160%); -webkit-backdrop-filter: blur(10px) saturate(160%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+}
+#pageHome .week-card .week-caret::before { color: var(--accent-light) !important; font-weight: 600; }
+
+/* ══ Spacing system (8-pt grid) on every page ══
+   16  screen side margins, card padding, gap between cards / sections
+   12  gap between blocks inside a card
+    8  gap between a label and its content, chips, small items
+    4  tight pairs (title + subtitle) */
+body.has-tabs { padding-left: 16px !important; padding-right: 16px !important; }
+.app-band { margin: -16px -16px 0 !important; padding-left: 16px !important; padding-right: 16px !important; }
+body .app-page:not(#pageHome) .app-band { margin-bottom: 8px !important; }
+.app-page .app-card, .app-page .tracker, .app-page .slot-card, .app-page .drawer-group, .app-page .app-goals,
+.app-page .app-tile, .app-page .insight-card, .app-page .mode-toggle-bar, .app-page .craving-wrap, .app-page .app-tiles,
+.app-page .survival-badge, #pageHome .app-home-body > .app-card { margin-bottom: 16px !important; }
+.app-page .app-card:not(.app-expect), .app-page .tracker, .app-page .app-goals, .app-log-card { padding: 16px !important; }
+.app-page .app-card:not(.app-expect) { gap: 12px !important; }
+.app-page .app-expect { padding: 0 16px !important; }
+.app-page .app-expect[open] { padding-bottom: 16px !important; }
+.app-rail { margin: 0 -16px !important; padding: 0 16px !important; scroll-padding: 0 16px; gap: 8px !important; }
+.app-rail-label { margin: 4px 0 -4px !important; }   /* label → rail: 8px with the card's 12px gap */
+.app-syms, .app-log-card .activity-presets { gap: 8px !important; }
+.app-page .slot-card { margin-bottom: 12px !important; }
+.app-head .subtitle, .app-hero { margin-top: 4px !important; }
+/* Eaten / Burned cards: their rows carry their own 12px padding */
+.app-page .app-card.app-today { padding: 4px 16px !important; gap: 0 !important; }
+
+/* Nutrition: every meal's tick sits inside the card, top-right (no left rail) */
+#slotSection .slot-card { margin-left: 0 !important; }
+#slotSection .slot-card::before { display: none !important; }
+#slotSection .slot-gutter { left: auto !important; right: 16px; top: 14px !important; z-index: 1; }
+#slotSection .slot-card .slot-header { padding-right: 40px !important; }
+#slotSection .slot-gutter { right: 12px !important; }
+.wake-row .slot-check { width: 26px !important; height: 26px !important; }
+
+/* Nutrition timeline, mirrored to the right (Superpower format):
+   card, then a column on its right with the tick, joined by a hairline dashed rail */
+#slotSection .slot-card { margin-left: 0 !important; margin-right: 44px !important; }
+#slotSection .slot-gutter { left: auto !important; right: -44px !important; top: 16px !important; width: 28px; }
+#slotSection .slot-card .slot-header { padding-right: 0 !important; }
+#slotSection .slot-card::before {
+  display: block !important; content: ''; position: absolute; left: auto !important;
+  right: -31px; top: 50px; bottom: -12px; border-left: 1px dashed rgba(20,20,20,.16) !important;
+}
+#slotSection .slot-card:last-of-type::before { display: none !important; }
+/* Wake-up items: their ticks also sit out on the right rail, level with each row */
+#slotSection .wake-row { position: relative; }
+#slotSection .wake-row .slot-check { position: absolute; right: -57px; top: 50%; transform: translateY(-50%); margin: 0 !important; z-index: 1; }
+
+/* Ticks: 20×20 visible box, 44×44 touch area (Apple / Material minimum).
+   The extra 12px each side is a transparent border; the box itself is the content area. */
+.slot-check {
+  box-sizing: content-box !important; width: 20px !important; height: 20px !important;
+  border: 12px solid transparent !important; border-radius: 18px !important;
+  background: #f3f4f6 !important; background-clip: content-box !important;
+  box-shadow: inset 0 0 0 1px rgba(20,20,20,.09) !important; margin: 0 !important;
+}
+.slot-check:checked { background: var(--accent) !important; box-shadow: none !important; }
+.slot-check:checked::after { width: 5px !important; height: 9px !important; border-width: 0 2px 2px 0 !important; }
+.slot-mark { width: 20px !important; height: 20px !important; border-radius: 6px !important; }
+.slot-mark.done::after { width: 5px; height: 9px; border-width: 0 2px 2px 0; }
+/* Rail column: box centres stay on the dashed line 29px right of the card */
+#slotSection .slot-gutter { width: 44px !important; height: 44px; right: -51px !important; top: 7px !important; place-items: center; }
+#slotSection .slot-card::before { top: 43px !important; }
+#slotSection .wake-row .slot-check { right: -66px !important; width: 20px !important; height: 20px !important; }
+#slotSection .slot-gutter { right: -52px !important; }
+
+/* ══ Selection = accent again (green in Normal, pink in PMS); black stays for action buttons only ══ */
+body .mode-btn.active, body.pms-mode .mode-btn#btnPMS.active { background: var(--accent) !important; color: #fff !important; box-shadow: none !important; }
+body .app-page:not(#pageHome) .app-band .cycle-day-cell.picked,
+body .app-page .cycle-day-cell.picked { background: var(--accent) !important; }
+body .app-page .cycle-day-cell.picked .cycle-day-name, body .app-page .cycle-day-cell.picked .cycle-day-num { color: #fff !important; }
+body .app-page .cycle-day-cell.picked .cycle-dot { box-shadow: 0 0 0 1.5px #fff; }
+body .day-tab.active { background: var(--accent) !important; color: #fff !important; }
+:root[data-theme="light"] body .eb-chip.on, body .app-page .eb-chip.on {
+  background: var(--accent-dim) !important; color: var(--accent-light) !important; box-shadow: inset 0 0 0 1.5px var(--accent) !important; border-color: var(--accent) !important;
+}
+:root[data-theme="light"] body .eb-seg-btn.on { background: var(--accent) !important; color: #fff !important; box-shadow: none !important; }
+:root[data-theme="light"] body .eb-card.on { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
+
+/* ── Cycle strip on Home: first thing on the light sheet, above the cards ── */
+body #pageHome .app-home-cal { margin: 0 0 16px; }
+body #pageHome .app-home-cal .cycle-reset-btn { display: none; }
+
+/* ── Onboarding: "Your numbers" and "Preparing your meal chart" ──
+   A short loader (lines tick in one by one), then the result fades in. */
+.ob-calc { display: grid; }
+.ob-calc > * { grid-area: 1 / 1; }
+.ob-calc-load { display: grid; justify-items: center; align-content: start; gap: 16px; padding: 32px 0;
+  animation: ob-calc-out .35s ease 2.4s forwards; }
+.ob-calc-load > p { margin: 0; font-size: 17px; font-weight: 600; color: var(--text-primary); }
+.ob-calc-load ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; justify-items: center; }
+.ob-calc-load li { font-size: 15px; color: var(--text-secondary); opacity: 0; animation: ob-calc-in .3s ease forwards; }
+.ob-calc-load li:nth-child(1) { animation-delay: .2s; }
+.ob-calc-load li:nth-child(2) { animation-delay: .7s; }
+.ob-calc-load li:nth-child(3) { animation-delay: 1.2s; }
+.ob-calc-load li:nth-child(4) { animation-delay: 1.7s; }
+.ob-calc-spin { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--accent-dim);
+  border-top-color: var(--accent); animation: ob-spin .8s linear infinite; }
+.ob-calc-out { opacity: 0; visibility: hidden; animation: ob-calc-show .4s ease 2.6s forwards; }
+.ob-calc.seen .ob-calc-load { display: none; }
+.ob-calc.seen .ob-calc-out { opacity: 1; visibility: visible; animation: none; }
+@keyframes ob-calc-show { to { opacity: 1; visibility: visible; } }
+@keyframes ob-calc-in { to { opacity: 1; } }
+@keyframes ob-calc-out { to { opacity: 0; visibility: hidden; } }
+@keyframes ob-spin { to { transform: rotate(360deg); } }
+
+.ob-nums { display: grid; gap: 8px; }
+.ob-num { background: #fff; border-radius: 12px; padding: 16px; box-shadow: inset 0 0 0 1px var(--border-secondary); }
+.ob-num + .ob-num-deficit, .ob-nums + .ob-num { margin-top: 8px; }
+.ob-num-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ob-num-top > span { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+.ob-num-top > b { font-size: 17px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.ob-num p { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+.ob-num-tag { font-style: normal; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-left: 4px; vertical-align: 2px; }
+.ob-num-tag.healthy { background: var(--accent-dim); color: var(--accent-light); }
+.ob-num-tag.underweight, .ob-num-tag.overweight { background: #fff4d6; color: #7a5300; }
+.ob-num-tag.obese { background: #fde8e8; color: #a3221f; }
+.ob-num-deficit .eb-stepper { min-width: 156px; padding: 2px; }
+.ob-num-deficit .eb-step-val { font-size: 15px; }
+.ob-num-deficit .eb-link { font-size: 13px; padding: 0; margin-left: 4px; color: var(--accent-light); text-decoration: underline; background: none; border: 0; }
+.ob-num-warn { padding: 8px 12px; border-radius: 8px; }
+.ob-num p.ob-num-warn.steep, .ob-num p.ob-num-warn.below { background: #fde8e8; color: #8f1d1b; }
+.ob-num p.ob-num-warn.slow { background: var(--accent-dim); color: var(--accent-light); }
+.ob-num-result { margin: 16px 0 12px; padding: 16px; border-radius: 12px; background: var(--ink, #141414); color: #fff; }
+.ob-num-result > span { font-size: 13px; color: rgba(255,255,255,.72); }
+.ob-num-result > b { display: block; font-size: 20px; font-weight: 600; margin-top: 4px; }
+.ob-num-result p { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.78); }
+
+.ob-prep { display: flex; flex-direction: column; justify-content: center; }
+.ob-prep .ob-calc-load { padding-top: 25vh; }
+.ob-prep .ob-calc-out .ob-title { margin-bottom: 24px; }
+.ob-prep-foot { opacity: 0; animation: ob-calc-in .4s ease 2.8s forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .ob-calc-load { display: none; }
+  .ob-calc-out, .ob-prep-foot { opacity: 1; visibility: visible; animation: none; }
+}
+
+/* ── Menstruation: cycle card + period log ── */
+/* "Change period start date" only on Menstruation */
+body .app-page:not(#pageCycle) .cycle-reset-btn { display: none !important; }
+.app-cycle-card { gap: 16px; }
+.app-cycle-bar { position: relative; display: flex; gap: 2px; height: 8px; }
+.app-cycle-bar i { border-radius: 4px; opacity: .9; }
+.app-cycle-bar b { position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 4px;
+  background: #fff; box-shadow: 0 0 0 2px #0b0b0c; }
+.app-cycle-bar-ends { display: flex; justify-content: space-between; margin-top: -8px; font-size: 13px; color: rgba(255,255,255,.72); }
+body .app-cycle-card .app-cycle-stats { gap: 0; }
+body .app-cycle-card .app-cycle-stats > div { background: none; border-radius: 0; padding: 0; gap: 4px; }
+body .app-cycle-card .app-cycle-stats > div + div { padding-left: 16px; border-left: 1px solid rgba(255,255,255,.14); }
+body .app-cycle-card .app-cycle-stats span, body .app-cycle-card .app-cycle-stats small { color: rgba(255,255,255,.72); font-size: 13px; }
+body .app-cycle-card .app-cycle-stats b { color: #fff; font-size: 17px; font-weight: 600; }
+
+.app-period-log { gap: 12px; }
+.app-period-log .app-link { background: none; border: 0; padding: 0; font-size: 15px; font-weight: 500;
+  color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.app-period-list { list-style: none; margin: 0; padding: 0; }
+.app-period-list li { display: flex; align-items: center; gap: 12px; min-height: 44px; border-top: 1px solid #eeeef0; }
+.app-period-list li span { flex: 1; font-size: 15px; color: var(--text-primary); }
+.app-period-list li em { font-style: normal; font-size: 13px; color: var(--text-secondary); }
+.app-period-list .app-x { width: 44px; height: 44px; margin-right: -12px; display: grid; place-items: center;
+  background: none; border: 0; color: var(--text-tertiary); cursor: pointer; }
+/* Next period / PMS: two rows, dot · label + note · date on the right */
+.app-cycle-next { list-style: none; margin: 0; padding: 0; }
+.app-cycle-next li { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.app-cycle-next li + li { border-top: 1px solid rgba(255,255,255,.12); }
+.app-cycle-next li:first-child { padding-top: 0; }
+.app-cycle-next li:last-child { padding-bottom: 0; }
+.app-cycle-next i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; align-self: flex-start; margin-top: 7px; }
+.app-cycle-next span { flex: 1; display: grid; gap: 4px; font-size: 15px; line-height: 1.3; color: #fff; }
+.app-cycle-next small { font-size: 13px; color: rgba(255,255,255,.72); }
+.app-cycle-next b { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; }
+
+/* ── Menstruation: daily log, phase food, patterns, cycle history ── */
+.app-daylog { gap: 16px; }
+.app-daylog-sec { display: grid; gap: 8px; }
+.app-daylog-sec + .app-daylog-sec { padding-top: 16px; border-top: 1px solid #eeeef0; }
+.app-daylog-sec > p { margin: 0; font-size: 15px; font-weight: 500; color: var(--text-primary); display: flex; justify-content: space-between; align-items: baseline; }
+.app-daylog-sec > p small { font-size: 13px; font-weight: 400; color: var(--text-secondary); }
+.app-daylog .app-tips { margin-top: 4px; }
+.app-swaps { display: grid; gap: 8px; }
+.app-swap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.app-water-cups { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.app-cup { height: 44px; border: 0; padding: 0; background: none; cursor: pointer; position: relative; }
+.app-cup::before { content: ''; position: absolute; inset: 8px 6px; border-radius: 4px 4px 8px 8px;
+  box-shadow: inset 0 0 0 1.5px rgba(20,20,20,.16); }
+.app-cup.on::before { background: #5aa9f0; box-shadow: none; }
+
+.app-phasefood { gap: 12px; }
+.app-phasefood .app-rail-tile b { font-size: 15px; }
+
+.app-patterns { gap: 16px; }
+.app-stats3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.app-stats3 > div { display: grid; gap: 4px; padding: 0 12px; }
+.app-stats3 > div:first-child { padding-left: 0; }
+.app-stats3 > div + div { border-left: 1px solid #eeeef0; }
+.app-stats3 span { font-size: 13px; color: var(--text-secondary); }
+.app-stats3 b { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+.app-stats3 small { font-size: 12px; color: var(--text-tertiary); }
+.app-insights { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.app-insights li { font-size: 15px; line-height: 1.4; color: var(--text-secondary); padding-left: 16px; position: relative; }
+.app-insights li::before { content: ''; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.app-insights b { color: var(--text-primary); font-weight: 600; }
+
+.app-period-list li { display: grid; gap: 4px; padding: 8px 0 12px; min-height: 0; }
+.app-hist-top { display: flex; align-items: center; gap: 12px; }
+.app-hist-top span { flex: 1; font-size: 15px; color: var(--text-primary); }
+.app-hist-top em { font-style: normal; font-size: 13px; color: var(--text-secondary); }
+.app-hist-top .app-x { width: 32px; height: 32px; margin: -6px -8px -6px 0; }
+.app-hist-bar { height: 8px; border-radius: 4px; background: #e6e7ea; overflow: hidden; }
+.app-hist-bar i { display: block; height: 100%; background: #ef5350; border-radius: 4px 0 0 4px; }
+.app-hist-bar.now { background: repeating-linear-gradient(90deg, #e6e7ea 0 6px, transparent 6px 9px); }
+body .app-swap .app-opt-btn { background: #fff; color: var(--text-primary); box-shadow: inset 0 0 0 1px rgba(20,20,20,.16); font-weight: 500; }
+/* Menstruation hero: one line */
+body .app-hero-line { display: block; font-size: 15px; line-height: 1.4; color: var(--text-secondary); }
+body .app-hero-line b { font-weight: 600; color: var(--text-primary); }
+/* Tips: white with a grey border, tighter spacing */
+:root[data-theme="light"] body .app-page .app-tip { background: #fff !important; box-shadow: none !important; border: 1px solid rgba(20,20,20,.09); padding: 12px 16px; gap: 8px; }
+body .app-tip[open] summary { margin-bottom: 0; }
+body .app-tip p { padding: 0; }
+/* Daily log: sections 12 apart (divider in the middle) */
+body .app-daylog { gap: 12px; }
+body .app-daylog-sec + .app-daylog-sec { padding-top: 12px; }
+
+/* ── Daily challenges (Fitness card, Home line, sheets) ── */
+.ch-card { gap: 12px; }
+.ch-card .app-link, .ch-foot .app-link { background: none; border: 0; padding: 0; font-size: 15px; font-weight: 500;
+  color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ch-list { list-style: none; margin: 0; padding: 0; }
+.ch-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #eeeef0; }
+.ch-row:first-child { border-top: 0; padding-top: 0; }
+.ch-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.ch-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ch-top b { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.ch-top span { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.ch-target { font-size: 15px; color: var(--text-secondary); }
+.ch-target b { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+.ch-bar { height: 4px; border-radius: 4px; background: #e6e7ea; overflow: hidden; margin-top: 4px; }
+.ch-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.ch-note { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: var(--accent-light); }
+.ch-done { min-width: 72px; height: 44px; border-radius: 8px; border: 0; background: var(--ink, #141414); color: #fff;
+  font-size: 15px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 12px; }
+.ch-done.on { background: var(--accent-dim); color: var(--accent-light); }
+.ch-tag { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.ch-row.rest .ch-target, .ch-row.paused .ch-target { font-size: 15px; }
+.ch-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #eeeef0; }
+.ch-empty .eb-btn { justify-self: start; }
+
+.ch-home { display: flex !important; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer; font: inherit; padding: 12px 16px !important; }
+.ch-home > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.ch-home b { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.ch-home small { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-home-dot { width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; box-shadow: inset 0 0 0 1.5px rgba(20,20,20,.16); display: grid; place-items: center; }
+.ch-home-dot.done { background: var(--accent); box-shadow: none; color: #fff; }
+.ch-home-slot:empty { display: none; }
+
+.ch-sheet { max-height: 88vh; display: flex; flex-direction: column; padding: 16px !important; }
+.ch-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ch-sheet-head b { font-size: 20px; font-weight: 600; }
+.ch-sheet-body { overflow-y: auto; display: grid; gap: 16px; padding-bottom: 8px; }
+.ch-field { display: grid; gap: 8px; }
+.ch-field > span, .ch-sec { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin: 0; }
+.ch-field small { font-size: 13px; color: var(--text-secondary); }
+.ch-sheet .eb-input { min-height: 48px; font-size: 16px; background: #fff; }
+.ch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ch-chips, .ch-wd { display: flex; flex-wrap: wrap; gap: 8px; }
+.ch-wd .eb-chip { width: 40px; height: 40px; padding: 0; justify-content: center; }
+.ch-preview { background: #fff; border: 1px solid rgba(20,20,20,.09); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.ch-preview p { margin: 0; font-size: 15px; font-weight: 500; color: var(--text-primary); }
+.ch-days { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+.ch-days span { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; min-width: 44px; padding: 4px 6px; border-radius: 8px;
+  background: #f3f3f5; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.ch-days small { font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+.ch-toggle { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #fff; border: 1px solid rgba(20,20,20,.09);
+  border-radius: 12px; padding: 12px 16px; cursor: pointer; font: inherit; }
+.ch-toggle span { flex: 1; display: grid; gap: 2px; }
+.ch-toggle b { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+.ch-toggle small { font-size: 13px; color: var(--text-secondary); line-height: 1.35; }
+.ch-toggle i { width: 44px; height: 26px; border-radius: 13px; background: rgba(20,20,20,.16); position: relative; flex-shrink: 0; transition: background .2s; }
+.ch-toggle i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .2s; }
+.ch-toggle.on i { background: var(--accent); }
+.ch-toggle.on i::after { transform: translateX(18px); }
+.ch-del { color: #a3221f !important; }
+.ch-mrow { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eeeef0; }
+.ch-mrow span { flex: 1; display: grid; gap: 2px; }
+.ch-mrow b { font-size: 15px; font-weight: 600; }
+.ch-mrow small { font-size: 13px; color: var(--text-secondary); }
+body .app-opt-btn.ghost { background: #fff; color: var(--text-primary); box-shadow: inset 0 0 0 1px rgba(20,20,20,.16); }
+
+.ch-party-sheet .ch-sheet-head { display: none; }
+.ch-party { position: relative; display: grid; justify-items: center; gap: 8px; text-align: center; padding: 32px 8px 8px; overflow: hidden; }
+.ch-party b { font-size: 20px; font-weight: 600; }
+.ch-party p { margin: 0 0 16px; font-size: 15px; color: var(--text-secondary); }
+.ch-party .eb-btn { width: 100%; }
+.ch-confetti { position: absolute; inset: 0; pointer-events: none; }
+.ch-confetti i { position: absolute; top: -10px; left: calc(var(--i) * 5.5%); width: 6px; height: 10px; border-radius: 2px;
+  background: var(--accent); opacity: 0; animation: ch-fall 1.6s ease-out calc(var(--i) * 40ms) forwards; }
+.ch-confetti i:nth-child(3n) { background: #f5c33b; }
+.ch-confetti i:nth-child(3n+1) { background: #5aa9f0; }
+@keyframes ch-fall { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(160px) rotate(220deg); } }
+@media (prefers-reduced-motion: reduce) { .ch-confetti { display: none; } }
+
+/* ── First-launch consent line + account sheet ── */
+.eb-consent { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 10000;
+  max-width: 448px; margin: 0 auto; background: #fff; border: 1px solid rgba(20,20,20,.09); border-radius: 12px; padding: 16px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, .12); display: grid; gap: 12px; }
+.eb-consent p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--text-primary); }
+.eb-consent-btns { display: flex; justify-content: flex-end; gap: 8px; }
+.eb-consent-btns button { font: inherit; font-size: 14px; font-weight: 600; border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 0; }
+.eb-consent-no { background: transparent; color: var(--text-secondary); }
+.eb-consent-yes { background: #111; color: #fff; min-width: 72px; }
+.acct-lead { margin: 0; font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+.acct-lead b { color: var(--text-primary); font-weight: 600; }
+.acct-err { margin: 0; font-size: 14px; color: #a3221f; }
+
+/* ── Home: Today card (phase + next meal + eaten) and folded energy ── */
+#pageHome .app-today-hero { display: grid; gap: 8px; padding: 16px !important; }
+.app-today-hero .app-expect { padding: 0 !important; gap: 8px !important; background: none; border: 0; box-shadow: none; }
+.app-today-hero .app-expect summary { display: flex; justify-content: space-between; align-items: center; list-style: none; }
+.app-today-hero .app-expect summary::-webkit-details-marker { display: none; }
+.app-today-hero .app-date-cycle { font-size: 16px; font-weight: 600; }
+.app-today-phase { margin: 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+.app-today-hero .app-today-next { margin-top: 4px; padding: 12px 0 4px; }
+.app-today-hero .app-next-text .app-next-name { white-space: normal; overflow: visible; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 17px; line-height: 1.3; }
+.app-today-hero .app-today-row { padding-top: 12px; border-top: 1px solid var(--card-stroke); }
+.app-today-missed, .app-today-setup { justify-self: start; background: none; border: 0; padding: 4px 0; font: inherit; font-size: 14px; font-weight: 500;
+  color: var(--accent-light); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+.app-energy-set { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.app-energy-set .app-card-label { margin: 0; }
+.app-energy-set .app-card-label span { color: var(--accent-dim); }
+.app-energy-change { background: rgba(255,255,255,.12); color: #fff; border: 0; border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.app-energy-card.answered > .app-muted:empty { display: none; }
+#pageHome .app-today-hero .app-expect { padding: 0 !important; margin: 0 !important; }
+#pageHome .app-today-hero .app-tile2-bar { margin: 0 0 4px !important; }
+#pageHome .app-today-hero .app-today-row { padding: 12px 0 0 !important; justify-content: space-between; }
+#pageHome .app-today-hero .app-today-text, #pageHome .app-today-hero .app-tile2-cta { margin: 0 !important; padding: 0 !important; text-align: left; transform: none; }
+#pageHome .app-today-hero .app-today-row { display: flex !important; align-items: baseline; gap: 12px; }
+#pageHome .app-today-hero .app-tile2-cta { grid-column: auto; font-size: 14px; color: var(--text-secondary); }
+#pageHome .app-today-hero .app-tile2-bar { width: 100%; }
+
+/* ── Week progress: now on Nutrition, under the day card ── */
+#pageFood #weeklyTrackerSection { margin: 0 0 16px; }
+#pageFood .week-card { padding: 16px !important; display: grid; gap: 8px; }
+#pageFood .week-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+#pageFood .week-nav { display: flex; align-items: center; gap: 4px; margin: 0; flex: 1; min-width: 0; }
+#pageFood .week-nav-label { font-size: 15px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+#pageFood .week-reset-ghost { margin-left: auto; font-size: 14px; color: var(--text-secondary); background: none; border: 0; padding: 4px 8px; }
+#pageFood .week-caret { order: 2; flex-shrink: 0; margin: 0; }
+#pageFood .week-summary-nums { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+#pageFood .week-bar { margin-top: 4px !important; }
+#pageFood .week-card { background: #fff !important; border: 1px solid rgba(20,20,20,.09) !important; min-height: 0 !important; box-shadow: none; }
+#pageFood .week-nav-btn { padding: 4px; min-width: 0; }
+
+/* ════ Consistency pass ════ */
+
+/* 5 · One selected-day style everywhere: the accent tint, like selected chips.
+   Home and Menstruation select today; Nutrition and Fitness select the picked day. */
+html body .app-page .cycle-day-cell.picked,
+html body #pageHome .cycle-day-cell.today,
+html body #pageCycle .cycle-day-cell.today {
+  background: var(--accent-dim) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+}
+html body .app-page .cycle-day-cell.picked .cycle-day-name, html body .app-page .cycle-day-cell.picked .cycle-day-num,
+html body #pageHome .cycle-day-cell.today .cycle-day-name, html body #pageHome .cycle-day-cell.today .cycle-day-num,
+html body #pageCycle .cycle-day-cell.today .cycle-day-name, html body #pageCycle .cycle-day-cell.today .cycle-day-num { color: var(--accent-light) !important; }
+html body .app-page .cycle-day-cell.picked .cycle-dot { box-shadow: none !important; }
+html body #pageFood .cycle-day-cell.today:not(.picked), html body #pageFitness .cycle-day-cell.today:not(.picked) {
+  background: transparent !important; box-shadow: inset 0 0 0 1px rgba(20,20,20,.16) !important;
+}
+
+/* 6 · One black button per screen. Everything else is a quiet outline. */
+html body #pageHome .app-card:not(.app-today-hero) .app-today-next .app-opt-btn:not(.done),
+html body .app-page .app-health-card .app-opt-btn, html body .app-page [data-health="connect"],
+html body #activityAddBtn, html body .activity-add-btn,
+html body .craving-btn {
+  background: #fff !important; color: var(--text-primary) !important;
+  box-shadow: inset 0 0 0 1px rgba(20,20,20,.16) !important; border: 0 !important;
+}
+
+/* 7 · No black cards: energy is white, the cycle card is tinted by its phase. */
+html body .app-page .app-card.app-energy-card, html body #pageHome .app-card.app-energy-card, html body #pageFitness .app-card.app-energy-card,
+html body .app-page .app-card.app-cycle-card, html body #pageCycle .app-card.app-cycle-card {
+  --text-primary: #141414; --text-secondary: #424242; --text-tertiary: #6b6b6b;
+  background: #fff !important; border: 1px solid rgba(20,20,20,.09) !important; box-shadow: none !important; color: var(--text-primary);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+html body .app-page .app-card.app-cycle-card, html body #pageCycle .app-card.app-cycle-card {
+  background: color-mix(in srgb, var(--phase, rgba(20,20,20,.09)) 9%, #fff) !important;
+  border-color: color-mix(in srgb, var(--phase, rgba(20,20,20,.09)) 28%, #fff) !important;
+}
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-card-label, html body :is(#pageCycle, .app-page) .app-cycle-card .app-card-label,
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-phase { color: var(--text-primary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-muted { color: var(--text-secondary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .eb-seg { background: #f3f3f2 !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .eb-seg-btn:not(.on) { color: var(--text-secondary) !important; background: transparent !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .eb-seg-btn.on { background: var(--accent-dim) !important; color: var(--accent-light) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-tile { background: #ffffff !important; border: 0; box-shadow: 0 0 0 1px rgba(20,20,20,.055), 0 1px 2px rgba(20,20,20,.03), 0 10px 30px -12px rgba(20,20,20,.12) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-tile b { color: var(--text-primary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-tile span { color: var(--text-secondary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-label { color: var(--text-tertiary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-opt-btn { color: var(--accent-light) !important; background: none !important; box-shadow: none !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-opt-btn.done { color: var(--text-tertiary) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-set .app-card-label span { color: var(--accent-light) !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-change { background: #f3f3f2 !important; color: var(--text-primary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-bar-ends { color: var(--text-secondary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-bar b { background: #111 !important; box-shadow: 0 0 0 2px #fff !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-next span { color: var(--text-primary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-next small { color: var(--text-secondary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-next b { color: var(--text-primary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-next li + li { border-top-color: color-mix(in srgb, var(--phase, #000) 22%, #fff) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-stats span, html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-stats small { color: var(--text-secondary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-stats b { color: var(--text-primary) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .app-cycle-stats > div + div { border-left-color: rgba(0,0,0,.1) !important; }
+html body :is(#pageCycle, .app-page) .app-cycle-card .eb-btn.secondary { background: #fff !important; color: var(--text-primary) !important;
+  box-shadow: inset 0 0 0 1px rgba(20,20,20,.16) !important; border: 0 !important; }
+
+/* 8 · Small alignments */
+html body #pageHome .app-today:not(.app-today-hero) .app-today-row { display: flex !important; justify-content: flex-start; }
+html body #pageHome .app-today:not(.app-today-hero) .app-tile2-cta { grid-column: auto; text-align: left; font-size: 15px; color: var(--text-secondary); }
+.mode-note { margin: -8px 4px 16px; font-size: 13px; line-height: 1.4; color: var(--text-secondary); }
+.app-hero-empty span { font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-tile .app-opt-btn { color: var(--accent-light) !important; background: none !important; box-shadow: none !important; }
+html body :is(#pageHome, #pageFitness, .app-page) .app-energy-card .app-rail-tile .app-opt-btn.done { color: var(--text-tertiary) !important; }
+html body .app-page:is(#pageFood, #pageFitness, #pageHome, #pageCycle) .app-band .cycle-day-cell.picked,
+html body .app-page:is(#pageFood, #pageFitness, #pageHome, #pageCycle) .cycle-day-cell.picked {
+  background: var(--accent-dim) !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+}
+html body .app-page:is(#pageFood, #pageFitness, #pageHome, #pageCycle) .app-band .cycle-day-cell.picked :is(.cycle-day-name, .cycle-day-num),
+html body .app-page:is(#pageFood, #pageFitness, #pageHome, #pageCycle) .cycle-day-cell.picked :is(.cycle-day-name, .cycle-day-num) { color: var(--accent-light) !important; }
+html body .app-page:is(#pageFood, #pageFitness) .app-band .cycle-day-cell.today:not(.picked) { background: transparent !important; box-shadow: inset 0 0 0 1px rgba(20,20,20,.16) !important; }
+html body #pageFitness .activity-custom { display: grid !important; grid-template-columns: minmax(0, 1fr) 72px auto; gap: 8px; width: 100%; box-sizing: border-box; }
+html body #pageFitness .activity-custom .activity-input { min-width: 0; width: 100%; box-sizing: border-box; }
+html body #pageFitness .activity-add-btn { padding: 0 16px; min-width: 0; }
+
+
+/* ══ v10: personal layer — phase colour, big cycle day, poster, words ══ */
+/* The header colour follows today's cycle phase (--tint, set by app.js),
+   fading smoothly when the phase changes. Falls back to the mode accent. */
+@property --tint { syntax: '<color>'; inherits: true; initial-value: #2e7d32; }
+#pageHome .app-band {
+  background:
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--tint) 72%, #fff 28%) 0%, transparent 60%),
+    linear-gradient(170deg, var(--tint), color-mix(in srgb, var(--tint) 88%, #000)) !important;
+  transition: --tint .8s ease;
+}
+#pageHome .app-band > * { position: relative; z-index: 1; }
+body:not([data-phase]) #pageHome .app-band, body[data-phase=""] #pageHome .app-band {
+  background:
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--accent) 70%, #fff 30%) 0%, transparent 60%),
+    linear-gradient(170deg, color-mix(in srgb, var(--accent) 74%, #000), color-mix(in srgb, var(--accent) 84%, #000)) !important;
+}
+/* Each phase has a pattern in the header: dots, rising lines, a sunburst, waves */
+body[data-phase]:not([data-phase=""]) #pageHome .app-band::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 30%, transparent 95%); mask-image: linear-gradient(#000 30%, transparent 95%);
+}
+body[data-phase="menstrual"] #pageHome .app-band::before  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='11' cy='11' r='2' fill='white' fill-opacity='.24'/%3E%3C/svg%3E"); }
+body[data-phase="follicular"] #pageHome .app-band::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cpath d='M-7 7L7 -7M0 28L28 0M21 35L35 21' stroke='white' stroke-opacity='.16' stroke-width='2'/%3E%3C/svg%3E"); }
+body[data-phase="ovulation"] #pageHome .app-band::before  { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Ccircle cx='300' cy='300' r='70' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.5'/%3E%3Ccircle cx='300' cy='300' r='120' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.5'/%3E%3Ccircle cx='300' cy='300' r='170' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.5'/%3E%3Ccircle cx='300' cy='300' r='220' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.5'/%3E%3Ccircle cx='300' cy='300' r='270' fill='none' stroke='white' stroke-opacity='.11' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right -250px top -250px / 560px 560px; }
+body[data-phase="luteal"] #pageHome .app-band::before     { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='20'%3E%3Cpath d='M0 10c7-8 21-8 28 0s21 8 28 0' fill='none' stroke='white' stroke-opacity='.2' stroke-width='2'/%3E%3C/svg%3E"); }
+
+/* Home: today's cycle day as the poster */
+#pageHome .app-head-top { align-items: center; }
+#pageHome .app-head-top .app-date { margin: 0; font-size: 15px; font-weight: 500; }
+#pageHome .app-head h1.hero-cycle {
+  display: flex; align-items: flex-end; gap: 12px; margin: 12px 0 10px !important;
+  color: #fff !important; font-size: 16px !important; line-height: 1 !important; letter-spacing: 0 !important;
+}
+.hero-num { font-size: 112px; font-weight: 800; letter-spacing: -0.06em; line-height: .76; margin-left: -6px; font-variant-numeric: tabular-nums; }
+.hero-stack { display: flex; flex-direction: column; gap: 6px; padding-bottom: 2px; min-width: 0; }
+.hero-kicker { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.88); }
+.hero-phase { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase; line-height: .9; }
+.hero-line { margin: 0 0 4px; font-size: 15px; line-height: 1.4; color: rgba(255,255,255,.92); max-width: 34ch; }
+
+
+/* Nutrition: this week in words */
+.app-words { padding: 16px !important; }
+.app-words-cloud {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 10px;
+  margin: 8px 0 10px; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-primary); text-align: center;
+}
+.app-words-cloud .top { color: var(--accent-light); }
+.app-words .app-muted { margin: 0; font-size: 13px; text-align: center; }
+
+/* Large titles: slim bar once the big title scrolls away */
+.app-titlebar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 29; text-align: center; color: #fff;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  background: color-mix(in srgb, var(--tint, color-mix(in srgb, var(--accent) 78%, #000)) 90%, transparent);
+  backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
+  transform: translateY(-100%); opacity: 0; pointer-events: none;
+  transition: transform .28s var(--eb-ease), opacity .2s ease;
+}
+.app-titlebar.show { transform: none; opacity: 1; }
+.app-titlebar b { font-size: 17px; font-weight: 600; }
+body:has(.tracker-mini.show) .app-titlebar, body:has(.eb-cal-overlay) .app-titlebar, body:has(.as-overlay) .app-titlebar { opacity: 0; }
+@media (min-width: 480px) {
+  .app-titlebar { left: calc(50% - var(--phone-w) / 2); right: calc(50% - var(--phone-w) / 2); }
+}
+
+/* No emoji: the line icons and plain words carry the meaning */
+.app-tile-emoji, .activity-icon, .survival-badge-trophy, .phase-popup-emoji, .supp-emoji, .prep-jar-emoji { display: none !important; }
+.app-tile-ico { display: block; margin-bottom: 8px; color: var(--accent-light); }
+
+/* Calmer motion for people who turned on Reduce Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+/* Small phones (iPhone SE 1st gen, 320pt): the big day number steps down */
+@media (max-width: 360px) {
+  .hero-num { font-size: 92px; }
+  .hero-phase { font-size: 24px; }
+}
+
+/* ── v11: today's plan in the header, lighter Today card ── */
+.hero-line { margin: 0 0 12px; font-size: 14px; color: rgba(255,255,255,.88); }
+
+/* Lighter cards on Home: no shadow, hairline edge, quieter secondary bits */
+body #pageHome .app-home-body > .app-card, body #pageHome .app-home-body > .app-card:not(.app-energy-card) { box-shadow: 0 1px 2px rgba(20,20,20,.04) !important; }
+#pageHome .app-today-hero { padding: 4px 16px 12px !important; }
+#pageHome .app-today-hero > .app-today-next:first-child { border-top: 0; margin-top: 0; padding-top: 12px; }
+#pageHome .app-today-next .app-opt-btn { min-height: 32px; padding: 0 14px; font-size: 14px; }
+#pageHome .app-today-missed { text-decoration: none; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+#pageHome .app-today-missed::after { content: ' \203A'; }
+#pageHome .app-today-next + .app-today-row, #pageHome .app-today-missed + .app-today-row { border-top: 0; }
+
+
+/* Jump to today: hidden while today is on screen, fades in when scrolled away */
+.cycle-today-btn { opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.cycle-today-btn.is-away { opacity: 1; pointer-events: auto; }
+
+/* ── v12: Home is two quiet cards ── */
+#pageHome .app-today-hero { padding: 4px 16px 12px !important; }
+.app-tolog { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  background: var(--accent-dim); color: var(--accent-light); vertical-align: 1px; }
+#pageHome .app-food-sum { padding: 10px 0 8px !important; border-top: 1px solid var(--card-stroke) !important; margin-top: 12px; }
+#pageHome .app-food-sum .app-today-text { font-size: 14px; color: var(--text-secondary); }
+#pageHome .app-food-sum .app-big { display: inline !important; font-size: 15px !important; font-weight: 600; color: var(--text-primary); }
+#pageHome .app-food-sum .app-today-text { display: block; }
+
+/* ── Sunday: your week, in a sheet ── */
+.wk-sum { display: grid; gap: 0; padding-bottom: 8px; }
+.wk-big { margin: 0; font-size: 56px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--accent-light); font-variant-numeric: tabular-nums; }
+.wk-label { margin: 4px 0 0; font-size: 17px; font-weight: 700; }
+.wk-sub { margin: 4px 0 0; font-size: 14px; color: var(--text-secondary); }
+.wk-k { margin: 24px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.wk-macros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.wk-macros b { display: block; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wk-macros small, .wk-macros span { display: block; font-size: 12px; color: var(--text-secondary); }
+.wk-macros span { margin-top: 2px; font-weight: 600; color: var(--text-primary); }
+.wk-macros i { display: block; height: 4px; margin-top: 8px; border-radius: 4px; background: var(--card-stroke); overflow: hidden; }
+.wk-macros em { display: block; height: 100%; background: var(--accent); }
+.wk-burn { margin: 0; font-size: 15px; color: var(--text-secondary); }
+.wk-burn b { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.wk-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 120px; }
+.wk-week > div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+.wk-bar { width: 100%; border-radius: 4px; }
+.wk-week b { font-size: 13px; font-weight: 600; }
+.wk-week small { font-size: 11px; color: var(--text-secondary); min-height: 13px; }
+.wk-key { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 16px; font-size: 13px; color: var(--text-secondary); }
+.wk-key i { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
+.wk-sum .eb-btn { width: 100%; }
+
+/* Nutrition tracker head: deficit left, weight loss + maintenance right */
+.tracker-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+#planGapLabel:empty, #planTargetLabel:empty { display: none; }
+.tracker-head > span:last-child { align-items: flex-start !important; }
+
+/* ══ v13: clean neutrals — white page, true greys, soft ringed cards ══ */
+:root:not([data-theme="dark"]) {
+  --bg-page: #ffffff; --bg-primary: #ffffff; --bg-secondary: #f3f3f2; --bg-info: #f3f3f2; --counter-bg: #ffffff;
+  --text-primary: #141414; --text-secondary: #424242; --text-tertiary: #6f6f6f; --text-info: #424242;
+  --border-tertiary: rgba(20,20,20,.09); --border-secondary: rgba(20,20,20,.09); --card-stroke: rgba(20,20,20,.09);
+  --card-shadow: 0 0 0 1px rgba(20,20,20,.055), 0 1px 2px rgba(20,20,20,.03), 0 10px 30px -12px rgba(20,20,20,.12);
+}
+:root:not([data-theme="dark"]) body { background: #ffffff; color: #141414; }
+
+/* Cards: no border, a faint ring and a wide, very soft shadow */
+:root:not([data-theme="dark"]) body .app-page .app-card,
+:root:not([data-theme="dark"]) body .app-page .tracker, :root:not([data-theme="dark"]) body .app-page .slot-card,
+:root:not([data-theme="dark"]) body .app-page .week-card, :root:not([data-theme="dark"]) body .app-page .drawer-group,
+:root:not([data-theme="dark"]) body .app-page .app-goals, :root:not([data-theme="dark"]) body .app-page .app-tile,
+:root:not([data-theme="dark"]) body .app-page .insight-card, :root:not([data-theme="dark"]) body .app-page .daily-msg-card,
+:root:not([data-theme="dark"]) body .app-page .craving-result, :root:not([data-theme="dark"]) body #pageHome .app-home-body > .app-card {
+  background: #ffffff !important; border: 0 !important;
+  box-shadow: 0 0 0 1px rgba(20,20,20,.055), 0 1px 2px rgba(20,20,20,.03), 0 10px 30px -12px rgba(20,20,20,.12) !important;
+}
+/* Text fields: soft fill, no border; white with a dark ring when typing */
+:root:not([data-theme="dark"]) body input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]),
+:root:not([data-theme="dark"]) body textarea, :root:not([data-theme="dark"]) body select {
+  background: #f3f3f2 !important; border: 0 !important; border-radius: 12px; color: #141414; font-size: 16px;
+}
+:root:not([data-theme="dark"]) body input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):focus,
+:root:not([data-theme="dark"]) body textarea:focus, :root:not([data-theme="dark"]) body select:focus {
+  background: #ffffff !important; box-shadow: 0 0 0 1.5px #141414 !important; outline: none;
+}
+
+/* Energy is a section on the page, not a card: title, selector and rails sit on the white */
+:root:not([data-theme="dark"]) body .app-page .app-card.app-energy-card,
+:root:not([data-theme="dark"]) body #pageHome .app-home-body > .app-card.app-energy-card {
+  background: transparent !important; box-shadow: none !important; border: 0 !important;
+  padding: 8px 0 0 !important; margin: 8px 0 24px !important;
+}
+.app-energy-card > .app-card-label { font-size: 17px !important; font-weight: 700 !important; }
+
+/* Energy tiles use the same card style as the Food card (white, ring, soft shadow).
+   The rail gets room top and bottom so the scroller doesn't clip the shadow. */
+.app-energy-card .app-rail { padding-top: 4px !important; padding-bottom: 20px !important; margin-bottom: -12px !important; }
+
+/* Menstruation: title and today's line share one row (wraps on narrow phones) */
+#pageCycle .app-head { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; row-gap: 4px; }
+#pageCycle .app-head > h1 { margin: 0 !important; }
+#pageCycle .app-head > .app-cycle-sub { margin: 0 !important; }
+#pageCycle .app-head > .app-cycle-sub .app-hero-line { font-size: 14px; }

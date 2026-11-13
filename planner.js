@@ -139,23 +139,46 @@
 
   const r = n => Math.round(n);
 
-  // ── Targets from the profile (estimate) ──
-  // Calories per kg by activity are rough averages for women; the goal
-  // then sets a gentle deficit or surplus.
-  function targetsFor(p) {
+  // ── Your numbers ──
+  // BMI with the Asian cut-offs used in India, BMR by Mifflin-St Jeor (women),
+  // maintenance = BMR × activity, then a daily deficit or surplus for the goal.
+  // Without height and age it falls back to calories per kg by activity.
+  const ACTIVITY = { sedentary: [1.2, 'mostly sitting'], light: [1.375, 'lightly active'],
+                     moderate: [1.55, 'moderately active'], very: [1.725, 'very active'] };
+  function numbers(p) {
     const toKg = v => (p.weight.unit === 'lb' ? +v / 2.20462 : +v);
     const kg = toKg(p.weight.current), goalKg = toKg(p.weight.goal) || kg;
     if (!(kg > 0)) return null;
-    const perKg = { sedentary: 25, light: 28, moderate: 31, very: 34 }[p.activity.level] || 28;
-    const tdee = r(kg * perKg / 10) * 10;
-    let cal = tdee;
-    if (p.goal === 'lose') cal = Math.max(1200, tdee - Math.min(500, r(tdee * 0.2)));
-    if (p.goal === 'muscle') cal = tdee + 200;
-    cal = r(cal / 10) * 10;
-    const protein = r(Math.min(150, goalKg * (p.goal === 'maintain' ? 1.2 : 1.6)));
+    const cm = +(p.body && p.body.height), age = +(p.body && p.body.age);
+    const [factor, actLabel] = ACTIVITY[p.activity.level] || ACTIVITY.light;
+    const bmi = cm > 0 ? Math.round(kg / ((cm / 100) ** 2) * 10) / 10 : null;
+    const bmiCat = bmi == null ? '' : bmi < 18.5 ? 'underweight' : bmi < 23 ? 'healthy' : bmi < 25 ? 'overweight' : 'obese';
+    const bmr = cm > 0 && age > 0 ? r(10 * kg + 6.25 * cm - 5 * age - 161) : null;
+    const tdee = r((bmr ? bmr * factor : kg * ({ sedentary: 25, light: 28, moderate: 31, very: 34 }[p.activity.level] || 28)) / 10) * 10;
+    // Never plan below BMR or 1,200 cal, and keep deficits under 25% of maintenance.
+    const floor = Math.max(1200, bmr || 0);
+    const losing = p.goal === 'lose' || goalKg < kg - 0.5;
+    const gaining = p.goal === 'muscle' || goalKg > kg + 0.5;
+    const recommended = losing ? Math.min(500, r(tdee * 0.2 / 50) * 50) : gaining ? -250 : 0;
+    const maxDeficit = Math.max(0, Math.min(r(tdee * 0.25 / 50) * 50, tdee - floor));
+    const chosen = p.plan && p.plan.deficit != null && p.plan.deficit !== '' ? +p.plan.deficit : recommended;
+    const deficit = losing ? Math.min(Math.max(0, chosen), Math.max(0, tdee - 1200)) : gaining ? Math.max(-500, Math.min(0, chosen)) : 0;
+    const target = r((tdee - deficit) / 10) * 10;
+    const perWeekKg = Math.round(deficit * 7 / 7700 * 100) / 100;     // ~7,700 cal per kg of body fat
+    const weeks = perWeekKg !== 0 && Math.abs(goalKg - kg) > 0.4 ? Math.ceil(Math.abs(goalKg - kg) / Math.abs(perWeekKg)) : null;
+    const warn = losing && deficit > maxDeficit ? (target < floor ? 'below' : 'steep')
+               : losing && deficit < 200 ? 'slow' : '';
+    return { kg, goalKg, cm, age, bmi, bmiCat, bmr, factor, actLabel, tdee, floor, losing, gaining,
+             recommended, maxDeficit, deficit, target, perWeekKg, weeks, warn };
+  }
+
+  function targetsFor(p) {
+    const n = numbers(p); if (!n) return null;
+    const cal = n.target;
+    const protein = r(Math.min(150, n.goalKg * (n.losing || n.gaining ? 1.6 : 1.2)));
     const fat = r(cal * 0.27 / 9);
     const carbs = r((cal - protein * 4 - fat * 9) / 4);
-    return { tdee, normal: { cal, p: protein, c: carbs, f: fat, fib: 28 },
+    return { tdee: n.tdee, normal: { cal, p: protein, c: carbs, f: fat, fib: 28 },
              pms: { cal: cal + 150, p: protein - 5, c: carbs + 30, f: fat + 3, fib: 30 } };
   }
 
@@ -218,7 +241,7 @@
   }
 
   function signature(p) {
-    return JSON.stringify([p.food.diet, p.food.cuisines, p.food.usual, p.weight, p.activity.level, p.goal]);
+    return JSON.stringify([p.food.diet, p.food.cuisines, p.food.usual, p.weight, p.activity.level, p.goal, p.body, p.plan]);
   }
   function build(p) {
     const t = targetsFor(p);
@@ -258,13 +281,13 @@
   // "deficit 420" / "surplus 200" next to maintenance: the plan's daily gap.
   function updateGap() {
     const el = document.getElementById('planGapLabel'); if (!el) return;
+    const tg = document.getElementById('planTargetLabel');
     const target = (typeof isPMSMode === 'function' && isPMSMode()) ? PMS_TARGETS.cal : TARGETS.cal;
     const gap = TDEE - target;
-    if (Math.abs(gap) < 50) { el.innerHTML = ''; return; }
-    // e.g. "weight loss 1,690 · deficit 420": the day's target and the gap that makes it.
-    el.innerHTML =
-      `<span class="tracker-stat"><small>${gap > 0 ? 'Weight loss' : 'Weight gain'}</small><b>${target.toLocaleString()}</b></span>` +
-      `<span class="tracker-stat"><small>${gap > 0 ? 'Deficit' : 'Surplus'}</small><b>${Math.abs(gap).toLocaleString()}</b></span>`;
+    if (Math.abs(gap) < 50) { el.innerHTML = ''; if (tg) tg.innerHTML = ''; return; }
+    // Deficit (or surplus) on the left; the day's target sits next to maintenance on the right.
+    el.innerHTML = `<small>${gap > 0 ? 'Deficit' : 'Surplus'}</small><b>${Math.abs(gap).toLocaleString()}</b>`;
+    if (tg) tg.innerHTML = `<small>${gap > 0 ? 'Weight loss' : 'Weight gain'}</small><b>${target.toLocaleString()}</b>`;
   }
   const origTracker = window.renderTracker;
   window.renderTracker = function () { const r = origTracker.apply(this, arguments); updateGap(); return r; };
@@ -292,5 +315,5 @@
   document.addEventListener('eb:profile', refresh);
   refresh();
 
-  window.EBPlanner = { refresh, rebuild, targetsFor, build, current: () => current, DISHES };
+  window.EBPlanner = { refresh, rebuild, targetsFor, numbers, build, current: () => current, DISHES };
 })();
