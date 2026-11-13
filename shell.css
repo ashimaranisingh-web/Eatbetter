@@ -2293,9 +2293,9 @@ body[data-phase="luteal"] #pageHome .app-band::before     { background: url("dat
 
 /* Large titles: slim bar once the big title scrolls away */
 .app-titlebar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 29; text-align: center; color: #fff;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 29; text-align: center; color: #141414;
   padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
-  background: color-mix(in srgb, var(--tint, color-mix(in srgb, var(--accent) 78%, #000)) 90%, transparent);
+  background: rgba(255,255,255,.82); box-shadow: 0 0.5px 0 rgba(20,20,20,.12);
   backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
   transform: translateY(-100%); opacity: 0; pointer-events: none;
   transition: transform .28s var(--eb-ease), opacity .2s ease;
