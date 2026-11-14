@@ -2,7 +2,7 @@
 // straight from the repo root (GitHub / file://), so nothing moves.
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-const FILES = ['index.html', 'shell.css', 'config.js', 'analytics.js', 'sync.js', 'native.js', 'store.js', 'health.js', 'reminders.js', 'planner.js', 'challenges.js', 'app.js', 'onboarding.js', 'profile.js', 'assistant.js', 'meals.js', 'daymode.js', 'fooddb.js', 'foodlog.js'];
+const FILES = ['index.html', 'shell.css', 'config.js', 'analytics.js', 'sync.js', 'native.js', 'store.js', 'health.js', 'reminders.js', 'planner.js', 'challenges.js', 'app.js', 'onboarding.js', 'profile.js', 'assistant.js', 'meals.js', 'daymode.js', 'fooddb.js', 'foodlog.js', 'offindia.js'];
 
 // Browser builds of PostHog and Supabase, refreshed from node_modules into
 // vendor/ (committed, so the website works without a build) and www/.

@@ -19,6 +19,16 @@
     challenge_started:    ['preset'],
     health_connected:     [],
     account_created:      [],
+    // Food modes, search and scanning. Only kinds and counts: never a food
+    // name, barcode or amount, so the consent promise still holds.
+    day_mode_set:         ['mode'],
+    food_logged:          ['mode', 'source', 'corrected'],
+    food_created:         ['mode'],
+    barcode_scanned:      ['result'],
+    label_read:           ['found'],
+    label_saved:          ['barcode', 'converted'],
+    label_shared:         [],
+    shared_flagged:       [],
   };
 
   function consent() {

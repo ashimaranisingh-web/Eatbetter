@@ -114,11 +114,14 @@
       line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b> within the hour`;
       why = 'Protein after a hard session helps your muscles recover.';
     } else {
-      const n = pf[0] || (foods[0] && foods[0].n); if (!n) return '';
-      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b>`;
+      // The next real meal for this phase (by time of day), not a food group.
+      const h = new Date().getHours(), meals = phase ? phaseMeals(phase, EB.getProfile().food.diet || 'veg') : [];
+      const next = meals[h < 11 ? 0 : h < 16 ? 1 : 2];
+      const n = next ? next[1] : pf[0] || (foods[0] && foods[0].n); if (!n) return '';
+      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b>${next ? ` for ${next[0].toLowerCase()}` : ''}`;
       why = phase ? `In this phase, ${PHASE_WHY[phase]}.` : 'Move, then refuel with something real.';
     }
-    return `<div class="app-combo"><span class="app-meta">Today’s combo</span><p>${line}</p><small>${why}</small></div>`;
+    return `<div class="app-combo"><p>${line}</p><small>${why}</small></div>`;
   }
   function energyHTML(ds) {
     const cur = energyFor(ds);
@@ -282,8 +285,9 @@
         ${meta ? '' : `<button type="button" class="app-today-setup" data-go="cycle">Add your last period date to see your phase</button>`}
         ${nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
             <div class="app-next-text">
-              <span class="app-meta">${esc(nm.slot)} · ${esc(nm.time)}${nm.missed ? ` <span class="app-tolog" data-go="food">${nm.missed} to log</span>` : ''}</span>
+              <span class="app-meta">${esc(nm.slot)} · ${esc(nm.time)}</span>
               <b class="app-next-name">${esc(nm.name)}</b>
+              ${nm.missed ? `<span class="app-tolog-line" data-go="food">${nm.missed} earlier meal${nm.missed > 1 ? 's' : ''} to log</span>` : ''}
             </div>
             <button type="button" class="app-opt-btn" data-log-next="${nm.slotId}">Log it</button>
           </div>`
@@ -291,17 +295,14 @@
               <div class="app-next-text"><span class="app-meta">All meals logged</span><b class="app-next-name">Done for today</b></div>
               <button type="button" class="app-opt-btn" data-go="food">Nutrition</button>
             </div>`}
-        <button type="button" class="app-today-row app-food-sum" data-go="food">
-          <span class="app-today-text">${eaten ? `<b class="app-big">${eaten.toLocaleString()}</b> of ${target.toLocaleString()} today` : 'Nothing logged yet today'}</span>
-        </button>
-        ${weekStatsHTML()}
+        ${weekStatsHTML(eaten, target)}
+        <div class="app-home-week${homeWeekOpen ? ' open' : ''}"></div>
       </div>
-      <div class="app-home-week"></div>
       ${energyHTML(ds)}
       <div class="ch-home-slot">${window.EBChallenges ? EBChallenges.homeLine() : ''}</div>
 `;
     const slot = page.querySelector('.app-home-week'); if (slot && weekSec) slot.appendChild(weekSec);
-    rollUp(page.querySelector('.app-food-sum .app-big'), eaten);
+    rollUp(page.querySelector('.app-week-stats .app-big'), eaten);
     paintHomeWeek();
     maybeWeekSheet();
   }
@@ -1001,6 +1002,25 @@
     go(location.hash.replace('#', '') || 'home', true);
   }
 
+  // Tapping a done mark undoes it: wake-up ticks clear; logged food is
+  // removed only after a confirm, since that deletes what was entered.
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-slot-unmark]'); if (!b) return;
+    const card = b.closest('.slot-card'), slot = b.dataset.slotUnmark, ds = selectedDateStr();
+    if (card && card.querySelector('.wake-row')) {
+      try { setWakeupItems(ds, []); localStorage.removeItem('wakeup_checked_' + ds); } catch {}
+    } else {
+      const log = getSlotLog(ds), v = log[slot], n = Array.isArray(v) ? v.length : v ? 1 : 0;
+      const name = slot ? slot.charAt(0).toUpperCase() + slot.slice(1) : 'this meal';
+      if (n && !confirm(`Remove ${n === 1 ? 'the food' : `the ${n} foods`} logged for ${name}?`)) return;
+      delete log[slot]; setSlotLog(ds, log);
+      try { setSlotEaten(ds, slot, false); } catch {}
+    }
+    ['renderSlotSection', 'renderTracker', 'renderWeeklyTracker'].forEach(fn => { try { window[fn](); } catch {} });
+    window.EBDayMode && EBDayMode.paint();
+    EB.toast && EB.toast('Unticked');
+  });
+
   function timeline() {
     let log = {}; try { log = getSlotLog(selectedDateStr()) || {}; } catch {}
     document.querySelectorAll('#slotSection .slot-card').forEach(card => {
@@ -1011,7 +1031,9 @@
       else {
         const v = log[card.dataset.slot];
         const done = (Array.isArray(v) ? v.length : v) || card.querySelector('.wake-row.on');
-        gutter.innerHTML = `<span class="slot-mark${done ? ' done' : ''}" aria-label="${done ? 'Eaten' : 'Not eaten yet'}"></span>`;
+        gutter.innerHTML = done
+          ? `<button type="button" class="slot-mark done" data-slot-unmark="${esc(card.dataset.slot || '')}" aria-label="Eaten. Tap to undo"></button>`
+          : `<span class="slot-mark" aria-label="Not eaten yet"></span>`;
       }
       card.prepend(gutter);
     });
@@ -1052,18 +1074,29 @@
   // Home: this week's calories (copied from the Nutrition tab's week card), tap to open it.
   // This week at a glance on the Home food card: calories (from the weekly
   // tracker) and workouts (count + calories burned), each opening its tab.
-  function weekStatsHTML() {
+  // Today, this week and workouts as three equal stats. "This week" opens the
+  // week card (‹ Week 3 of 6 ›, bar, Details) inside the same card.
+  let homeWeekOpen = false;
+  function weekStatsHTML(eaten, target) {
     const d = weekData(), n = d.reduce((a, x) => a + x.workouts, 0), burned = d.reduce((a, x) => a + x.burned, 0);
     return `<div class="app-week-stats">
-      <button type="button" data-go="food"><span>Calories this week</span><b id="homeWeekCal">–</b></button>
-      <button type="button" data-go="fitness"><span>Workouts this week</span><b>${n ? `${n} · ${burned.toLocaleString()} cal burned` : 'None yet'}</b></button>
+      <button type="button" data-go="food"><span>Today</span><b class="app-big">${(eaten || 0).toLocaleString()}</b><small>of ${(target || 0).toLocaleString()} cal</small></button>
+      <button type="button" data-home-week aria-expanded="${homeWeekOpen}"><span>This week <i aria-hidden="true">▾</i></span><b id="homeWeekCal">–</b><small id="homeWeekSub"></small></button>
+      <button type="button" data-go="fitness"><span>Workouts</span><b>${n}</b><small>${n ? `${burned.toLocaleString()} cal` : 'none yet'}</small></button>
     </div>`;
   }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-home-week]'); if (!b) return;
+    homeWeekOpen = !homeWeekOpen;
+    b.setAttribute('aria-expanded', homeWeekOpen);
+    const box = document.querySelector('#pageHome .app-home-week'); if (box) box.classList.toggle('open', homeWeekOpen);
+  });
   function paintHomeWeek() {
     const box = $('homeWeekCal'), sec = $('weeklyTrackerSection'); if (!box) return;
     const q = c => { const el = sec && sec.querySelector(c); return el ? el.textContent.trim() : ''; };
     const val = q('.week-card-val'), sub = q('.week-card-sub').replace(/\s*net$/, '');
-    box.innerHTML = val ? `${esc(val)} <small>${esc(sub)}</small>` : 'Nothing yet';
+    box.textContent = val || '0';
+    const sb = $('homeWeekSub'); if (sb) sb.textContent = sub ? `${sub} cal` : '';
   }
   function updateMini() {
     const mini = $('trackerMini'), eq = $('calEquation'); if (!mini || !eq) return;

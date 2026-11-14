@@ -48,5 +48,25 @@
   // rejects with code CAMERA_DENIED / NO_CAMERA. Not available on the website.
   function scanBarcode() { return M ? M.scanBarcode() : Promise.reject(Object.assign(new Error('unavailable'), { code: 'UNAVAILABLE' })); }
 
-  window.EBNative = { native, haptic, share, widget, reduce, scanBarcode };
+  // Photo of a nutrition label (source 'camera' or 'photos') → { rows: [text] } or { cancelled }.
+  function readLabel(source = 'camera') { return M ? M.readLabel({ source }) : Promise.reject(Object.assign(new Error('unavailable'), { code: 'UNAVAILABLE' })); }
+
+  // GET JSON. In the iPhone app this goes through the native HTTP client, so
+  // services that don't allow browser requests (CORS) still answer.
+  async function getJSON(url, ms = 9000) {
+    if (native && cap.nativePromise) {
+      let t;
+      const timer = new Promise((_, no) => { t = setTimeout(() => no(new Error('timeout')), ms); });
+      const r = await Promise.race([cap.nativePromise('CapacitorHttp', 'request', { url, method: 'GET', headers: { Accept: 'application/json', 'User-Agent': 'Menufi/1.0 (iOS app)' } }), timer])
+        .finally(() => clearTimeout(t));
+      if (!r || r.status >= 400) throw Object.assign(new Error('http ' + (r && r.status)), { status: r && r.status });
+      return typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+    }
+    const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), ms);
+    const r = await fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    if (!r.ok) throw Object.assign(new Error('http ' + r.status), { status: r.status });
+    return r.json();
+  }
+
+  window.EBNative = { native, haptic, share, widget, reduce, scanBarcode, readLabel, getJSON };
 })();

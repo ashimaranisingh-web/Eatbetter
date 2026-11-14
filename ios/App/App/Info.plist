@@ -34,6 +34,8 @@
 	<string>Menu-fi saves the calories, protein, carbs, fat and fiber you log so Apple Health shows what you ate.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Menu-fi uses the microphone when you answer questions or log meals by voice.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Menu-fi reads a photo of a food pack’s nutrition label, so you don’t have to type the numbers.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save your weekly poster to Photos.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
