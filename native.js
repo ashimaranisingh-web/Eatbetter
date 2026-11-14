@@ -68,5 +68,20 @@
     return r.json();
   }
 
+  // Safe areas: if iOS reports no top inset on a phone that has a notch or
+  // Dynamic Island, fall back to the standard sizes so nothing sits under the
+  // clock and battery or the home bar.
+  if (native) {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top);visibility:hidden;pointer-events:none';
+    const check = () => {
+      document.body.appendChild(probe);
+      const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      probe.remove();
+      document.documentElement.classList.toggle('safe-fallback', inset === 0 && Math.max(screen.width, screen.height) >= 812);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', check); else check();
+  }
+
   window.EBNative = { native, haptic, share, widget, reduce, scanBarcode, readLabel, getJSON };
 })();

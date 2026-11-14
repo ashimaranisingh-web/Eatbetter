@@ -2386,7 +2386,7 @@ body #pageHome .app-home-body > .app-card, body #pageHome .app-home-body > .app-
 }
 :root:not([data-theme="dark"]) body input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):focus,
 :root:not([data-theme="dark"]) body textarea:focus, :root:not([data-theme="dark"]) body select:focus {
-  background: #ffffff !important; box-shadow: 0 0 0 1.5px #141414 !important; outline: none;
+  background: #ffffff !important; box-shadow: inset 0 0 0 1.5px #141414 !important; outline: none;   /* inside the field, so scrolling sheets can't clip it */
 }
 
 /* Energy is a section on the page, not a card: title, selector and rails sit on the white */
@@ -2641,3 +2641,218 @@ html[data-theme="dark"] #foodLog .fl-phase-note { color: #eee; }
 .pf-sources p { margin: 0; font-size: 13px; line-height: 1.45; color: #6f6f6f; }
 .pf-sources b { color: #424242; font-weight: 600; }
 html[data-theme="dark"] .pf-sources b { color: #ddd; }
+
+/* ══ App cleanup (Nov 2026) ══ */
+
+/* Nutrition header: title left, Plan / Log / Guide on the right */
+#pageFood .app-band { overflow: visible; z-index: 6; }
+#pageFood .app-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#foodModePick { position: relative; }
+#foodModePick #dayModeBox { margin: 0; }
+html body #foodModePick .app-dm { position: relative; background: transparent; box-shadow: none; overflow: visible; border-radius: 0; }
+html body #foodModePick .app-dm-btn { width: auto; min-height: 40px; padding: 0 12px 0 16px; gap: 6px; border-radius: 20px; background: #f3f3f2; color: #141414; }
+html body #foodModePick .app-dm-btn b { font-size: 15px; }
+html body #foodModePick .app-dm-menu { position: absolute; right: 0; top: calc(100% + 8px); width: min(320px, calc(100vw - 32px)); z-index: 60;
+  margin: 0; padding: 6px; border: 0; border-radius: 12px; background: #fff; box-shadow: 0 12px 40px rgba(16,24,40,.18), 0 0 0 1px rgba(20,20,20,.06); }
+html body #foodModePick .app-dm-lock { padding: 8px 8px 4px; margin: 0; }
+html[data-theme="dark"] body #foodModePick .app-dm-btn { background: rgba(255,255,255,.1); color: #fff; }
+html[data-theme="dark"] body #foodModePick .app-dm-menu { background: #1b1b1b; }
+#pageFood .app-motto, #pageFood #foodHero { display: none !important; }
+
+/* Day card: weight-loss target and deficit on the left, Reset day on the right */
+#tracker .tracker-head > span:last-child { width: 100%; display: flex; align-items: flex-start; gap: 16px; }
+#tracker .tracker-stat:has(#tdeeLabel) { display: none !important; }
+#tracker #resetBtn { margin-left: auto; }
+
+/* Craving finder: its own tinted block, above the meals */
+html body #pageFood .craving-wrap { margin: 0 0 16px; padding: 12px; border-radius: 12px; background: var(--accent-dim, #e8f3ec); border: 0; }
+#pageFood .craving-label { margin: 0 2px 8px; font-size: 14px; font-weight: 600; color: #141414; }
+html body #pageFood .craving-wrap .craving-input { background: #fff !important; border: 0 !important; box-shadow: none !important; }
+html body #pageFood .craving-wrap .craving-btn { background: #fff !important; border: 0 !important; }
+#slotSection .slot-select { display: none !important; }
+
+/* Meal choice inside a food (radio options) */
+.fl-radio { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0; }
+.fl-radio-opt { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid rgba(20,20,20,.14); border-radius: 22px;
+  background: #fff; font: 500 15px inherit; font-family: inherit; color: #141414; cursor: pointer; text-align: left; }
+.fl-radio-opt i { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #b5b5b5; }
+.fl-radio-opt.on { border-color: var(--accent); background: var(--accent-dim, #e8f3ec); }
+.fl-radio-opt.on i { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 4px, transparent 4.5px); }
+html[data-theme="dark"] .fl-radio-opt { background: transparent; color: #fff; border-color: rgba(255,255,255,.2); }
+
+/* Home: this week, energy, up next */
+#pageHome .app-weekcard { padding: 16px !important; }
+#pageHome .app-weekbig { display: flex; align-items: baseline; gap: 8px; margin: 4px 0 4px; }
+#pageHome .app-weekbig b { font-size: 34px; font-weight: 600; letter-spacing: -.02em; color: #141414; }
+#pageHome .app-weekbig b.good { color: var(--accent); }
+#pageHome .app-weekbig span { font-size: 14px; color: #6f6f6f; }
+#pageHome .app-week-more { font-size: 14px; color: #424242; background: none; border: 0; padding: 10px 0; cursor: pointer; }
+#pageHome .app-week-more i { font-style: normal; font-size: 10px; display: inline-block; transition: transform .2s; }
+#pageHome .app-week-more[aria-expanded="true"] i { transform: rotate(180deg); }
+#pageHome .app-upnext { padding: 4px 16px !important; }
+#pageHome .app-upnext .app-today-next { border-top: 0 !important; margin: 0 !important; }
+
+/* Menstruation: current phase first, the rest of the cycle after */
+html body #pageCycle .app-cycle-card { background: #fff !important; border: 1px solid rgba(20,20,20,.09) !important; }
+html[data-theme="dark"] body #pageCycle .app-cycle-card { background: var(--bg-primary) !important; border-color: rgba(255,255,255,.1) !important; }
+#pageCycle .cyc-now { margin: 16px 0 8px; }
+#pageCycle .cyc-now-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+#pageCycle .cyc-now-head i { width: 10px; height: 10px; border-radius: 50%; background: var(--phase); align-self: center; }
+#pageCycle .cyc-now-head b { font-size: 22px; font-weight: 600; }
+#pageCycle .cyc-now-head span { flex-basis: 100%; margin-left: 18px; font-size: 14px; color: #6f6f6f; }
+#pageCycle .cyc-body { margin: 12px 0 8px; font-size: 15px; line-height: 1.45; color: #2b2b2b; }
+#pageCycle .cyc-guide { margin: 0; display: grid; gap: 8px; }
+#pageCycle .cyc-guide div { display: grid; grid-template-columns: 56px 1fr; gap: 8px; }
+#pageCycle .cyc-guide dt { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #6f6f6f; padding-top: 2px; }
+#pageCycle .cyc-guide dd { margin: 0; font-size: 14px; line-height: 1.45; color: #2b2b2b; }
+#pageCycle .cyc-guide dd b { font-weight: 600; }
+#pageCycle .cyc-sub { margin: 16px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #6f6f6f; }
+#pageCycle .cyc-next { list-style: none; margin: 8px 0 8px; padding: 0; border-top: 1px solid rgba(20,20,20,.09); }
+#pageCycle .cyc-next li { border-bottom: 1px solid rgba(20,20,20,.09); }
+#pageCycle .cyc-next summary { list-style: none; display: flex; align-items: center; gap: 12px; min-height: 56px; cursor: pointer; }
+#pageCycle .cyc-next summary::-webkit-details-marker { display: none; }
+#pageCycle .cyc-next summary i { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+#pageCycle .cyc-next summary span { flex: 1; display: grid; }
+#pageCycle .cyc-next summary b { font-size: 16px; font-weight: 600; }
+#pageCycle .cyc-next summary small { font-size: 13px; color: #6f6f6f; }
+#pageCycle .cyc-next summary::after { content: ''; width: 8px; height: 8px; border-right: 2px solid #8a8a8a; border-bottom: 2px solid #8a8a8a; transform: rotate(45deg); margin-right: 4px; transition: transform .2s; }
+#pageCycle .cyc-next details[open] summary::after { transform: rotate(225deg); }
+#pageCycle .cyc-next-body { padding: 0 0 16px 22px; }
+#pageCycle .cyc-next-body .cyc-body { margin-top: 0; }
+#pageCycle .app-logcta { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px !important; }
+#pageCycle .app-logcta-text { min-width: 0; }
+#pageCycle .app-logcta-text .app-card-label { margin: 0 0 2px; }
+#pageCycle .app-logcta-text .app-muted { margin: 0; font-size: 14px; }
+#pageCycle .app-logcta .eb-btn { flex: none; min-width: 88px; min-height: 44px; }
+#pageCycle .app-daylog-actions { display: grid; gap: 4px; margin-top: 16px; }
+#pageCycle .app-daylog-actions .eb-btn { width: 100%; min-height: 48px; }
+#pageCycle .app-daylog-actions .eb-link { justify-self: center; }
+html[data-theme="dark"] #pageCycle :is(.cyc-body, .cyc-guide dd) { color: #ddd; }
+
+/* ══ Round 2 (Nov 2026) ══ */
+/* Nutrition title row: Reset day on the right */
+#pageFood .app-head-row .reset-btn { font-size: 14px; padding: 10px 0 10px 12px; color: #424242; background: none; }
+
+/* Day card: Deficit and Weight loss grouped on the left, 12 px apart; tighter overall */
+#tracker .tracker-head > span:last-child { width: auto; gap: 12px !important; justify-content: flex-start; }
+#tracker .tracker-right { margin: 0 !important; gap: 12px; }
+html body #pageFood #tracker { padding: 12px 16px !important; margin-bottom: 16px; }
+html body #pageFood #tracker .tracker-head { margin-bottom: 8px; }
+html body #pageFood #tracker .cal-equation { padding: 8px 0 !important; margin: 0 0 8px !important; }
+html body #pageFood #tracker .cal-term-val { font-size: 24px !important; }
+html body #pageFood #tracker .tracker-grid { gap: 8px 12px !important; }
+
+/* Meals: no dead marks, no "+ Add a custom meal" (search does it) */
+#slotSection .slot-gutter span.slot-mark:not(.done) { visibility: hidden; }
+#slotSection .add-meal-btn { display: none !important; }
+
+/* Sheets: one 16 px inset, 16 px inside cards */
+html body .app-sheet .activity-body { padding: 0 0 16px !important; }
+html body .app-sheet :is(.prep-header, .prep-macros, .prep-shelf, .prep-ingredients, .prep-steps, .prep-tip) { padding-left: 16px !important; padding-right: 16px !important; }
+
+/* Menstruation: "Your cycle" title; the current phase folds */
+#pageCycle .app-cycle-card > .app-card-label { margin: 0 0 12px; }
+#pageCycle details.cyc-now > summary { list-style: none; cursor: pointer; position: relative; padding-right: 24px; }
+#pageCycle details.cyc-now > summary::-webkit-details-marker { display: none; }
+#pageCycle details.cyc-now > summary::after { content: ''; position: absolute; right: 4px; top: 12px; width: 8px; height: 8px;
+  border-right: 2px solid #8a8a8a; border-bottom: 2px solid #8a8a8a; transform: rotate(45deg); transition: transform .2s; }
+#pageCycle details.cyc-now[open] > summary::after { transform: rotate(225deg); top: 16px; }
+
+/* Profile → How you track food */
+.pf-track { display: grid; gap: 8px; margin: 0 0 8px; }
+.pf-track-opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border: 1px solid rgba(20,20,20,.12); border-radius: 12px;
+  background: #fff; text-align: left; font: inherit; color: #141414; cursor: pointer; min-height: 56px; }
+.pf-track-opt i { flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 2px solid #b5b5b5; }
+.pf-track-opt span { display: grid; gap: 2px; }
+.pf-track-opt b { font-size: 15px; font-weight: 600; }
+.pf-track-opt small { font-size: 13px; color: #6f6f6f; }
+.pf-track-opt.on { border-color: var(--accent); background: var(--accent-dim, #e8f3ec); }
+.pf-track-opt.on i { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 5px, transparent 5.5px); }
+html[data-theme="dark"] .pf-track-opt { background: transparent; color: #fff; border-color: rgba(255,255,255,.18); }
+
+/* iPhone safe areas when iOS doesn't report them (html.safe-fallback, set by native.js) */
+html.safe-fallback .tracker-mini { padding-top: 55px; }
+html.safe-fallback .app-band { padding-top: 63px; }
+html.safe-fallback .eb-tabbar { bottom: 44px; }
+html.safe-fallback body.has-tabs { padding-bottom: calc(var(--tabbar-h) + 58px); }
+
+/* ══ Round 3 ══ */
+/* Day card goal: one small line instead of two stats */
+#tracker .tracker-goal { display: block; font-size: 13px; line-height: 1.35; color: #6f6f6f; white-space: normal; }
+#tracker #planTargetLabel:empty { display: none; }
+html body #pageFood #tracker .tracker-head { margin-bottom: 4px; }
+
+/* Sticky day bar: clear room below the clock / battery and around the numbers */
+html body .tracker-mini { padding: calc(env(safe-area-inset-top) + 14px) 16px 12px; }
+html.safe-fallback body .tracker-mini { padding-top: 61px; }
+html body .tracker-mini .tracker-mini-day { margin-bottom: 6px; }
+
+/* Undo toast (unticking a meal) */
+.app-undo { position: fixed; left: 16px; right: 16px; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 20px); z-index: 400;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 4px 4px 16px; border-radius: 12px;
+  background: #141414; color: #fff; font-size: 15px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  transform: translateY(16px); opacity: 0; pointer-events: none; transition: transform .2s, opacity .2s; }
+.app-undo.show { transform: none; opacity: 1; pointer-events: auto; }
+.app-undo button { min-height: 44px; padding: 0 16px; border: 0; background: none; color: #fff; font: 600 15px inherit; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Home week card: one summary, days on demand */
+#pageHome .app-weekcard .app-row { align-items: baseline; }
+#pageHome .app-week-sub { margin: 0 0 12px; font-size: 13px; color: #6f6f6f; }
+#pageHome .app-weekbig { margin-bottom: 2px; }
+html body #pageHome .app-weekcard .app-week-stats { margin-top: 0; }
+#pageHome .app-week-more { display: block; width: 100%; margin: 8px 0 -8px; padding: 12px 0; text-align: center; border-top: 1px solid rgba(20,20,20,.09); }
+#pageHome .app-weekdays { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid rgba(20,20,20,.09); display: grid; gap: 8px; }
+#pageHome .app-weekdays li { display: grid; grid-template-columns: 36px 1fr 52px 52px; align-items: center; gap: 8px; font-size: 13px; }
+#pageHome .app-weekdays li.today .wk-d { font-weight: 700; color: var(--accent); }
+#pageHome .app-weekdays li.future { opacity: .45; }
+#pageHome .app-weekdays .wk-d { color: #424242; }
+#pageHome .app-weekdays .wk-bar { position: relative; height: 8px; border-radius: 4px; background: #f0f0ef; }
+#pageHome .app-weekdays .wk-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent); }
+#pageHome .app-weekdays .wk-bar i.over { background: #e0913f; }
+#pageHome .app-weekdays .wk-bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #141414; border-radius: 1px; }
+#pageHome .app-weekdays .wk-n { text-align: right; font-weight: 600; color: #141414; }
+#pageHome .app-weekdays .wk-diff { text-align: right; color: var(--accent); }
+#pageHome .app-weekdays .wk-diff.over { color: #b8661d; }
+
+/* Home: challenge card, 12 px padding */
+html body #pageHome .ch-home { padding: 12px !important; }
+#pageHome .app-weekbig b.over { color: #b8661d; }
+/* Week card: eaten vs allowed, and the 1 kg insight */
+#pageHome .app-budget { margin: 0 0 8px; }
+#pageHome .app-budget-bar { height: 8px; border-radius: 4px; background: #f0f0ef; overflow: hidden; }
+#pageHome .app-budget-bar i { display: block; height: 100%; border-radius: 4px; background: var(--accent); }
+#pageHome .app-budget-bar i.over { background: #e0913f; }
+#pageHome .app-budget-ends { display: flex; justify-content: space-between; margin-top: 6px; font-size: 13px; color: #6f6f6f; }
+#pageHome .app-budget-ends b { color: #141414; font-weight: 600; }
+#pageHome .app-week-insight { margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: var(--accent-dim, #e8f3ec); font-size: 13px; line-height: 1.4; color: #2b2b2b; }
+#pageHome .app-week-insight b { font-weight: 600; }
+html[data-theme="dark"] #pageHome .app-week-insight { color: #eee; }
+/* Home challenge: the challenge itself leads, the label is quiet */
+html body #pageHome .ch-home small { font-size: 13px; color: #6f6f6f; margin-bottom: 2px; }
+html body #pageHome .ch-home b { font-size: 16px; font-weight: 600; color: #141414; }
+#pageHome .app-weekcard .app-budget { margin-top: 4px; }
+/* Profile inline fields: text sits inside the pill, not on its edge */
+html body .pf-inline { box-sizing: border-box; min-height: 40px; padding: 8px 12px !important; }
+html body input[type="date"].pf-inline { padding-right: 12px !important; }
+.pf-email { flex: 1; min-width: 0; text-align: right; font-size: 16px; color: #141414; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 8px 12px; }
+.pf-email.muted { color: var(--accent); }
+
+/* Home: Up next + Today's challenge in one quick-access card */
+html body #pageHome .app-shortcuts { padding: 0 16px !important; display: block !important; height: auto !important; }
+html body #pageHome .app-shortcuts .app-today-next { min-height: 72px; padding: 12px 0 !important; margin: 0 !important; border: 0 !important; }
+html body #pageHome .app-shortcuts .ch-home-slot:not(:empty) { border-top: 1px solid rgba(20,20,20,.09); }
+html body #pageHome .app-shortcuts .ch-home { width: 100%; margin: 0 !important; padding: 12px 0 !important; background: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
+html body #pageHome .app-shortcuts .app-today-setup { margin: 12px 0 0; }
+
+/* Home: Energy today is a defined card like the others */
+html body #pageHome .app-card.app-energy-card, html:not([data-theme="dark"]) body #pageHome .app-card.app-energy-card {
+  background: #fff !important; padding: 16px !important; margin: 0 0 16px !important; border-radius: 12px !important;
+  box-shadow: 0 0 0 1px rgba(20,20,20,.055), 0 1px 2px rgba(20,20,20,.03), 0 10px 30px -12px rgba(20,20,20,.12) !important; }
+html body #pageHome .app-energy-card .app-rail { margin-right: -16px; padding-right: 16px; }
+html[data-theme="dark"] body #pageHome .app-card.app-energy-card { background: var(--bg-primary) !important; }
+:root:not([data-theme="dark"]) body #pageHome .app-home-body > .app-card.app-energy-card {
+  background: #fff !important; padding: 16px !important; margin: 0 0 16px !important; border-radius: 12px !important;
+  box-shadow: 0 0 0 1px rgba(20,20,20,.055), 0 1px 2px rgba(20,20,20,.03), 0 10px 30px -12px rgba(20,20,20,.12) !important; }
+/* Home challenge tick: far right, 20 px, like the meal's Log it */
+html body #pageHome .ch-home > span:not(.ch-home-dot) { flex: 1; min-width: 0; }
+html body #pageHome .ch-home .ch-home-dot { order: 2; margin-left: auto; width: 20px !important; height: 20px !important; flex: none; }

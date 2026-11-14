@@ -43,7 +43,7 @@
     return `
         <p class="eb-group-label">Account</p>
         <div class="eb-list">
-          <div class="eb-list-row"><span class="eb-row-text"><span class="eb-list-label">${esc(EBSync.email())}</span>
+          <div class="eb-list-row"><span class="eb-row-text"><span class="eb-list-label">Backup</span>
             <span class="eb-list-value">${at ? 'Backed up ' + new Date(at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Not backed up yet'}</span></span></div>
           <button type="button" class="eb-list-row" data-pf="syncNow"><span class="eb-list-label">Sync Now</span></button>
           <button type="button" class="eb-list-row" data-pf="signOut"><span class="eb-list-label">Sign Out</span></button>
@@ -72,18 +72,21 @@
         <div class="eb-list">
           <label class="eb-list-row is-input"><span class="eb-list-label">Name</span>
             <input class="pf-inline" data-pf="name" value="${esc(p.name)}" placeholder="Add" autocomplete="given-name"></label>
-          <label class="eb-list-row is-input"><span class="eb-list-label">Birthday</span>
-            <input type="date" class="pf-inline" data-pf="birthday" value="${esc(p.birthday)}" max="${EB.todayISO()}" autocomplete="bday"></label>
+          ${window.EBSync && EBSync.enabled() ? (EBSync.signedIn()
+            ? `<div class="eb-list-row is-input"><span class="eb-list-label">Email</span><span class="pf-email">${esc(EBSync.email())}</span></div>`
+            : `<button type="button" class="eb-list-row is-input" data-pf="signIn"><span class="eb-list-label">Email</span><span class="pf-email muted">Sign in to add</span></button>`) : ''}
         </div>
 
         ${window.EBSync && EBSync.enabled() ? accountHTML() : ''}
 
-        <p class="eb-group-label">Meal Plan</p>
-        <div class="eb-seg pf-seg" role="radiogroup" aria-label="Meal plan">
-          ${[['generated', 'Built for me'], ['original', 'Original plan']].map(([v, t]) =>
-            `<button type="button" class="eb-seg-btn${(p.planSource || 'generated') === v ? ' on' : ''}" data-plan-src="${v}" role="radio" aria-checked="${(p.planSource || 'generated') === v}">${t}</button>`).join('')}
-        </div>
-        <p class="eb-group-note">${window.EBPlanner && EBPlanner.current() ? `Built from your food, goal and activity. About ${TARGETS.cal.toLocaleString()} cal a day (an estimate).` : 'The fixed weekly plan the app started with.'}</p>
+        ${window.EBDayMode && EBDayMode.MODES ? `
+        <p class="eb-group-label">How you track food</p>
+        <div class="pf-track" role="radiogroup" aria-label="How you track food">${EBDayMode.MODES.map(m => {
+          const on = EBDayMode.currentMode() === m.v;
+          return `<button type="button" class="pf-track-opt${on ? ' on' : ''}" data-track-mode="${m.v}" role="radio" aria-checked="${on}">
+            <i aria-hidden="true"></i><span><b>${m.t}</b><small>${m.line}</small></span></button>`;
+        }).join('')}</div>
+        <p class="eb-group-note">Applies from today. Best kept the same for a while, so your weeks compare fairly.</p>` : ''}
 
         <p class="eb-group-label">Your Plan</p>
         <div class="eb-list">${steps.map(s => {
@@ -154,6 +157,16 @@
     const t = e.target;
     const ps = t.closest('[data-plan-src]');
     if (ps) { patch(p => { p.planSource = ps.dataset.planSrc; }); if (window.EBPlanner) EBPlanner.refresh(); return render(); }
+    const tm = t.closest('[data-track-mode]');
+    if (tm && window.EBDayMode) {
+      const v = tm.dataset.trackMode, cur = EBDayMode.currentMode();
+      if (v === cur) return;
+      const name = (EBDayMode.MODES.find(m => m.v === v) || {}).t || v;
+      if (EBDayMode.hasFood(todayStr()) && !confirm(`Switch to ${name}? Everything you’ve logged for food today will be cleared. Other days stay as they are.`)) return;
+      EBDayMode.changeMode(v);
+      EB.toast(`Tracking with ${name} from today`);
+      return render();
+    }
     const tp = t.closest('[data-theme-pref]');
     if (tp) { EB.setThemePref(tp.dataset.themePref); return render(); }
     const se = t.closest('[data-step-edit]');

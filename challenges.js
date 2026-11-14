@@ -244,7 +244,7 @@
     const todo = items.filter(x => x.st.status === 'active');
     return `<button type="button" class="app-card ch-home" data-go-challenges>
         <span class="ch-home-dot${todo.length ? '' : ' done'}">${todo.length ? '' : CHECK}</span>
-        <span><b>${todo.length ? 'Today’s challenge' : 'Challenges done'}</b><small>${(todo.length ? todo : items).map(x => phrase(x.ch, x.st.target)).join(', ')}</small></span>
+        <span><small>${todo.length ? 'Today’s challenge' : 'Challenges done'}</small><b>${(todo.length ? todo : items).map(x => phrase(x.ch, x.st.target)).join(', ')}</b></span>
       </button>`;
   }
   function refresh() {

@@ -82,14 +82,13 @@
   function pickerHTML(d, mode, locked) {
     const m = MODES.find(x => x.v === mode);
     return `<div class="app-dm${menuOpen ? ' open' : ''}">
-        <button type="button" class="app-dm-btn" data-dm-toggle aria-haspopup="listbox" aria-expanded="${menuOpen}">
-          <span>How you eat today</span><b>${m.t}</b>${CHEVRON}
+        <button type="button" class="app-dm-btn" data-dm-toggle aria-haspopup="listbox" aria-expanded="${menuOpen}" aria-label="How you eat today: ${m.t}">
+          <b>${m.t}</b>${CHEVRON}
         </button>
         ${menuOpen ? `<ul class="app-dm-menu" role="listbox" aria-label="How you eat today">${MODES.map(x => `<li>
             <button type="button" class="app-dm-opt${x.v === mode ? ' on' : ''}" role="option" aria-selected="${x.v === mode}" data-dm-pick="${x.v}"${locked && x.v !== mode ? ' disabled' : ''}>
               <span><b>${x.t}</b><small>${x.line}</small></span>${x.v === mode ? CHECK : ''}
-            </button></li>`).join('')}</ul>
-          ${locked ? '<p class="app-dm-lock">Set for this day, since you’ve started. Pick again tomorrow.</p>' : ''}` : ''}
+            </button></li>`).join('')}${locked ? '<li><p class="app-dm-lock">Set for this day, since you’ve started. Pick again tomorrow.</p></li>' : ''}</ul>` : ''}
       </div>`;
   }
   function paintPicker(focus) {
@@ -148,29 +147,29 @@
 
   function paint() {
     const page = $('pageFood'); if (!page) return;
-    let box = $('dayModeBox');
-    if (!box) {
-      box = document.createElement('div'); box.id = 'dayModeBox'; box.className = 'app-daymode';
+    // How you track food is a Profile setting now (rarely changed), so the page has no picker.
+    if (!$('dayModeSearch')) {
       const body = document.createElement('div'); body.id = 'dayModeBody';
-      const tracker = $('tracker');
-      if (tracker) { tracker.before(box); } else page.appendChild(box);
-      const anchor = $('cravingWrap') || $('slotSection');
-      if (anchor) anchor.before(body); else page.appendChild(body);
+      const search = document.createElement('div'); search.id = 'dayModeSearch';
+      page.appendChild(search); page.appendChild(body);
     }
     const d = ds(), mode = modeFor(d), locked = hasFood(d);
     page.dataset.dayview = mode;   // not "daymode": that name belongs to the picker buttons
-    // Log puts search right under the picker; Guide and Plan sit below the day's totals.
-    const body = $('dayModeBody'), want = mode === 'log' ? box : ($('cravingWrap') || $('slotSection'));
-    if (want === box) { const after = $('dayModeSearch') || box; if (after.nextElementSibling !== body) after.after(body); }
-    else if (want && want.previousElementSibling !== body) want.before(body);
-    box.innerHTML = pickerHTML(d, mode, locked);
-    // One search + scan bar under the dropdown on every day. Log mode has the
-    // full version (with the logged list) in its own body below.
-    let search = $('dayModeSearch');
-    if (!search) { search = document.createElement('div'); search.id = 'dayModeSearch'; }
-    if (box.nextElementSibling !== search) box.after(search);
+    // Order under the day card: search → Guide / Log → craving → meals.
+    const tracker = $('tracker'), search = $('dayModeSearch'), body = $('dayModeBody'), crave = $('cravingWrap');
+    if (tracker && tracker.nextElementSibling !== search) tracker.after(search);
+    if (search.nextElementSibling !== body) search.after(body);
+    if (crave && body.nextElementSibling !== crave) body.after(crave);
+    // The craving finder reads as its own thing, not a second search bar.
+    if (crave && !crave.querySelector('.craving-label')) {
+      const lb = document.createElement('p'); lb.className = 'craving-label'; lb.textContent = 'Craving something?';
+      crave.prepend(lb);
+    }
+    const ci = $('cravingInput');
+    if (ci && ci.placeholder !== 'Sweet, salty, spicy, crunchy…') { ci.placeholder = 'Sweet, salty, spicy, crunchy…'; ci.setAttribute('aria-label', 'What are you craving?'); }
+    // Log mode's body has its own full search (with the logged list).
     search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true }) : '';
-    $('dayModeBody').innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : '';
+    body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : '';
     if (window.EBFoodLog) EBFoodLog.mounted();
   }
 
@@ -240,5 +239,21 @@
     }
   });
 
-  window.EBDayMode = { paint, refresh, modeFor, estimate, guideMeals };
+  // Profile → How you track food. Applies from today on; past days keep theirs.
+  // Today's food is cleared first (the caller confirms that with her).
+  function clearDay(d) {
+    ['slots_', 'guide_', 'wakeup_items_', 'wakeup_checked_'].forEach(k => { try { localStorage.removeItem(k + d); } catch {} });
+    try { Object.keys(localStorage).filter(k => k.startsWith('slotEaten_' + d + '_')).forEach(k => localStorage.removeItem(k)); } catch {}
+  }
+  function changeMode(v) {
+    if (!MODES.some(x => x.v === v)) return;
+    const d = todayStr();
+    if (hasFood(d)) clearDay(d);
+    put('eb_lastDayMode', v); put('dayMode_' + d, v);
+    window.EBAnalytics && EBAnalytics.track('day_mode_set', { mode: v });
+    refresh();
+  }
+  const currentMode = () => modeFor(todayStr());
+
+  window.EBDayMode = { paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
 })();

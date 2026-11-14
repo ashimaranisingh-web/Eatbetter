@@ -268,6 +268,7 @@
       <div class="fl-live">${totalHTML(f, st.fix ? { ...t, ...st.fix } : t)}</div>
       ${st.fix ? fixHTML(t) : `<button type="button" class="eb-link fl-fixlink" data-fl-fix>Numbers look off? Correct them</button>`}
       ${f.src === 'shared' && f.code && !st.fix ? `<button type="button" class="eb-link fl-fixlink" data-fl-flag="${esc(f.code)}">Different on your pack? Report it and read the label</button>` : ''}
+      ${slotRadio(st.slot, 'data-fl-slot')}
       <button type="button" class="eb-btn primary fl-add" data-fl-add>Add to ${SLOT_NAME[st.slot]}</button>
     </div>`;
   }
@@ -283,20 +284,22 @@
         `<label><span>${l}</span><input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${esc(c[k])}" data-fl-cr="${k}"></label>`).join('')}</div>
       <p class="fl-src">Use the label on the pack, or your best guess. You can change it later.</p>
       <p class="fl-err" id="flErr" role="alert"></p>
+      ${slotRadio(st.slot, 'data-fl-slot')}
       <button type="button" class="eb-btn primary" data-fl-save-own>Save and add to ${SLOT_NAME[st.slot]}</button>
       <button type="button" class="eb-link" data-fl-cancel>Cancel</button>
     </div>`;
   }
 
-  function slotsHTML() {
-    return `<div class="eb-seg fl-slots" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, t]) =>
-      `<button type="button" class="eb-seg-btn${st.slot === v ? ' on' : ''}" data-fl-slot="${v}" role="radio" aria-checked="${st.slot === v}">${t}</button>`).join('')}</div>`;
+  // Which meal: radio options shown with the food, once one is picked.
+  function slotRadio(sel, attr) {
+    return `<div class="fl-radio" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, t]) =>
+      `<button type="button" class="fl-radio-opt${sel === v ? ' on' : ''}" ${attr}="${v}" role="radio" aria-checked="${sel === v}"><i aria-hidden="true"></i>${t}</button>`).join('')}</div>`;
   }
   let compact = false;   // Plan / Guide days: just the bar until she types or scans
   function resultsHTML() {
     if (compact) {
       if (!st.raw.trim() && !st.scan && !st.create && !st.label) return '';
-      return slotsHTML() + resultsBody();
+      return resultsBody();
     }
     return resultsBody();
   }
@@ -745,8 +748,7 @@
   function editHTML(m) {
     const e = st.edit, f = e.food;
     return `<div class="fl-detail">
-      <div class="eb-seg fl-slots fl-slots-sm" role="radiogroup" aria-label="Meal">${SLOTS.map(([v, t]) =>
-        `<button type="button" class="eb-seg-btn${e.slot === v ? ' on' : ''}" data-fl-eslot="${v}" role="radio" aria-checked="${e.slot === v}">${t}</button>`).join('')}</div>
+      ${slotRadio(e.slot, 'data-fl-eslot')}
       ${f && !e.fix ? amountHTML(f, e.amt, e.unit) + `<div class="fl-live">${totalHTML(f, totals(f, e.amt, e.unit))}</div>
           <button type="button" class="eb-link fl-fixlink" data-fl-efix>Numbers look off? Correct them</button>`
         : `<div class="fl-fix">${[['cal', 'Calories'], ['p', 'Protein g'], ['c', 'Carbs g'], ['f', 'Fat g']].map(([k, l]) =>
@@ -781,7 +783,6 @@
       </label>`;
     if (compact) return `<div class="fl fl-compact" id="foodLog">${bar}<div id="flResults" class="fl-results">${resultsHTML()}</div></div>`;
     return `<div class="fl" id="foodLog">
-      ${slotsHTML()}
       ${bar}
       <div id="flResults" class="fl-results">${resultsHTML()}</div>
       <p class="fl-label fl-logged-head">Logged today</p>
@@ -826,7 +827,7 @@
     const t = e.target, root = t.closest('#foodLog'); if (!root) return;
     const at = sel => t.closest(sel);
     let n;
-    if ((n = at('[data-fl-slot]'))) { st.slot = n.dataset.flSlot; return repaint(); }
+    if ((n = at('[data-fl-slot]'))) { st.slot = n.dataset.flSlot; return paintResults(); }
     if (at('[data-fl-scan]')) return startScan();
     if ((n = at('[data-fl-label]'))) return readLabel(n.dataset.flLabel);
     if (at('[data-fl-labeltype]')) { const sc = st.scan; st.label = { code: sc && sc.code || null, name: sc && sc.name || foodWords(st.raw), cal: '', p: '', c: '', f: '', fib: '', sug: '', na: '', pack: '', serving: '', pieceG: '', pieceName: '', basis: '100', liquid: false, read: -1 }; st.scan = null; st.create = null; return paintResults(); }
@@ -1013,5 +1014,27 @@
     setTimeout(() => { const y = e.target.getBoundingClientRect().top + window.scrollY - 96; if (Math.abs(window.scrollY - y) > 40) window.scrollTo(0, y); }, 250);
   });
 
-  window.EBFoodLog = { html, mounted, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
+  // Open the page's search bar, optionally for a given meal and with a query.
+  // Used by Replace / Add, "Add" on suggested foods, and the old add sheet.
+  function focusSearch(slot, query, opts) {
+    if (slot && SLOT_NAME[slot]) st.slot = slot;
+    Object.assign(st, { raw: query || '', open: null, create: null, scan: null, label: null, online: null, edit: null });
+    if (window.EBDayMode) EBDayMode.paint();
+    setTimeout(() => {
+      const s = $('flSearch'); if (!s) return;
+      s.value = st.raw; paintResults();
+      // A single obvious match for a suggested food opens straight away.
+      if (query) {
+        const first = $('flResults') && $('flResults').querySelector('[data-fl-open]');
+        if (first) first.click();
+        // A suggested dish that isn't in the food list: start "my own food" with what we know.
+        else if (opts && opts.cal) { st.create = { name: query, unit: '1 serving', cal: opts.cal, p: '', c: '', f: '' }; paintResults(); }
+      }
+      const y = s.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo(0, Math.max(0, y));
+      if (!query) s.focus();
+    }, 60);
+  }
+
+  window.EBFoodLog = { focusSearch, html, mounted, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
 })();
