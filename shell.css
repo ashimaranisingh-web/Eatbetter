@@ -2595,3 +2595,49 @@ html[data-theme="dark"] body #dayModeBox select.app-daymode-select { background-
 html[data-theme="dark"] #dayModeBox .app-dm { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
 html[data-theme="dark"] #dayModeBox .app-dm-btn, html[data-theme="dark"] #dayModeBox .app-dm-btn b, html[data-theme="dark"] #dayModeBox .app-dm-btn svg, html[data-theme="dark"] #dayModeBox .app-dm-opt { color: #fff; }
 html[data-theme="dark"] #dayModeBox .app-dm-menu { border-top-color: rgba(255,255,255,.1); }
+/* Search + scan bar under "How you eat today" on every day */
+#dayModeSearch:not(:empty) { margin: 0 0 16px; }
+#dayModeSearch #foodLog { margin: 0; }
+#dayModeSearch .fl-results:empty { display: none; }
+#dayModeSearch .fl-slots { margin: 12px 0 4px; }
+#pageFood .app-food-search:not(.app-log-search) { display: none !important; }
+button.slot-mark { padding: 0; cursor: pointer; font: inherit; }
+#slotSection .slot-gutter button.slot-mark::before { content: ''; position: absolute; inset: -12px; }
+#slotSection .slot-gutter button.slot-mark { position: relative; }
+/* Home today card: next meal, then Today · This week · Workouts */
+#pageHome .app-tolog-line { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--accent); cursor: pointer; }
+html body #pageHome .app-week-stats { grid-template-columns: 1fr 1fr 1fr; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(20,20,20,.09); }
+html body #pageHome .app-week-stats button { gap: 2px; padding: 0 12px; min-height: 52px; }
+html body #pageHome .app-week-stats button:first-child { padding-left: 0; }
+html body #pageHome .app-week-stats button + button { border-left: 1px solid rgba(20,20,20,.09); padding-left: 12px; }
+html body #pageHome .app-week-stats span { font-size: 12px; color: #6f6f6f; }
+html body #pageHome .app-week-stats span i { font-style: normal; font-size: 10px; display: inline-block; transition: transform .2s; }
+html body #pageHome .app-week-stats [aria-expanded="true"] span i { transform: rotate(180deg); }
+html body #pageHome .app-week-stats b { font-size: 20px; font-weight: 600; color: #141414; line-height: 1.2; }
+html body #pageHome .app-week-stats small { font-size: 12px; color: #6f6f6f; }
+/* The week card, opened inside the today card */
+#pageHome .app-home-week { display: none; }
+#pageHome .app-home-week.open { display: block; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(20,20,20,.09); }
+html body #pageHome .app-home-week .week-card { background: transparent !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; margin: 0 !important; color: #141414 !important; }
+html body #pageHome .app-home-week .week-summary-nums { display: none !important; }
+html body #pageHome .app-home-week :is(.week-nav-label, .week-nav-btn, .week-card-val, .week-card-label) { color: #141414 !important; }
+html body #pageHome .app-home-week :is(.week-card-sub, .week-reset-ghost) { color: #6f6f6f !important; }
+html body #pageHome .app-home-week .week-bar { background: #f0f0ef !important; }
+html body #pageHome .app-home-week .week-bar-fill { background: var(--accent) !important; }
+html body #pageHome .app-home-week .week-caret { background: #f3f3f2 !important; }
+html body #pageHome .app-home-week .week-caret::before { color: #6f6f6f !important; }
+#pageHome .app-combo { padding-top: 12px; }
+/* Macro bars follow the mode accent: green on Normal days, pink on PMS days. Over target stays red. */
+html body .bar-fill:is(.cal, .p, .c, .f, .fib):not(.over) { background: var(--accent) !important; }
+/* Log: sugar/sodium line, phase notes, label photo */
+#foodLog .fl-total .fl-extra { font-size: 13px; color: #6f6f6f; }
+#foodLog .fl-phase-note { margin: 2px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--accent-dim, #e8f3ec); font-size: 13px; line-height: 1.4; color: #2b2b2b; }
+#foodLog .fl-photo { display: block; width: 100%; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: #f3f3f2; cursor: zoom-in; max-height: 160px; transition: max-height .25s; }
+#foodLog .fl-photo img { display: block; width: 100%; height: auto; }
+#foodLog .fl-photo.big { max-height: 900px; cursor: zoom-out; }
+#foodLog .fl-q { margin-bottom: -4px; }
+html[data-theme="dark"] #foodLog .fl-phase-note { color: #eee; }
+.pf-sources { display: grid; gap: 8px; margin: 0 4px 24px; }
+.pf-sources p { margin: 0; font-size: 13px; line-height: 1.45; color: #6f6f6f; }
+.pf-sources b { color: #424242; font-weight: 600; }
+html[data-theme="dark"] .pf-sources b { color: #ddd; }

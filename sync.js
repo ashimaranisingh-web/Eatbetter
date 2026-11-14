@@ -192,7 +192,33 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && session) syncAndRepaint(); });
   }
 
+  // ── Shared pack database (supabase/food-products.sql) ──
+  // Read: anyone (public pack info). Submit: signed-in only, one vote each.
+  async function lookupProduct(barcode) {
+    if (!sb) return null;
+    const { data, error } = await sb.from('food_products').select('*').eq('barcode', barcode).maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+  async function submitLabel(barcode, f) {
+    if (!sb || !session) return false;
+    const base = { p_barcode: barcode, p_name: f.name, p_per: f.per, p_cal: f.cal, p_protein: f.p, p_carbs: f.c,
+      p_fat: f.f, p_fibre: f.fib, p_pack: f.pack, p_serving: f.serving };
+    let { error } = await sb.rpc('submit_food_label_v2', { ...base, p_sugar: f.sug, p_sodium: f.na });
+    // Before food-products-v2.sql has been run, fall back to the first version.
+    if (error && /PGRST202|Could not find the function/i.test(error.code + ' ' + error.message)) ({ error } = await sb.rpc('submit_food_label', base));
+    if (error) throw error;
+    return true;
+  }
+  async function flagProduct(barcode) {
+    if (!sb || !session) return false;
+    const { error } = await sb.rpc('flag_food_product', { p_barcode: barcode });
+    if (error) throw error;
+    return true;
+  }
+
   window.EBSync = {
+    lookupProduct, submitLabel, flagProduct,
     enabled: () => !!sb,
     email: () => session?.user?.email || '',
     signedIn: () => !!session,

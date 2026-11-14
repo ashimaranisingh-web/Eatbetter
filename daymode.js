@@ -161,11 +161,17 @@
     page.dataset.dayview = mode;   // not "daymode": that name belongs to the picker buttons
     // Log puts search right under the picker; Guide and Plan sit below the day's totals.
     const body = $('dayModeBody'), want = mode === 'log' ? box : ($('cravingWrap') || $('slotSection'));
-    if (want === box) { if (box.nextElementSibling !== body) box.after(body); }
+    if (want === box) { const after = $('dayModeSearch') || box; if (after.nextElementSibling !== body) after.after(body); }
     else if (want && want.previousElementSibling !== body) want.before(body);
     box.innerHTML = pickerHTML(d, mode, locked);
+    // One search + scan bar under the dropdown on every day. Log mode has the
+    // full version (with the logged list) in its own body below.
+    let search = $('dayModeSearch');
+    if (!search) { search = document.createElement('div'); search.id = 'dayModeSearch'; }
+    if (box.nextElementSibling !== search) box.after(search);
+    search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true }) : '';
     $('dayModeBody').innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : '';
-    if (mode === 'log' && window.EBFoodLog) EBFoodLog.mounted();
+    if (window.EBFoodLog) EBFoodLog.mounted();
   }
 
   function refresh() {

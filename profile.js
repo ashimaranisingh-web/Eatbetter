@@ -111,6 +111,14 @@
         </div>
         <p class="eb-group-note">Adds AI estimates for foods the built-in list doesn’t know. Meal text is sent to Anthropic when set.</p>
 
+        <p class="eb-group-label">Food data and privacy</p>
+        <div class="pf-sources">
+          <p><b>Where the numbers come from.</b> Home recipes are Menu-fi estimates. Ingredients come from USDA FoodData Central (public domain) and IFCT 2017 by the National Institute of Nutrition, India. Packaged foods come from <b>Open Food Facts</b>, made by volunteers and shared under the Open Database License, and from labels read by Menu-fi users. All numbers are estimates.</p>
+          <p><b>Camera and photos.</b> Used only to scan barcodes and read nutrition labels. Photos are read on your phone and aren’t uploaded or kept.</p>
+          <p><b>Shared packs.</b> When you save a pack from its label while signed in, its barcode, name and nutrition are shared so other people’s scans find it. Your account is linked to that entry privately, only so each person counts once. Nobody can see who added it, and it’s deleted with your account.</p>
+          <p><b>Lookups.</b> When a pack isn’t on your phone, its barcode or name is sent to Open Food Facts or UPCitemdb to find it. Nothing about you is sent.</p>
+        </div>
+
         <div class="eb-list pf-actions">
           <button type="button" class="eb-list-row" data-pf="redo"><span class="eb-list-label">Redo Onboarding</span>${ICONS.chevron}</button>
           <button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase Profile</span></button>
