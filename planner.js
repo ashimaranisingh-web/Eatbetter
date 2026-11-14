@@ -290,9 +290,9 @@
     const target = (typeof isPMSMode === 'function' && isPMSMode()) ? PMS_TARGETS.cal : TARGETS.cal;
     const gap = TDEE - target;
     if (Math.abs(gap) < 50) { el.innerHTML = ''; if (tg) tg.innerHTML = ''; return; }
-    // Deficit (or surplus) on the left; the day's target sits next to maintenance on the right.
-    el.innerHTML = `<small>${gap > 0 ? 'Deficit' : 'Surplus'}</small><b>${Math.abs(gap).toLocaleString()}</b>`;
-    if (tg) tg.innerHTML = `<small>${gap > 0 ? 'Weight loss' : 'Weight gain'}</small><b>${target.toLocaleString()}</b>`;
+    // One short line: what the day's number means.
+    el.innerHTML = `<small class="tracker-goal">${gap > 0 ? `Eat in a ${Math.abs(gap).toLocaleString()} cal deficit daily for weight loss` : `Eat ${Math.abs(gap).toLocaleString()} cal over maintenance daily to gain`}</small>`;
+    if (tg) tg.innerHTML = '';
   }
   const origTracker = window.renderTracker;
   window.renderTracker = function () { const r = origTracker.apply(this, arguments); updateGap(); return r; };

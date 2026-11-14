@@ -130,11 +130,11 @@
     const logged = getActivities(ds).filter(a => a.suggested === ds);
     // The four levels stay on screen, so changing your energy is one tap.
     return `<div class="app-card app-energy-card">
-      <p class="app-card-label">${cur ? 'Energy today' : 'How’s your energy?'}</p>
+      <p class="app-card-label">Energy today</p>
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${cur === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${cur === e.v}">${e.t}</button>`).join('')}
       </div>
-      ${s ? '' : '<p class="app-muted">Tap how you feel and I’ll suggest workouts and foods for your energy and cycle.</p>'}
+
       ${s ? comboHTML(ds, s, foods) : ''}
       ${s ? `<p class="app-rail-label">Workouts</p>
       <div class="app-rail">${s.options.map(o => {
@@ -281,11 +281,12 @@
     const weekSec = $('weeklyTrackerSection'), homeBody = page.querySelector('.app-home-body');
     if (weekSec && homeBody.contains(weekSec)) homeBody.after(weekSec);
     page.querySelector('.app-home-body').innerHTML = `
-      <div class="app-card app-today app-today-hero">
+      ${weekCardHTML(eaten, target)}
+      <div class="app-card app-shortcuts">
         ${meta ? '' : `<button type="button" class="app-today-setup" data-go="cycle">Add your last period date to see your phase</button>`}
         ${nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
             <div class="app-next-text">
-              <span class="app-meta">${esc(nm.slot)} · ${esc(nm.time)}</span>
+              <span class="app-meta">${nm.now ? 'Now' : 'Up next'} · ${esc(nm.slot)} · ${esc(nm.time)}</span>
               <b class="app-next-name">${esc(nm.name)}</b>
               ${nm.missed ? `<span class="app-tolog-line" data-go="food">${nm.missed} earlier meal${nm.missed > 1 ? 's' : ''} to log</span>` : ''}
             </div>
@@ -295,14 +296,11 @@
               <div class="app-next-text"><span class="app-meta">All meals logged</span><b class="app-next-name">Done for today</b></div>
               <button type="button" class="app-opt-btn" data-go="food">Nutrition</button>
             </div>`}
-        ${weekStatsHTML(eaten, target)}
-        <div class="app-home-week${homeWeekOpen ? ' open' : ''}"></div>
+        <div class="ch-home-slot">${window.EBChallenges ? EBChallenges.homeLine() : ''}</div>
       </div>
       ${energyHTML(ds)}
-      <div class="ch-home-slot">${window.EBChallenges ? EBChallenges.homeLine() : ''}</div>
 `;
-    const slot = page.querySelector('.app-home-week'); if (slot && weekSec) slot.appendChild(weekSec);
-    rollUp(page.querySelector('.app-week-stats .app-big'), eaten);
+    if (weekSec && $('appParking') && weekSec.parentElement !== $('appParking')) $('appParking').appendChild(weekSec);
     paintHomeWeek();
     maybeWeekSheet();
   }
@@ -385,6 +383,13 @@
       logPeriodStart(ds, 'Period started. Your cycle is updated');
     } else learnPeriodLength();
   }
+  function setFlow(ds, v) {
+    const cur = (dayLog()[ds] || {}).flow;
+    if (cur === v) return;
+    setDayField(ds, 'flow', v || null);
+    if (v && v !== 'spotting' && !periodHistory().some(st => st <= ds && near(st, ds))) logPeriodStart(ds, 'Period started. Your cycle is updated');
+    else learnPeriodLength();
+  }
   // Period length = consecutive flow days from each logged start, averaged.
   function learnPeriodLength() {
     const log = dayLog(), lens = [];
@@ -403,29 +408,69 @@
   const chipRow = (list, sel, attr) => `<div class="app-syms">${list.map(([v, t]) =>
     `<button type="button" class="eb-chip${(Array.isArray(sel) ? sel.includes(v) : sel === v) ? ' on' : ''}" ${attr}="${v}">${t}</button>`).join('')}</div>`;
 
-  // One card for today's log: flow, symptoms, mood, cravings, water.
-  function todayLogHTML(ds, phase) {
-    const d = dayLog()[ds] || {}, syms = symLog()[ds] || [], water = +d.water || 0;
-    const tips = syms.filter(v => SYM_TIPS[v]);
+  // ── The day's log: opened from a button, edited as a draft, kept on Save ──
+  let cycleDate = null, logDraft = null;   // cycleDate: the day picked on the strip (null = today)
+  const viewDs = () => cycleDate || dateToStr(new Date());
+  function draftFor(ds) {
+    const d = dayLog()[ds] || {};
+    return { ds, flow: d.flow || null, syms: (symLog()[ds] || []).slice(), mood: (d.mood || []).slice(), cravings: (d.cravings || []).slice(), water: +d.water || 0 };
+  }
+  function logSummary(ds) {
+    const d = dayLog()[ds] || {}, syms = (symLog()[ds] || []).filter(v => v !== 'none');
+    const nm = (list, k) => (list.find(x => x[0] === k) || [, k])[1];
+    const bits = [];
+    if (d.flow) bits.push(nm(FLOW, d.flow) + ' flow');
+    if (syms.length) bits.push(syms.map(v => nm(SYMPTOMS, v)).join(', '));
+    if ((d.mood || []).length) bits.push(d.mood.map(v => nm(MOODS, v)).join(', '));
+    if ((d.cravings || []).length) bits.push('craving ' + d.cravings.map(v => nm(CRAVINGS, v).toLowerCase()).join(', '));
+    if (+d.water) bits.push(`${d.water} glass${+d.water === 1 ? '' : 'es'} of water`);
+    return bits.join(' · ');
+  }
+  function logCardHTML(ds, phase) {
+    const isToday = ds === dateToStr(new Date());
+    const when = isToday ? 'Today' : fmtDay(new Date(ds + 'T00:00'));
+    const sum = logSummary(ds);
+    if (!logDraft || logDraft.ds !== ds) return `<div class="app-card app-logcta">
+        <div class="app-logcta-text"><p class="app-card-label">${when}</p><p class="app-muted">${sum ? esc(sum) : 'Nothing logged yet'}</p></div>
+        <button type="button" class="eb-btn primary sm" data-cyclog-open>${sum ? 'Edit' : 'Log'}</button>
+      </div>`;
+    const d = logDraft, water = d.water;
+    const tips = d.syms.filter(v => SYM_TIPS[v]);
     const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
-    const crave = (d.cravings || []).filter(c => CRAVE_SWAP[c]);
+    const crave = d.cravings.filter(c => CRAVE_SWAP[c]);
     return `<div class="app-card app-daylog">
-      <div class="app-row"><p class="app-card-label">How are you feeling today?</p><span class="app-muted small">${fmtDay(new Date(ds + 'T00:00'))}</span></div>
+      <div class="app-row"><p class="app-card-label">How are you feeling?</p><span class="app-muted small">${when}</span></div>
       <div class="app-daylog-sec"><p>Flow</p>${chipRow(FLOW, d.flow, 'data-flow')}</div>
-      <div class="app-daylog-sec"><p>Symptoms</p>${chipRow(SYMPTOMS.filter(([v]) => v !== 'cravings'), syms, 'data-sym')}
+      <div class="app-daylog-sec"><p>Symptoms</p>${chipRow(SYMPTOMS.filter(([v]) => v !== 'cravings'), d.syms, 'data-sym')}
         ${tips.length ? `<div class="app-tips">${tips.map((v, i) => `<details class="app-tip"${i === 0 ? ' open' : ''}>
             <summary>For ${symName(v).toLowerCase()}</summary>
             ${SYM_TIPS[v].map(([tag, t]) => `<p><span class="app-tag ${tag === 'Ease off' || tag === 'Note' ? 'off' : ''}">${tag}</span>${t}</p>`).join('')}
           </details>`).join('')}</div>` : ''}</div>
-      <div class="app-daylog-sec"><p>Mood</p>${chipRow(MOODS, d.mood || [], 'data-mood')}</div>
-      <div class="app-daylog-sec"><p>Cravings</p>${chipRow(CRAVINGS, d.cravings || [], 'data-crave')}
+      <div class="app-daylog-sec"><p>Mood</p>${chipRow(MOODS, d.mood, 'data-mood')}</div>
+      <div class="app-daylog-sec"><p>Cravings</p>${chipRow(CRAVINGS, d.cravings, 'data-crave')}
         ${crave.length ? `<div class="app-swaps">${crave.map(c => `<div class="app-swap"><span>Craving ${c}? Try</span>
           ${CRAVE_SWAP[c].map(f => `<button type="button" class="app-opt-btn" data-food-idea="${esc(f)}">${f}</button>`).join('')}
           <button type="button" class="app-swap-more" data-crave-more="${c}">More ideas</button></div>`).join('')}</div>` : ''}</div>
-      <div class="app-daylog-sec app-water"><p>Water<small>${water} of 8 glasses${phase === 'luteal' ? ' · helps with bloating' : ''}</small></p>
+      <div class="app-daylog-sec app-water"><p>Water<small>${water} of 8 glasses</small></p>
         <div class="app-water-cups" role="group" aria-label="Glasses of water">${Array.from({ length: 8 }, (_, i) =>
           `<button type="button" class="app-cup${i < water ? ' on' : ''}" data-water="${i + 1}" aria-label="${i + 1} glass${i ? 'es' : ''}"></button>`).join('')}</div></div>
+      <div class="app-daylog-actions">
+        <button type="button" class="eb-btn primary" data-cyclog-save>Save</button>
+        <button type="button" class="eb-link" data-cyclog-cancel>Cancel</button>
+      </div>
     </div>`;
+  }
+  function saveLog() {
+    const d = logDraft; if (!d) return;
+    window.EBAnalytics && EBAnalytics.track('cycle_log_used', { section: 'save' });
+    setFlow(d.ds, d.flow);
+    const sl = symLog(); if (d.syms.length) sl[d.ds] = d.syms; else delete sl[d.ds];
+    try { localStorage.setItem(SKEY, JSON.stringify(sl)); } catch {}
+    setDayField(d.ds, 'mood', d.mood); setDayField(d.ds, 'cravings', d.cravings); setDayField(d.ds, 'water', d.water || null);
+    const when = d.ds === dateToStr(new Date()) ? 'today' : fmtDay(new Date(d.ds + 'T00:00'));
+    logDraft = null;
+    EB.toast(`Saved for ${when}`);
+    try { renderCycleCalendar(); } catch {}
   }
 
   // What to eat for today's phase: the nutrient that matters and foods to log.
@@ -533,13 +578,13 @@
     const stats = [
       ['Average cycle', gaps.length ? `${Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length)} days` : `${s.len} days`, gaps.length ? `${gaps.length} logged` : 'your estimate'],
       ['Average period', `${s.period} days`, hist.some(st => flowDays(st) >= 2) ? 'from your flow logs' : 'your estimate'],
-      ['Cycle variation', gaps.length >= 2 ? `${Math.max(...gaps) - Math.min(...gaps)} days` : '—', gaps.length >= 2 ? (Math.max(...gaps) - Math.min(...gaps) <= 7 ? 'regular' : 'irregular') : 'needs 3 periods']
+      ['Varies by', gaps.length >= 2 ? `${Math.max(...gaps) - Math.min(...gaps)} days` : '—', gaps.length >= 2 ? (Math.max(...gaps) - Math.min(...gaps) <= 7 ? 'regular' : 'irregular') : 'after 3 periods']
     ];
     return `<div class="app-card app-patterns">
       <p class="app-card-label">Your patterns</p>
       <div class="app-stats3">${stats.map(([k, v, n]) => `<div><span>${k}</span><b>${v}</b><small>${n}</small></div>`).join('')}</div>
       ${out.length ? `<ul class="app-insights">${out.map(x => `<li>${x}</li>`).join('')}</ul>`
-        : '<p class="app-muted">Log symptoms, moods and cravings for a cycle and I’ll show when they tend to come, and how your eating changes by phase.</p>'}
+        : '<p class="app-muted">Log for a cycle to see when symptoms and cravings show up.</p>'}
     </div>`;
   }
 
@@ -601,59 +646,91 @@
       </div>`;
   }
 
+  // What to expect in each phase: mood, energy, libido, body.
+  const EXPECT = {
+    menstrual: 'Tired or low at first, and cramps are common. Mood usually lifts as bleeding eases. Libido tends to be low.',
+    follicular: 'Energy, focus and confidence climb. Skin is often at its clearest. Libido starts to rise.',
+    ovulation: 'Your most confident, social days, and libido is usually at its highest. Some feel a twinge on one side. This is your most fertile window.',
+    luteal: 'Calm and steady at first. In the last week, irritability, low mood, bloating, sore breasts and cravings are common. Libido often dips.'
+  };
+  const PHASE_NAME = { menstrual: 'Period', follicular: 'Follicular', ovulation: 'Ovulation', luteal: 'Luteal (PMS)' };
+  // Runs of the same phase from a date: the one it's in, then the next three.
+  function phaseRuns(ds) {
+    const runs = []; let d = ds, info = phaseOf(d); if (!info) return runs;
+    let start = d; while (phaseOf(addDays(start, -1)) && phaseOf(addDays(start, -1)).phase === info.phase && runs.length === 0 && addDays(start, -1) >= addDays(ds, -40)) start = addDays(start, -1);
+    for (let guard = 0; guard < 120 && runs.length < 4; guard++) {
+      const ph = phaseOf(d); if (!ph) break;
+      let end = d; while (phaseOf(addDays(end, 1)) && phaseOf(addDays(end, 1)).phase === ph.phase) end = addDays(end, 1);
+      runs.push({ phase: ph.phase, start: runs.length ? d : start, end });
+      d = addDays(end, 1);
+    }
+    return runs;
+  }
+  function phaseDetail(k, diet, open) {
+    const g = phaseGuide(diet).find(x => x.k === k); if (!g) return '';
+    const eat = (PHASE_NUTRIENTS[k] || []).map(([n, , ex]) => `<b>${n}</b> (${ex})`).join(', ');
+    return `<p class="cyc-body">${g.body}</p>
+      <dl class="cyc-guide">
+        <div><dt>Expect</dt><dd>${EXPECT[k]}</dd></div>
+        <div><dt>Eat</dt><dd>${eat}</dd></div>
+        <div><dt>Move</dt><dd>${g.move}</dd></div>
+      </dl>
+      ${open ? `<p class="cyc-sub">Meals for this phase</p>
+      <ul class="app-food-list">${phaseMeals(k, diet).map(([slot, m, cal]) => `<li><span><b>${esc(m)}</b><small>${slot} · about ${cal} cal</small></span>
+        <button type="button" class="app-opt-btn" data-food-idea="${esc(m)}" data-idea-cal="${cal}" data-idea-slot="${slot.toLowerCase()}">Add</button></li>`).join('')}</ul>` : ''}`;
+  }
+
+  let nowOpen = true;   // the current-phase section, open unless she folds it
+  document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cyc-now]')) nowOpen = e.target.open; }, true);
   function renderCyclePage() {
     const page = $('pageCycle'); if (!page) return;
-    const p = EB.getProfile();
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const ds = dateToStr(today);
+    const p = EB.getProfile(), diet = p.food.diet || 'veg';
+    const ds = viewDs(), isToday = ds === dateToStr(new Date());
     const info = phaseOf(ds), meta = info && PHASE_META[info.phase];
     const sub = page.querySelector('.app-cycle-sub');
     const body = page.querySelector('.app-cycle-body');
-    let next = null, pms = null, until = null, ovu = null;
-    const cs = getCycleStart();
-    if (cs) {
-      const len = +p.cycle.cycleLength || 28;
-      next = new Date(cs + 'T00:00'); while (next <= today) next.setDate(next.getDate() + len);
-      until = Math.round((next - today) / 86400000);
-      const lead = { '1-3': 3, '4-7': 7, '7+': 10 }[p.cycle.pmsStart] || 5;
-      pms = new Date(next); pms.setDate(pms.getDate() - lead);
-      ovu = new Date(next); ovu.setDate(ovu.getDate() - 14);
-    }
-    // "Day 2 · Menstrual phase · ends in 4 days": days left in the current phase.
-    let left = 0;
-    if (info) { const st = { ...cycleSettings(), len: info.cycleLength }; let e = info.dayNum;
-      while (e < st.len && getCyclePhase(e + 1, st) === info.phase) e++; left = e - info.dayNum + 1; }
+    const runs = info ? phaseRuns(ds) : [];
+    const cur = runs[0], short = d => fmtDay(new Date(d + 'T00:00'));
+    const left = cur ? Math.round((new Date(cur.end) - new Date(ds)) / 86400000) + 1 : 0;
     sub.innerHTML = meta
-      ? `<span class="app-hero-line"><b>Day ${info.dayNum}</b> · ${meta.label === 'PMS' ? 'Luteal (PMS)' : meta.label} · ends ${left <= 1 ? 'today' : `in ${left} days`}</span>`
+      ? `<span class="app-hero-line"><b>Day ${info.dayNum}</b> · ${PHASE_NAME[info.phase]}${isToday ? '' : ` · ${short(ds)}`}</span>`
       : '<span class="app-hero-sub">Add your last period date to start</span>';
-    const syms = symLog()[ds] || [];
-    const iron = ({ vegan: 'palak, rajma, tofu, dates', veg: 'palak, rajma, chana, dates', jain: 'chana, moong, sesame, dates',
-      egg: 'eggs, palak, rajma, dates', pescatarian: 'fish, eggs, palak, rajma', nonveg: 'chicken, eggs, palak, rajma' })[p.food.diet] || 'palak, rajma, dates';
-    const guide = phaseGuide(p.food.diet);
-    const tips = syms.filter(v => SYM_TIPS[v]);
-    const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
-    // Each upcoming date opens what that phase means: body, eat, move, tip.
-    const nextRow = (k, head) => { const g = guide.find(x => x.k === k);
-      return `<li><details class="app-next-row"><summary><i style="background:${PHASE_META[k].color}"></i>${head}</summary>
-        ${g ? `<div class="app-next-body"><p class="app-phase-body">${g.body}</p>
-          <p><span class="app-tag">Eat</span>${g.eat}</p><p><span class="app-tag">Move</span>${g.move}</p><p><span class="app-tag">Tip</span>${g.tip}</p></div>` : ''}
-      </details></li>`; };
+    const fertile = r => r.phase === 'ovulation' ? ` · most fertile ${short(addDays(r.start, -2)).replace(/^\w+ /, '')}–${short(addDays(r.end, 0)).replace(/^\w+ /, '')}` : '';
+    // PMS symptoms start a set number of days before the period (from onboarding).
+    const lead = { '1-3': 3, '4-7': 7, '7+': 10 }[p.cycle.pmsStart] || 5;
+    const nextPeriod = runs.find((r, i) => i > 0 && r.phase === 'menstrual');
+    const pmsFrom = r => r.phase === 'luteal' && nextPeriod ? ` · PMS likely from ${short(addDays(nextPeriod.start, -lead))}` : '';
     body.innerHTML = `
-      <div class="app-card app-cycle-card" style="--phase:${meta ? meta.color : '#e1e3e7'}">
-        <div class="app-row"><p class="app-card-label">Your cycle</p>${meta ? `<span class="app-phase"><i style="background:${meta.color}"></i>${meta.label}</span>` : ''}</div>
+      <div class="app-card app-cycle-card">
+        <p class="app-card-label">Your cycle</p>
         ${info ? cycleBar(info) : ''}
-        ${next ? `<ul class="app-cycle-next">
-            ${nextRow('menstrual', `<span>Next period<small>in ${until} day${until === 1 ? '' : 's'}</small></span><b>${fmtDay(next)}</b>`)}
-            ${ovu && ovu > today ? `${nextRow('ovulation', `<span>Ovulation around<small>most fertile ${fmtDay(new Date(ovu - 2 * 86400000)).replace(/^\w+ /, '')} to ${fmtDay(new Date(+ovu + 86400000)).replace(/^\w+ /, '')}</small></span><b>${fmtDay(ovu)}</b>`)}` : ''}
-            ${nextRow('luteal', `<span>PMS likely from<small>${Math.round((next - pms) / 86400000)} days before your period</small></span><b>${fmtDay(pms)}</b>`)}
-          </ul>` : '<p class="app-muted">Add the first day of your last period and I’ll predict the next one.</p>'}
+        ${cur ? `<details class="cyc-now" style="--phase:${PHASE_META[cur.phase].color}"${nowOpen ? ' open' : ''} data-cyc-now>
+            <summary class="cyc-now-head"><i></i><b>${PHASE_NAME[cur.phase]}</b>
+              <span>until ${short(cur.end)} · ${left <= 1 ? 'last day' : `${left} days left`}${pmsFrom(cur)}</span></summary>
+            ${phaseDetail(cur.phase, diet, true)}
+          </details>
+          <ul class="cyc-next">${runs.slice(1).map(r => `<li><details>
+              <summary><i style="background:${PHASE_META[r.phase].color}"></i><span><b>${PHASE_NAME[r.phase]}</b><small>${short(r.start)}${fertile(r)}${pmsFrom(r)}</small></span></summary>
+              <div class="cyc-next-body">${phaseDetail(r.phase, diet, false)}</div></details></li>`).join('')}</ul>`
+          : '<p class="app-muted">Add the first day of your last period and I’ll map your cycle.</p>'}
         <p class="app-muted small">General guidance, not medical advice.</p>
       </div>
-      ${todayLogHTML(ds, info && info.phase)}
-      ${info ? phaseFoodHTML(info.phase, p.food.diet) : ''}
+      ${logCardHTML(ds, info && info.phase)}
       ${patternsHTML(p)}
       ${periodLogHTML(p)}`;
+    // The strip shows which day this page is about.
+    document.querySelectorAll('#cycleSection .cycle-day-cell').forEach(c => c.classList.toggle('picked', active === 'cycle' && c.dataset.date === ds));
   }
+  // On Menstruation, tapping a date shows (and logs) that day.
+  document.addEventListener('click', e => {
+    if (active !== 'cycle') return;
+    const cell = e.target.closest('#cycleSection .cycle-day-cell'); if (!cell || !cell.dataset.date) return;
+    e.stopPropagation(); e.preventDefault();
+    const ds = cell.dataset.date;
+    cycleDate = ds === dateToStr(new Date()) ? null : ds;
+    if (logDraft && logDraft.ds !== ds) logDraft = null;
+    renderCyclePage();
+  }, true);
 
   // ── Fitness ──
   function healthHTML() {
@@ -669,17 +746,9 @@
   }
   function renderFitnessPage() {
     const page = $('pageFitness'); if (!page) return;
-    const ds = selectedDateStr();
-    page.querySelector('.app-fit-energy').innerHTML = energyHTML(ds) + healthHTML();
     const chs = page.querySelector('.app-fit-challenges');
     if (chs && window.EBChallenges) chs.innerHTML = EBChallenges.cardHTML();
-    const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
-    let week = 0;
-    ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(d => { try { week += getActivities(dateStrForDay(d)).length; } catch {} });
-    const weekLine = week ? `${week} workout${week === 1 ? '' : 's'} this week` : 'none this week yet';
-    page.querySelector('.app-fit-sub').innerHTML = burned
-      ? `<span class="app-hero"><b>${burned.toLocaleString()}</b><span>cal burned ${DAY_NAMES[currentDay]} · ${weekLine}</span></span>`
-      : `<span class="app-hero app-hero-empty"><span>No workouts logged ${ds === dateToStr(new Date()) ? 'today' : DAY_NAMES[currentDay]} · ${weekLine}. Log one below, or start a challenge.</span></span>`;
+    const h = page.querySelector('.app-fit-health'); if (h) h.innerHTML = healthHTML();
   }
 
   // ── Food: a line that reacts to how the day is going ──
@@ -897,7 +966,7 @@
     // Nutrition (food)
     const food = mk('pageFood');
     const foodHead = document.createElement('header'); foodHead.className = 'app-head';
-    foodHead.innerHTML = '<div class="app-head-row"><h1>Nutrition</h1></div><p class="app-hero" id="foodHero"></p><p class="app-motto" id="foodMotto"></p>';
+    foodHead.innerHTML = '<div class="app-head-row"><h1>Nutrition</h1></div>';
     const reset = $('resetBtn'); if (reset) foodHead.firstChild.appendChild(reset);
     park.appendChild($('modeSubtitle'));            // targets now live in the day card
     food.appendChild(foodHead);
@@ -909,6 +978,13 @@
     food.appendChild($('tracker'));
     home.appendChild($('weeklyTrackerSection'));   // the week card lives on Home only
     food.appendChild($('cravingWrap'));
+    // The craving finder reads as its own thing, not a second search bar.
+    const cw = $('cravingWrap'), ci = $('cravingInput');
+    if (cw && !cw.querySelector('.craving-label')) {
+      const lb = document.createElement('p'); lb.className = 'craving-label'; lb.textContent = 'Craving something?';
+      cw.prepend(lb);
+      if (ci) { ci.placeholder = 'Sweet, salty, spicy, crunchy…'; ci.setAttribute('aria-label', 'What are you craving?'); }
+    }
     food.appendChild($('slotSection'));
     const drawers = [...container.querySelectorAll(':scope > .drawer-group')];
     const activityGroup = drawers.find(g => g.querySelector('#activityBlock'));
@@ -929,10 +1005,8 @@
 
     // Fitness
     const fit = mk('pageFitness');
-    fit.innerHTML = `<header class="app-head"><div class="app-head-row"><h1>Fitness</h1>
-        <button type="button" class="reset-btn" data-fit-reset>Reset day</button></div>
-        <p class="subtitle app-fit-sub"></p></header>
-      <div class="app-shared"></div><div class="app-fit-challenges"></div><div class="app-fit-energy"></div>`;
+    fit.innerHTML = `<header class="app-head"><div class="app-head-row"><h1>Fitness</h1></div></header>
+      <div class="app-shared"></div>`;
     if (activityGroup) {
       fit.appendChild(activityGroup);
       const det = activityGroup.querySelector('#activityBlock');
@@ -953,6 +1027,9 @@
         if (divider) goals.appendChild(divider);
         if (list) goals.appendChild(list);
         activityGroup.after(goals);
+        const ch = document.createElement('div'); ch.className = 'app-fit-challenges';
+        const hl = document.createElement('div'); hl.className = 'app-fit-health';
+        activityGroup.before(ch); goals.after(hl);
       }
     }
 
@@ -970,8 +1047,8 @@
     const bar = document.createElement('nav');
     bar.className = 'eb-tabbar';
     bar.setAttribute('aria-label', 'Main');
-    bar.innerHTML = `<div class="eb-tabbar-pill">${TABS.map(([id, t]) => `<button type="button" data-tab="${id}">${TAB_ICONS[id]}<span>${t}</span></button>`).join('')}</div>
-      <button type="button" class="eb-mira-btn eb-plus-btn" data-quick aria-label="Quick actions" aria-expanded="false"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>`;
+    // Four tabs only: adding food, workouts and periods happens on each page.
+    bar.innerHTML = `<div class="eb-tabbar-pill">${TABS.map(([id, t]) => `<button type="button" data-tab="${id}">${TAB_ICONS[id]}<span>${t}</span></button>`).join('')}</div>`;
     document.body.appendChild(bar);
     bar.addEventListener('click', e => {
       if (e.target.closest('[data-quick]')) return toggleQuick();
@@ -989,6 +1066,10 @@
     const origSlots = window.renderSlotSection;
     if (typeof origSlots === 'function') window.renderSlotSection = function () { const r = origSlots.apply(this, arguments); timeline(); return r; };
     window.checkAndRenderSurvivalBadge = survivalBadge;
+    // Replace / Add and the old "Add a meal" sheet now open the page's own search.
+    const origReplace = window.enterReplaceMode, origAdd = window.openAddMeal;
+    window.enterReplaceMode = slotId => window.EBFoodLog ? EBFoodLog.focusSearch(slotId) : origReplace && origReplace(slotId);
+    window.openAddMeal = () => window.EBFoodLog ? EBFoodLog.focusSearch() : origAdd && origAdd();
     document.addEventListener('eb:profile', repaint);
 
     buildMini();
@@ -1002,23 +1083,35 @@
     go(location.hash.replace('#', '') || 'home', true);
   }
 
-  // Tapping a done mark undoes it: wake-up ticks clear; logged food is
-  // removed only after a confirm, since that deletes what was entered.
+  // Tapping a done mark unticks it straight away; a toast offers Undo.
+  function undoToast(msg, undo) {
+    let el = $('appUndo');
+    if (!el) { el = document.createElement('div'); el.id = 'appUndo'; el.className = 'app-undo'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+    el.innerHTML = `<span>${esc(msg)}</span><button type="button">Undo</button>`;
+    el.classList.add('show');
+    clearTimeout(undoToast.t); undoToast.t = setTimeout(() => el.classList.remove('show'), 5000);
+    el.querySelector('button').onclick = () => { el.classList.remove('show'); undo(); };
+  }
+  const repaintMeals = () => { ['renderSlotSection', 'renderTracker', 'renderWeeklyTracker'].forEach(fn => { try { window[fn](); } catch {} }); window.EBDayMode && EBDayMode.paint(); };
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-slot-unmark]'); if (!b) return;
     const card = b.closest('.slot-card'), slot = b.dataset.slotUnmark, ds = selectedDateStr();
+    const name = slot ? slot.charAt(0).toUpperCase() + slot.slice(1) : 'Meal';
     if (card && card.querySelector('.wake-row')) {
+      const before = (() => { try { return getWakeupItems(ds); } catch { return []; } })();
       try { setWakeupItems(ds, []); localStorage.removeItem('wakeup_checked_' + ds); } catch {}
-    } else {
-      const log = getSlotLog(ds), v = log[slot], n = Array.isArray(v) ? v.length : v ? 1 : 0;
-      const name = slot ? slot.charAt(0).toUpperCase() + slot.slice(1) : 'this meal';
-      if (n && !confirm(`Remove ${n === 1 ? 'the food' : `the ${n} foods`} logged for ${name}?`)) return;
-      delete log[slot]; setSlotLog(ds, log);
-      try { setSlotEaten(ds, slot, false); } catch {}
+      repaintMeals();
+      return undoToast('Wake up unticked', () => { try { setWakeupItems(ds, before); } catch {} repaintMeals(); });
     }
-    ['renderSlotSection', 'renderTracker', 'renderWeeklyTracker'].forEach(fn => { try { window[fn](); } catch {} });
-    window.EBDayMode && EBDayMode.paint();
-    EB.toast && EB.toast('Unticked');
+    const log = getSlotLog(ds), before = log[slot], wasEaten = (() => { try { return getSlotEaten(ds, slot); } catch { return false; } })();
+    delete log[slot]; setSlotLog(ds, log);
+    try { setSlotEaten(ds, slot, false); } catch {}
+    repaintMeals();
+    undoToast(`${name} unticked`, () => {
+      const l = getSlotLog(ds); if (before !== undefined) l[slot] = before; setSlotLog(ds, l);
+      try { if (wasEaten) setSlotEaten(ds, slot, true); } catch {}
+      repaintMeals();
+    });
   });
 
   function timeline() {
@@ -1077,19 +1170,76 @@
   // Today, this week and workouts as three equal stats. "This week" opens the
   // week card (‹ Week 3 of 6 ›, bar, Details) inside the same card.
   let homeWeekOpen = false;
-  function weekStatsHTML(eaten, target) {
-    const d = weekData(), n = d.reduce((a, x) => a + x.workouts, 0), burned = d.reduce((a, x) => a + x.burned, 0);
-    return `<div class="app-week-stats">
-      <button type="button" data-go="food"><span>Today</span><b class="app-big">${(eaten || 0).toLocaleString()}</b><small>of ${(target || 0).toLocaleString()} cal</small></button>
-      <button type="button" data-home-week aria-expanded="${homeWeekOpen}"><span>This week <i aria-hidden="true">▾</i></span><b id="homeWeekCal">–</b><small id="homeWeekSub"></small></button>
-      <button type="button" data-go="fitness"><span>Workouts</span><b>${n}</b><small>${n ? `${burned.toLocaleString()} cal` : 'none yet'}</small></button>
+  // What the plan allowed on the finished days (target + what workouts burned) vs what was eaten.
+  function budgetBar(done, T) {
+    const allowed = Math.round(done.reduce((a, x) => a + T + x.burned, 0)), ate = Math.round(done.reduce((a, x) => a + x.eat.cal, 0));
+    const over = ate > allowed, pct = allowed ? Math.min(100, ate / allowed * 100) : 0;
+    return `<div class="app-budget" role="img" aria-label="Ate ${ate.toLocaleString()} of ${allowed.toLocaleString()} calories allowed">
+        <div class="app-budget-bar"><i class="${over ? 'over' : ''}" style="width:${pct}%"></i></div>
+        <div class="app-budget-ends"><span>Ate <b>${ate.toLocaleString()}</b></span><span>${over ? `${(ate - allowed).toLocaleString()} over the ${allowed.toLocaleString()} allowed` : `of ${allowed.toLocaleString()} allowed`}</span></div>
+      </div>`;
+  }
+  // 7,700 cal of deficit ≈ 1 kg of body fat, however long that takes.
+  function fatLine(real, gap) {
+    const pace = gap > 0 ? ` At ${gap.toLocaleString()} a day, that’s about <b>1 kg every ${Math.round(CAL_PER_KG / gap)} days</b>.` : '';
+    return `1 kg of fat is about <b>${CAL_PER_KG.toLocaleString()} cal</b> of deficit in total.${pace}`;
+  }
+  function weekCardHTML(eaten, target) {
+    const d = weekData(), S = weekSummary(d);
+    const lose = /DEFICIT/.test(S.label);
+    const T = (isPMSMode() ? PMS_TARGETS : TARGETS).cal;
+    const range = (() => { const a = new Date(d[0].ds + 'T00:00'), z = new Date(d[6].ds + 'T00:00');
+      return `${a.getDate()}–${z.getDate()} ${z.toLocaleDateString(undefined, { month: 'short' })}`; })();
+    const today = dateToStr(new Date());
+    const top = Math.max(T, ...d.map(x => x.eat.cal)) || 1;
+    const days = d.map(x => {
+      const dt = new Date(x.ds + 'T00:00'), c = Math.round(x.eat.cal), future = x.ds > today;
+      const diff = c ? T - c : 0;
+      return `<li class="${x.ds === today ? 'today' : ''}${future ? ' future' : ''}">
+        <span class="wk-d">${dt.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+        <span class="wk-bar"><i style="width:${Math.min(100, c / top * 100)}%" class="${c > T ? 'over' : ''}"></i><b style="left:${T / top * 100}%"></b></span>
+        <span class="wk-n">${future ? '' : c ? c.toLocaleString() : '–'}</span>
+        <span class="wk-diff ${diff < 0 ? 'over' : ''}">${!c || future ? '' : x.ds === today ? 'so far' : diff >= 0 ? `−${diff.toLocaleString()}` : `+${(-diff).toLocaleString()}`}</span>
+      </li>`;
+    }).join('');
+    // Deficit so far vs the plan, over finished days only (today isn't over yet).
+    const gap = TDEE - T, done = d.filter(x => x.ds < today && x.eat.cal > 0);
+    let head;
+    if (gap > 0 && lose !== null) {
+      const real = Math.round(done.reduce((a, x) => a + (TDEE + x.burned - x.eat.cal), 0));
+      const planned = gap * done.length, diff = real - planned, n0 = v => Math.abs(Math.round(v)).toLocaleString();
+      head = !done.length
+        ? `<div class="app-weekbig"><b>0</b><span>of ${gap.toLocaleString()} cal planned deficit</span></div>
+           <p class="app-week-sub">Your plan: a ${gap.toLocaleString()} cal deficit a day. Days count once they’re over.</p>`
+        : `${budgetBar(done, T)}
+           <p class="app-week-insight">${fatLine(real, gap)}</p>`;
+    } else {
+      head = `<div class="app-weekbig"><b class="${lose ? 'good' : ''}">${S.big}</b><span>${S.label.toLowerCase()}</span></div>
+      <p class="app-week-sub">${esc(S.sub)}</p>`;
+    }
+    return `<div class="app-card app-weekcard">
+      <div class="app-row"><p class="app-card-label">This week</p><span class="app-muted small">${range}</span></div>
+      ${head}
+      <div class="app-week-stats">
+        <button type="button" data-go="food"><span>Pace</span>${(() => {
+          // Days to lose 1 kg at this week's real average deficit (finished days only).
+          const fin = d.filter(x => x.ds < today && x.eat.cal > 0);
+          const avg = fin.length ? fin.reduce((a, x) => a + (TDEE + x.burned - x.eat.cal), 0) / fin.length : 0;
+          return avg > 0 ? `<b class="app-big">${Math.round(CAL_PER_KG / avg)} days</b><small>to lose 1 kg</small>`
+            : `<b>–</b><small>${fin.length ? 'no deficit yet' : 'after a full day'}</small>`;
+        })()}</button>
+        <button type="button" data-go="fitness"><span>Burned</span><b>${S.burned.toLocaleString()}</b><small>cal this week</small></button>
+        <button type="button" data-go="fitness"><span>Workouts</span><b>${S.workouts}</b><small>this week</small></button>
+      </div>
+      ${homeWeekOpen ? `<ul class="app-weekdays" aria-label="Calories by day, target ${T.toLocaleString()}">${days}</ul>` : ''}
+      <button type="button" class="app-week-more" data-home-week aria-expanded="${homeWeekOpen}">${homeWeekOpen ? 'Hide days' : 'Show each day'} <i aria-hidden="true">▾</i></button>
     </div>`;
   }
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-home-week]'); if (!b) return;
     homeWeekOpen = !homeWeekOpen;
-    b.setAttribute('aria-expanded', homeWeekOpen);
-    const box = document.querySelector('#pageHome .app-home-week'); if (box) box.classList.toggle('open', homeWeekOpen);
+    const card = document.querySelector('#pageHome .app-weekcard');
+    if (card) { const tmp = document.createElement('div'); tmp.innerHTML = weekCardHTML(Math.round(computeConsumed(currentDay).cal), isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal); card.replaceWith(tmp.firstElementChild); }
   });
   function paintHomeWeek() {
     const box = $('homeWeekCal'), sec = $('weeklyTrackerSection'); if (!box) return;
@@ -1214,23 +1364,25 @@
     const en = t.closest('[data-energy]');
     if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); return repaint(); }
     const fi = t.closest('[data-food-idea]');
-    if (fi) { if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
+    if (fi) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(fi.dataset.ideaSlot || null, fi.dataset.foodIdea, { cal: +fi.dataset.ideaCal || null }); } else if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
     const lo = t.closest('[data-log-opt]');
     if (lo && !lo.disabled) {
       const ds = selectedDateStr(), s = suggest(ds); if (!s) return;
       const o = s.options.find(x => x.kind === lo.dataset.logOpt); if (o) logWorkout(ds, o);
       return;
     }
-    const fl = t.closest('[data-flow]');
-    if (fl) { onFlow(dateToStr(new Date()), fl.dataset.flow); return renderCyclePage(); }
-    const mo = t.closest('[data-mood]');
-    if (mo) { const ds = dateToStr(new Date()); setDayField(ds, 'mood', toggleIn((dayLog()[ds] || {}).mood, mo.dataset.mood)); return renderCyclePage(); }
-    const cr = t.closest('[data-crave]');
-    if (cr) { const ds = dateToStr(new Date()); setDayField(ds, 'cravings', toggleIn((dayLog()[ds] || {}).cravings, cr.dataset.crave)); return renderCyclePage(); }
-    const wa = t.closest('[data-water]');
-    if (wa) { const ds = dateToStr(new Date()), n = +wa.dataset.water; setDayField(ds, 'water', (+(dayLog()[ds] || {}).water === n) ? n - 1 : n); return renderCyclePage(); }
-    const sy = t.closest('[data-sym]');
-    if (sy) { toggleSym(dateToStr(new Date()), sy.dataset.sym); return renderCyclePage(); }
+    if (t.closest('[data-cyclog-open]')) { logDraft = draftFor(viewDs()); return renderCyclePage(); }
+    if (t.closest('[data-cyclog-cancel]')) { logDraft = null; return renderCyclePage(); }
+    if (t.closest('[data-cyclog-save]')) { saveLog(); return renderCyclePage(); }
+    if (logDraft) {
+      const d = logDraft;
+      const fl = t.closest('[data-flow]'); if (fl) { d.flow = d.flow === fl.dataset.flow ? null : fl.dataset.flow; return renderCyclePage(); }
+      const mo = t.closest('[data-mood]'); if (mo) { d.mood = toggleIn(d.mood, mo.dataset.mood); return renderCyclePage(); }
+      const cr = t.closest('[data-crave]'); if (cr) { d.cravings = toggleIn(d.cravings, cr.dataset.crave); return renderCyclePage(); }
+      const wa = t.closest('[data-water]'); if (wa) { const n = +wa.dataset.water; d.water = d.water === n ? n - 1 : n; return renderCyclePage(); }
+      const sy = t.closest('[data-sym]');
+      if (sy) { const v = sy.dataset.sym; d.syms = d.syms.includes(v) ? d.syms.filter(x => x !== v) : v === 'none' ? ['none'] : d.syms.filter(x => x !== 'none').concat(v); return renderCyclePage(); }
+    }
     if (t.closest('[data-period-log]')) return pickPeriodDate();
     const rm = t.closest('[data-period-remove]');
     if (rm) { if (confirm('Remove this period date?')) { removePeriodStart(rm.dataset.periodRemove); renderCyclePage(); } return; }
@@ -1255,7 +1407,7 @@
       return;
     }
     if (t.closest('[data-food-search]')) {
-      if (window.EBMeals) EBMeals.openSearch(); else try { openAddModal(); } catch {}
+      if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(); } else if (window.EBMeals) EBMeals.openSearch();
     }
   }
 

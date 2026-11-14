@@ -4141,7 +4141,7 @@ function renderTracker() {
   let netSub = `of ${fmt(target)}`;
   if (isOver) netSub = `+${fmt(netCal - target)} over`;
   else if (isDeficit) netSub = `${fmt(Math.abs(netCal))} cal deficit`;
-  else netSub = `${fmt(target - netCal)} left`;
+  else netSub = `of ${fmt(target)}`;
 
   document.getElementById('calEquation').innerHTML = `
     <div class="cal-term">
@@ -5695,6 +5695,14 @@ function logPartial(slotId, dateStr) {
   renderSlotSection(); renderTracker(); renderWeeklyTracker(); renderTabs();
 }
 
+// True when the only thing logged for a meal is its planned meal (ticked as eaten),
+// so "Back to planned meal" would do nothing and isn't shown.
+function isPlannedOnly(slot, ds) {
+  const v = getSlotLog(ds)[slot.id], arr = Array.isArray(v) ? v : v ? [v] : [];
+  let def = null; try { def = getEffectiveDefaultMeal(slot, currentDay, isPMSMode()); } catch {}
+  return arr.length === 1 && !!def && arr[0].name === def.name && Math.round(arr[0].cal) === Math.round(def.cal);
+}
+
 function enterReplaceMode(slotId) {
   replaceModeSlots.add(slotId);
   renderSlotSection();
@@ -5844,8 +5852,8 @@ function renderSlotSection() {
           <span style="font-size:12px;font-weight:600;color:var(--success)">${r2(m.cal)} cal</span><br>
           <span style="font-size:11px;color:var(--text-tertiary)">${r2(m.p)}g P</span>
         </div>
-        <button onclick="removeSlotMeal('${slot.id}', ${idx}, '${ds}')"
-          style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-tertiary);padding:4px;flex-shrink:0">✕</button>
+        ${isPlannedOnly(slot, ds) ? '' : `<button onclick="removeSlotMeal('${slot.id}', ${idx}, '${ds}')" aria-label="Remove ${escapeHtml(String(m.name).replace(/<[^>]*>/g, ''))}"
+          style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-tertiary);padding:4px;flex-shrink:0;min-width:44px;min-height:44px">✕</button>`}
       </div>`).join('');
 
     const ingList = getIngredientListForSlot(slot.id);
@@ -5882,7 +5890,7 @@ function renderSlotSection() {
         </div>
         ${headerMacros}
         ${loggedHtml}
-        ${(hasLog && slot.defaultMeal) ? `<div style="padding:6px 14px 0">
+        ${(hasLog && slot.defaultMeal && !isPlannedOnly(slot, ds)) ? `<div style="padding:6px 14px 0">
           <button onclick="restoreDefault('${slot.id}', '${ds}')"
             style="width:100%;padding:8px;border:none;background:none;font-size:11px;color:var(--text-tertiary);font-family:inherit;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;min-height:36px">
             ↺ Back to planned meal
