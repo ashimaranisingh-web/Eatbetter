@@ -26,6 +26,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Menu-fi uses the camera to scan the barcode on a food pack, so you can log it without typing.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Menu-fi reads your weight, period days and workouts to keep your meal plan in step with your cycle and activity.</string>
 	<key>NSHealthUpdateUsageDescription</key>

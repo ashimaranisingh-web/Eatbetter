@@ -4673,7 +4673,7 @@ function renderCycleCalendar() {
     <div class="cycle-calendar-wrap" id="cycleCalWrap">
       <div class="cycle-calendar">${cells}</div>
     </div>
-    <button class="cycle-reset-btn" onclick="resetCycle()">Add a period date</button>`;
+    <button type="button" class="cycle-reset-btn" data-period-log>Log a period</button>`;
 
   requestAnimationFrame(() => {
     const wrap = document.getElementById('cycleCalWrap');
@@ -6506,6 +6506,9 @@ renderWeight();
 <script src="profile.js"></script>
 <script src="assistant.js"></script>
 <script src="meals.js"></script>
+<script src="fooddb.js"></script>
+<script src="daymode.js"></script>
+<script src="foodlog.js"></script>
 </div>
 </body>
 </html>

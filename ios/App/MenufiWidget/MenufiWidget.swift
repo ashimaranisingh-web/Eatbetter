@@ -1,7 +1,8 @@
 import WidgetKit
 import SwiftUI
 
-// Menu-fi widget: cycle day + phase, and the next meal, on the home and
+// Menu-fi widget: what to eat next and today's workout, with the cycle day
+// as a small line on top. Shown on the home and
 // lock screen. The app writes the data (MenufiPlugin.updateWidget) into the
 // shared App Group as JSON: two weeks of days, so the widget stays right
 // even on days the app isn't opened, plus today's meal times.
@@ -21,14 +22,22 @@ struct WidgetMeal: Codable {
     let time: String       // "1–2pm"
     let start: Double      // hour, 13
     let end: Double        // hour, 14
-    let name: String       // meal name
+    let name: String       // meal name, or "460–560 cal" on Guide days
+    let detail: String?    // "About 527 cal"
     let logged: Bool
+}
+struct WidgetWorkout: Codable {
+    let name: String       // "30 min walk", or what she logged
+    let detail: String?    // "About 120 cal" / "210 cal burned"
+    let done: Bool
+    let guess: Bool?       // suggested before she set her energy
 }
 struct WidgetData: Codable {
     let name: String?
     let days: [WidgetDay]
     let mealsDate: String?
     let meals: [WidgetMeal]
+    let workout: WidgetWorkout?
 }
 
 private func loadData() -> WidgetData? {
@@ -51,6 +60,7 @@ struct MenufiEntry: TimelineEntry {
     let day: WidgetDay?
     let next: WidgetMeal?
     let allLogged: Bool
+    let workout: WidgetWorkout?
 }
 
 private func entry(at date: Date, data: WidgetData?) -> MenufiEntry {
@@ -65,15 +75,17 @@ private func entry(at date: Date, data: WidgetData?) -> MenufiEntry {
         next = open.first { $0.end > hour } ?? open.last
         allLogged = !data.meals.isEmpty && open.isEmpty
     }
-    return MenufiEntry(date: date, day: day, next: next, allLogged: allLogged)
+    let workout = data?.mealsDate == key ? data?.workout : nil
+    return MenufiEntry(date: date, day: day, next: next, allLogged: allLogged, workout: workout)
 }
 
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> MenufiEntry {
         MenufiEntry(date: .now,
                     day: WidgetDay(d: "", day: 13, label: "Ovulation", color: "#43a047", deep: "#2e6b31", periodIn: 15),
-                    next: WidgetMeal(slot: "Lunch", time: "1–2pm", start: 13, end: 14, name: "Dal, rice and greens", logged: false),
-                    allLogged: false)
+                    next: WidgetMeal(slot: "Lunch", time: "1–2pm", start: 13, end: 14, name: "Dal, rice and greens", detail: "About 450 cal", logged: false),
+                    allLogged: false,
+                    workout: WidgetWorkout(name: "45 min strength", detail: "About 270 cal", done: false, guess: false))
     }
     func getSnapshot(in context: Context, completion: @escaping (MenufiEntry) -> Void) {
         let data = loadData()
@@ -110,43 +122,76 @@ extension Color {
 }
 
 // ── Views ──
+// Food and workout lead; the cycle day is a small line at the top.
 
-struct BigDay: View {
-    let day: WidgetDay
-    var size: CGFloat = 56
+struct DayLine: View {
+    let day: WidgetDay?
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("DAY").font(.system(size: 11, weight: .semibold)).tracking(1.5).opacity(0.75)
-            Text("\(day.day)").font(.system(size: size, weight: .heavy)).monospacedDigit()
-                .minimumScaleFactor(0.6).lineLimit(1)
-            Text(day.label.uppercased()).font(.system(size: 13, weight: .heavy)).tracking(1.2)
-                .lineLimit(1).minimumScaleFactor(0.7)
+        HStack(spacing: 5) {
+            if let d = day {
+                Circle().fill(Color(hex: d.color)).frame(width: 7, height: 7)
+                    .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1))
+                Text("Day \(d.day) · \(d.label)")
+            } else {
+                Text("Menu-fi")
+            }
         }
+        .font(.system(size: 11, weight: .semibold))
+        .opacity(0.85)
+        .lineLimit(1)
     }
 }
 
-struct NextMealView: View {
+struct Kicker: View {
+    let text: String
+    var body: some View {
+        Text(text.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.6).opacity(0.7).lineLimit(1)
+    }
+}
+
+struct MealBlock: View {
     let entry: MenufiEntry
+    var nameSize: CGFloat = 15
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             if let m = entry.next {
-                Text("NEXT · \(m.slot.uppercased()) · \(m.time)").font(.system(size: 10, weight: .semibold)).tracking(0.6).opacity(0.75)
-                Text(m.name).font(.system(size: 14, weight: .semibold)).lineLimit(2)
+                Kicker(text: m.time.isEmpty ? "Next · \(m.slot)" : "\(m.slot) · \(m.time)")
+                Text(m.name).font(.system(size: nameSize, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
+                if let d = m.detail { Text(d).font(.system(size: 11, weight: .medium)).opacity(0.8).lineLimit(1) }
             } else if entry.allLogged {
-                Text("All meals logged today").font(.system(size: 13, weight: .semibold))
+                Kicker(text: "Food")
+                Text("All meals logged").font(.system(size: nameSize, weight: .semibold))
             } else {
-                Text("Open Menu-fi for today’s meals").font(.system(size: 12, weight: .medium)).opacity(0.8)
+                Kicker(text: "Food")
+                Text("Open Menu-fi for today’s meals").font(.system(size: 13, weight: .medium)).opacity(0.85)
             }
         }
     }
 }
 
-struct EmptyView2: View {
+struct WorkoutBlock: View {
+    let workout: WidgetWorkout?
+    var compact = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Menu-fi").font(.system(size: 15, weight: .heavy))
-            Text("Add your last period date in the app to see your cycle day here.")
-                .font(.system(size: 12)).opacity(0.85)
+        if let w = workout {
+            if compact {
+                HStack(spacing: 5) {
+                    Image(systemName: w.done ? "checkmark.circle.fill" : "figure.run")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(w.done ? "Done · \(w.name)" : w.name).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Kicker(text: w.done ? "Workout · done" : (w.guess == true ? "Workout · suggested" : "Workout today"))
+                    HStack(spacing: 5) {
+                        Image(systemName: w.done ? "checkmark.circle.fill" : "figure.run").font(.system(size: 13, weight: .semibold))
+                        Text(w.name).font(.system(size: 15, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
+                    }
+                    if let d = w.detail { Text(d).font(.system(size: 11, weight: .medium)).opacity(0.8).lineLimit(1) }
+                }
+            }
+        } else {
+            Text("Open Menu-fi for a workout").font(.system(size: 12, weight: .medium)).opacity(0.85)
         }
     }
 }
@@ -170,51 +215,55 @@ struct MenufiWidgetView: View {
     @ViewBuilder var content: some View {
         switch family {
         case .accessoryInline:
-            if let d = entry.day { Text("Day \(d.day) · \(d.label)") } else { Text("Menu-fi") }
+            if let m = entry.next { Text("\(m.slot): \(m.name)") }
+            else if let w = entry.workout { Text(w.name) }
+            else if let d = entry.day { Text("Day \(d.day) · \(d.label)") } else { Text("Menu-fi") }
         case .accessoryCircular:
             if let d = entry.day {
                 VStack(spacing: -2) {
                     Text("DAY").font(.system(size: 9, weight: .semibold))
-                    Text("\(d.day)").font(.system(size: 24, weight: .heavy)).monospacedDigit()
+                    Text("\(d.day)").font(.system(size: 22, weight: .bold)).monospacedDigit()
                 }
-            } else { Image(systemName: "drop") }
+            } else { Image(systemName: "fork.knife") }
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 1) {
-                if let d = entry.day {
-                    Text("Day \(d.day) · \(d.label)").font(.system(size: 15, weight: .heavy))
-                } else { Text("Menu-fi").font(.system(size: 15, weight: .heavy)) }
                 if let m = entry.next {
-                    Text("\(m.slot) · \(m.time)").font(.system(size: 12, weight: .semibold))
+                    Text("\(m.slot) · \(m.time)").font(.system(size: 13, weight: .bold)).lineLimit(1)
                     Text(m.name).font(.system(size: 12)).lineLimit(1)
                 } else if entry.allLogged {
-                    Text("All meals logged").font(.system(size: 12))
+                    Text("All meals logged").font(.system(size: 13, weight: .bold))
+                } else {
+                    Text("Menu-fi").font(.system(size: 13, weight: .bold))
                 }
+                WorkoutBlock(workout: entry.workout, compact: true)
             }
         case .systemMedium:
-            if let d = entry.day {
-                HStack(alignment: .top, spacing: 16) {
-                    BigDay(day: d, size: 64)
-                    VStack(alignment: .leading, spacing: 8) {
-                        NextMealView(entry: entry)
-                        Spacer(minLength: 0)
-                        if let p = d.periodIn, p > 0 {
-                            Text(p == 1 ? "Period due tomorrow" : "Period in \(p) days").font(.system(size: 12, weight: .medium)).opacity(0.85)
-                        }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    DayLine(day: entry.day)
+                    Spacer(minLength: 8)
+                    if let p = entry.day?.periodIn, p > 0 {
+                        Text(p == 1 ? "Period due tomorrow" : "Period in \(p) days")
+                            .font(.system(size: 11, weight: .medium)).opacity(0.8).lineLimit(1)
                     }
-                    Spacer(minLength: 0)
                 }
-            } else { EmptyView2() }
+                Spacer(minLength: 0)
+                HStack(alignment: .top, spacing: 12) {
+                    MealBlock(entry: entry).frame(maxWidth: .infinity, alignment: .leading)
+                    Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1)
+                    WorkoutBlock(workout: entry.workout).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
         default:
-            if let d = entry.day {
-                VStack(alignment: .leading, spacing: 6) {
-                    BigDay(day: d, size: 52)
-                    Spacer(minLength: 0)
-                    if let m = entry.next {
-                        Text("\(m.slot) · \(m.time)").font(.system(size: 11, weight: .semibold)).opacity(0.85).lineLimit(1)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else { EmptyView2() }
+            VStack(alignment: .leading, spacing: 6) {
+                DayLine(day: entry.day)
+                Spacer(minLength: 0)
+                MealBlock(entry: entry, nameSize: 14)
+                Rectangle().fill(Color.white.opacity(0.25)).frame(height: 1)
+                WorkoutBlock(workout: entry.workout, compact: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -231,7 +280,7 @@ struct MenufiWidget: Widget {
             MenufiWidgetView(entry: entry)
         }
         .configurationDisplayName("Your day")
-        .description("Your cycle day and what to eat next.")
+        .description("What to eat next and today’s workout, with your cycle day.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular, .accessoryInline])
     }
 }

@@ -301,9 +301,12 @@
         d: `Weight ÷ height². ${w(n.kg)} ÷ (${(n.cm / 100).toFixed(2)} m)². For South Asians, healthy is 18.5–22.9 (lower than the usual 24.9, because risk starts at a lower weight).` },
       n.bmr && { k: 'Calories at rest (BMR)', v: fmt(n.bmr),
         d: `What your body burns doing nothing. 10 × weight + 6.25 × height − 5 × age − 161 (the Mifflin-St Jeor formula for women).` },
-      { k: 'Maintenance', v: fmt(n.tdee),
-        d: n.bmr ? `BMR × ${n.factor} because you’re ${n.actLabel}. Eat this much and your weight stays the same.`
-                 : `About ${Math.round(n.tdee / n.kg)} cal per kg for someone ${n.actLabel}. Add height and age for a sharper number.` }
+      { k: 'Maintenance', v: fmt(n.tdee), maint: true,
+        d: n.overridden
+          ? `Your own number. The formula says ${fmt(n.tdeeCalc)}. <button type="button" class="eb-link" data-action="calcMaint">Use ${fmt(n.tdeeCalc)}</button>`
+          : (n.bmr ? `BMR × ${n.factor} because you’re ${n.actLabel}. Eat this much and your weight stays the same.`
+                   : `About ${Math.round(n.tdee / n.kg)} cal per kg for someone ${n.actLabel}. Add height and age for a sharper number.`)
+            + ' Know your real number? Adjust it with − and +.' }
     ].filter(Boolean);
     const step = n.losing ? 50 : n.gaining ? -50 : 0;
     const label = n.losing ? 'Daily deficit' : 'Daily surplus';
@@ -323,7 +326,11 @@
         </div>
         <div class="ob-calc-out">
           <div class="ob-nums">${rows.map(x => `<div class="ob-num">
-            <div class="ob-num-top"><span>${x.k}</span><b>${x.v}${x.tag ? ` <em class="ob-num-tag ${x.tag}">${BMI_WORDS[x.tag]}</em>` : ''}</b></div>
+            <div class="ob-num-top"><span>${x.k}</span>${x.maint ? `<div class="eb-stepper">
+                <button type="button" class="eb-step-btn" data-step="plan.maintenance" data-delta="-50" data-min="${n.floor}" data-max="4500" data-from="${n.tdee}" aria-label="Lower maintenance">−</button>
+                <span class="eb-step-val" aria-live="polite"><b>${x.v}</b> cal</span>
+                <button type="button" class="eb-step-btn" data-step="plan.maintenance" data-delta="50" data-min="${n.floor}" data-max="4500" data-from="${n.tdee}" aria-label="Raise maintenance">+</button>
+              </div>` : `<b>${x.v}${x.tag ? ` <em class="ob-num-tag ${x.tag}">${BMI_WORDS[x.tag]}</em>` : ''}</b>`}</div>
             <p>${x.d}</p></div>`).join('')}</div>
           ${step ? `<div class="ob-num ob-num-deficit">
             <div class="ob-num-top"><span>${label}</span>
@@ -600,6 +607,7 @@
       }
       const act = e.target.closest('[data-action]');
       if (act && act.dataset.action === 'recDeficit') { p.plan.deficit = null; return changed(true); }
+      if (act && act.dataset.action === 'calcMaint') { p.plan.maintenance = null; return changed(true); }
       if (act && act.dataset.action === 'noPeriods') { p.cycle.tracks = false; onNoPeriods && onNoPeriods(); }
       if (act && act.dataset.action === 'connectHealth') {
         EBHealth.connect()
