@@ -2291,21 +2291,6 @@ body[data-phase="luteal"] #pageHome .app-band::before     { background: url("dat
 .app-words-cloud .top { color: var(--accent-light); }
 .app-words .app-muted { margin: 0; font-size: 13px; text-align: center; }
 
-/* Large titles: slim bar once the big title scrolls away */
-.app-titlebar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 29; text-align: center; color: #141414;
-  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
-  background: rgba(255,255,255,.82); box-shadow: 0 0.5px 0 rgba(20,20,20,.12);
-  backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
-  transform: translateY(-100%); opacity: 0; pointer-events: none;
-  transition: transform .28s var(--eb-ease), opacity .2s ease;
-}
-.app-titlebar.show { transform: none; opacity: 1; }
-.app-titlebar b { font-size: 17px; font-weight: 600; }
-body:has(.tracker-mini.show) .app-titlebar, body:has(.eb-cal-overlay) .app-titlebar, body:has(.as-overlay) .app-titlebar { opacity: 0; }
-@media (min-width: 480px) {
-  .app-titlebar { left: calc(50% - var(--phone-w) / 2); right: calc(50% - var(--phone-w) / 2); }
-}
 
 /* No emoji: the line icons and plain words carry the meaning */
 .app-tile-emoji, .activity-icon, .survival-badge-trophy, .phase-popup-emoji, .supp-emoji, .prep-jar-emoji { display: none !important; }
@@ -2406,7 +2391,8 @@ body #pageHome .app-home-body > .app-card, body #pageHome .app-home-body > .app-
 
 /* Energy is a section on the page, not a card: title, selector and rails sit on the white */
 :root:not([data-theme="dark"]) body .app-page .app-card.app-energy-card,
-:root:not([data-theme="dark"]) body #pageHome .app-home-body > .app-card.app-energy-card {
+:root:not([data-theme="dark"]) body #pageHome .app-home-body > .app-card.app-energy-card,
+html:not([data-theme="dark"]) body #pageFitness .app-card.app-energy-card {
   background: transparent !important; box-shadow: none !important; border: 0 !important;
   padding: 8px 0 0 !important; margin: 8px 0 24px !important;
 }
@@ -2421,3 +2407,191 @@ body #pageHome .app-home-body > .app-card, body #pageHome .app-home-body > .app-
 #pageCycle .app-head > h1 { margin: 0 !important; }
 #pageCycle .app-head > .app-cycle-sub { margin: 0 !important; }
 #pageCycle .app-head > .app-cycle-sub .app-hero-line { font-size: 14px; }
+
+/* v14: phase foods as a list, phases inside "Your cycle", craving link */
+.app-food-list { list-style: none; margin: 0; padding: 0; }
+.app-food-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+.app-food-list li + li { border-top: 1px solid rgba(20,20,20,.09); }
+.app-food-list b { font-size: 15px; font-weight: 500; }
+html body #pageCycle .app-cycle-card .app-phases { gap: 0; margin: 0 -4px; padding-top: 4px; border-top: 1px solid color-mix(in srgb, var(--phase, #000) 22%, #fff); }
+html body #pageCycle .app-cycle-card .app-phase-row { padding: 12px 4px; border-radius: 8px; background: transparent !important; }
+html body #pageCycle .app-cycle-card .app-phase-row[open] { padding: 12px; background: #fff !important; }
+.app-swap-more { background: none; border: 0; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* Log a workout: one card, not a card in a card */
+html body #pageFitness .app-log-card #activityBlock { background: transparent !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; margin: 0 !important; }
+/* Today's combo: plain text on the page, set off by hairlines */
+.app-combo { display: grid; gap: 2px; padding: 12px 0; border-top: 1px solid rgba(20,20,20,.09); border-bottom: 1px solid rgba(20,20,20,.09); }
+.app-combo .app-meta { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.app-combo p { margin: 0; font-size: 15px; line-height: 1.4; color: #141414; }
+.app-combo b { font-weight: 600; }
+.app-combo small { font-size: 13px; color: #6f6f6f; line-height: 1.4; }
+/* Home food card: this week's calories + workouts, two columns under a hairline */
+#pageHome .app-week-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(20,20,20,.09); padding-top: 12px; }
+#pageHome .app-week-stats button { all: unset; display: grid; gap: 2px; cursor: pointer; min-height: 44px; align-content: start; }
+#pageHome .app-week-stats button + button { border-left: 1px solid rgba(20,20,20,.09); padding-left: 16px; }
+#pageHome .app-week-stats span { font-size: 12px; color: #6f6f6f; }
+#pageHome .app-week-stats b { font-size: 15px; font-weight: 600; color: #141414; }
+#pageHome .app-week-stats small { font-size: 13px; font-weight: 400; color: #6f6f6f; }
+/* "Your cycle": each upcoming date opens its phase guide right below it */
+#pageCycle .app-cycle-card .app-cycle-next li { display: block; }
+#pageCycle .app-next-row > summary { list-style: none; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+#pageCycle .app-next-row > summary::-webkit-details-marker { display: none; }
+#pageCycle .app-next-row > summary > i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+#pageCycle .app-next-row > summary > span { flex: 1; }
+#pageCycle .app-next-row > summary::after { content: ''; flex-shrink: 0; width: 7px; height: 7px; margin: 0 2px 4px 4px; border-right: 1.5px solid #6f6f6f; border-bottom: 1.5px solid #6f6f6f; transform: rotate(45deg); transition: transform .2s; }
+#pageCycle .app-next-row[open] > summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+#pageCycle .app-next-body { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 8px; background: #fff; }
+#pageCycle .app-next-body p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+#pageCycle .app-next-body .app-phase-body { color: #141414; }
+/* Under the calendar: "Log a period" as a quiet tertiary link */
+html body #pageCycle .cycle-reset-btn { display: block !important; min-height: 44px; padding: 8px 12px !important; font-size: 14px !important; font-weight: 600; color: #141414 !important; text-decoration: underline; text-underline-offset: 3px; }
+/* Foods for you today: nutrient insight, meals and quick adds */
+.app-nutrients { display: grid; gap: 10px; }
+.app-nutrients p { display: grid; grid-template-columns: 104px 1fr; gap: 12px; align-items: start; margin: 0; font-size: 14px; line-height: 1.4; color: #141414; }
+.app-nutrients .app-tag { justify-self: start; }
+.app-nutrients small { display: block; font-size: 13px; color: #6f6f6f; }
+.app-phasefood .app-rail-label { margin: 8px 0 -4px; }
+.app-food-list li > span { display: grid; gap: 2px; min-width: 0; }
+.app-food-list li > span small { font-size: 13px; color: #6f6f6f; }
+.app-food-list li { padding: 8px 0; }
+/* Add is a text link here; the screen's one black button stays elsewhere */
+html body .app-food-list .app-opt-btn, html body .app-food-list .app-opt-btn:not(.done):not(:disabled) {
+  flex-shrink: 0; padding: 0; min-height: 44px; min-width: 44px; background: none !important; box-shadow: none !important;
+  color: var(--accent-light) !important; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; font-size: 14px; }
+html body #pageCycle .app-swap .app-opt-btn, html body #pageCycle .app-swap .app-opt-btn:not(.done):not(:disabled) {
+  background: #fff !important; color: #141414 !important; box-shadow: inset 0 0 0 1px rgba(20,20,20,.16) !important; font-weight: 500; }
+
+/* Phase detail under each date: a label column and text, indented to the row's text, no inner box */
+#pageCycle .app-next-body { display: grid; gap: 8px; margin: 10px 0 4px 22px; padding: 0; background: none; border-radius: 0; }
+#pageCycle .app-next-body p { display: grid; grid-template-columns: 48px 1fr; gap: 8px; margin: 0; font-size: 14px; line-height: 1.45; color: #424242; }
+#pageCycle .app-next-body .app-phase-body { display: block; color: #141414; margin-bottom: 2px; }
+html body #pageCycle .app-next-body .app-tag { all: unset; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #6f6f6f; line-height: 1.75; }
+
+/* ── How you eat today: Plan / Log / Guide ── */
+.app-daymode { margin: 0 0 16px; }
+.app-daymode-line { margin: 8px 2px 0; font-size: 13px; line-height: 1.4; color: #6f6f6f; }
+.app-daymode-line span { display: block; color: #424242; }
+.app-daymode .eb-seg-btn:disabled { opacity: .4; }
+/* Log and Guide days hide the meal plan's own pieces (nothing is deleted) */
+#pageFood:is([data-dayview="log"], [data-dayview="guide"]) :is(#slotSection, .app-tiles, .app-food-search:not(.app-log-search)) { display: none !important; }
+#dayModeBody:empty { display: none; }
+.app-log-search { margin-bottom: 16px; }
+.app-log-empty { margin: 0 2px 24px; font-size: 14px; color: #6f6f6f; }
+.app-log-list { list-style: none; margin: 0; padding: 0; }
+.app-log-list li { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 0; }
+.app-log-list li + li { border-top: 1px solid rgba(20,20,20,.09); }
+.app-log-list li > span { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.app-log-list b { font-size: 15px; font-weight: 500; }
+.app-log-list small { font-size: 13px; color: #6f6f6f; }
+.app-log-list em { font-style: normal; font-size: 14px; font-weight: 600; color: #141414; }
+.app-log-del { all: unset; width: 44px; height: 44px; display: grid; place-items: center; margin-right: -12px; font-size: 22px; color: #6f6f6f; cursor: pointer; }
+/* Guide */
+.app-guide .app-row { align-items: center; }
+.app-guide-n { width: 132px; }
+.app-guide-why { margin: 0; font-size: 14px; line-height: 1.45; color: #424242; }
+.app-guide-why b { color: #141414; }
+.app-guide-list { list-style: none; margin: 0; padding: 0; }
+.app-guide-list li { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; }
+.app-guide-list li + li { border-top: 1px solid rgba(20,20,20,.09); }
+.app-guide-head { display: flex; justify-content: space-between; gap: 8px; }
+.app-guide-head b { font-size: 15px; font-weight: 600; }
+.app-guide-head span { font-size: 15px; font-weight: 600; color: #141414; }
+.app-guide-text p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: #6f6f6f; }
+.app-guide-tick { all: unset; width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(20,20,20,.3); cursor: pointer; position: relative; }
+.app-guide-tick::before { content: ''; position: absolute; inset: -10px; }
+li.done .app-guide-tick { background: var(--accent); box-shadow: none; }
+li.done .app-guide-tick::after { content: ''; position: absolute; left: 8px; top: 4px; width: 6px; height: 11px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+li.done .app-guide-head b { color: #6f6f6f; }
+.app-guide-step { gap: 4px; }
+.app-guide-step .eb-step-val { min-width: 36px; text-align: center; font-size: 13px; color: #424242; }
+@media (max-width: 380px) { .app-guide-list li { grid-template-columns: 28px 1fr; } .app-guide-step { grid-column: 2; justify-self: start; } }
+
+/* ── Log mode: search, amounts, logged entries (foodlog.js) ── */
+#foodLog { display: grid; gap: 0; margin: 0 0 24px; }
+#foodLog .fl-slots { margin: 0 0 12px; }
+#foodLog .fl-slots .eb-seg-btn { min-height: 44px; font-size: 14px; }
+#foodLog .fl-search { position: relative; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 8px 0 16px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px rgba(20,20,20,.14); color: #6f6f6f; }
+#foodLog .fl-search:focus-within { box-shadow: inset 0 0 0 2px var(--ink, #141414); }
+#foodLog .fl-search input { flex: 1; min-width: 0; height: 50px; border: 0; background: transparent; font: 400 16px/1.2 inherit; font-family: inherit; color: var(--ink, #141414); outline: none; -webkit-appearance: none; appearance: none; }
+#foodLog .fl-search input::-webkit-search-cancel-button { display: none; }
+#foodLog .fl-clear { width: 44px; height: 44px; border: 0; background: none; font-size: 22px; color: #6f6f6f; cursor: pointer; }
+#foodLog .fl-results { margin: 8px 0 16px; }
+#foodLog .fl-hint { margin: 8px 2px; font-size: 14px; line-height: 1.45; color: #6f6f6f; }
+#foodLog .fl-label { display: flex; justify-content: space-between; margin: 16px 2px 4px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #6f6f6f; }
+#foodLog .fl-logged-head { margin-top: 8px; font-size: 13px; color: #424242; }
+#foodLog .fl-meal .fl-label { margin-top: 12px; text-transform: none; letter-spacing: 0; font-size: 14px; color: #424242; }
+#foodLog .fl-list { list-style: none; margin: 0; padding: 0; }
+#foodLog .fl-list > li + li { border-top: 1px solid rgba(20,20,20,.09); }
+#foodLog .fl-line { display: flex; align-items: center; gap: 4px; }
+#foodLog .fl-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 2px; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+#foodLog .fl-row > span { flex: 1; min-width: 0; display: grid; gap: 2px; }
+#foodLog .fl-row b { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+#foodLog .fl-row small { font-size: 13px; color: #6f6f6f; }
+#foodLog .fl-row em { font-style: normal; font-size: 14px; font-weight: 600; white-space: nowrap; }
+#foodLog .fl-star, #foodLog .fl-del { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: #8a8a8a; cursor: pointer; font-size: 22px; }
+#foodLog .fl-star.on { color: var(--accent); }
+#foodLog .fl-detail { display: grid; gap: 8px; padding: 4px 0 16px; }
+#foodLog .fl-amt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#foodLog .fl-amt .eb-stepper { display: flex; align-items: center; gap: 4px; }
+#foodLog .fl-amt-in { width: 72px; height: 44px; border-radius: 8px; border: 0; box-shadow: inset 0 0 0 1px rgba(20,20,20,.14); background: #fff; text-align: center; font: 600 16px inherit; font-family: inherit; color: var(--ink, #141414); -moz-appearance: textfield; }
+#foodLog .fl-amt-in::-webkit-inner-spin-button, #foodLog .fl-amt-in::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#foodLog .fl-unit { flex: 1; min-width: 112px; min-height: 44px; height: 44px; padding: 0 12px; font-size: 16px; }
+#foodLog .fl-unit-one { font-size: 15px; color: #424242; }
+#foodLog .fl-total { margin: 4px 0 0; display: grid; gap: 2px; font-size: 14px; color: #424242; }
+#foodLog .fl-total b { font-size: 17px; font-weight: 600; color: var(--ink, #141414); }
+#foodLog .fl-src { margin: 0; font-size: 12px; line-height: 1.4; color: #6f6f6f; }
+#foodLog .fl-fixlink, #foodLog .fl-make { justify-self: start; min-height: 44px; padding: 12px 0; font-size: 14px; }
+#foodLog .fl-make { margin: 4px 2px 0; }
+#foodLog .fl-make-btn { width: 100%; margin-top: 4px; }
+#foodLog .fl-fix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#foodLog .fl-fix label, #foodLog .fl-create > label { display: grid; gap: 4px; font-size: 13px; color: #6f6f6f; }
+#foodLog .fl-fix .eb-input, #foodLog .fl-create .eb-input { min-height: 44px; font-size: 16px; }
+#foodLog .fl-create { display: grid; gap: 12px; padding: 4px 0 8px; }
+#foodLog .fl-create-title { margin: 0; font-size: 16px; font-weight: 600; }
+#foodLog .fl-err { margin: 0; font-size: 13px; color: #b3261e; }
+#foodLog .fl-err:empty { display: none; }
+#foodLog .fl-add, #foodLog [data-fl-esave], #foodLog [data-fl-save-own] { width: 100%; min-height: 48px; }
+#foodLog .fl-slots-sm .eb-seg-btn { font-size: 13px; }
+#foodLog .fl-note { margin: 16px 2px 0; }
+html[data-theme="dark"] #foodLog .fl-search, html[data-theme="dark"] #foodLog .fl-amt-in { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); color: inherit; }
+html[data-theme="dark"] #foodLog .fl-list > li + li { border-top-color: rgba(255,255,255,.1); }
+#foodLog .fl-search input:placeholder-shown + .fl-clear { display: none; }
+#foodLog .fl-search input[type="search"] { background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
+#foodLog .fl-search .fl-scan { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--ink, #141414); cursor: pointer; }
+#foodLog .fl-search .fl-clear { margin-right: -8px; }
+#foodLog .fl-scanbox { display: grid; gap: 8px; padding: 4px 0 8px; }
+#foodLog .fl-scan-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 -8px; }
+#foodLog .fl-scan-head .fl-label { margin: 8px 2px 0; }
+#foodLog .fl-scan-x { width: 44px; height: 44px; border: 0; background: none; font-size: 22px; color: #6f6f6f; cursor: pointer; }
+#foodLog .fl-scanbox #flCode { min-height: 48px; font-size: 18px; letter-spacing: .06em; }
+/* Plan / Log / Guide as a dropdown row */
+.app-daymode-pick { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 4px 0 16px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px rgba(20,20,20,.12); font-size: 15px; color: #424242; }
+.app-daymode-select { -webkit-appearance: none; appearance: none; min-height: 44px; padding: 0 36px 0 12px; border: 0; border-radius: 8px; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; font: 600 16px inherit; font-family: inherit; color: var(--ink, #141414); text-align: right; cursor: pointer; }
+.app-daymode-select:disabled { opacity: 1; cursor: default; background-image: none; padding-right: 12px; }
+.app-daymode-select:focus-visible { outline: 2px solid var(--ink, #141414); outline-offset: 2px; }
+html[data-theme="dark"] .app-daymode-pick { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); color: #d0d0d0; }
+html[data-theme="dark"] .app-daymode-select { color: #fff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+html body #dayModeBox select.app-daymode-select { background-color: transparent !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23141414' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; box-shadow: none !important; border: 0 !important; padding: 0 36px 0 12px !important; width: auto !important; min-width: 0 !important; }
+html body #dayModeBox select.app-daymode-select:disabled { background-image: none !important; padding-right: 12px !important; color: #6f6f6f; }
+html[data-theme="dark"] body #dayModeBox select.app-daymode-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important; }
+#pageFood #modeNote { display: none !important; }
+/* Plan / Log / Guide: custom dropdown with explainer lines */
+#dayModeBox .app-dm { border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px rgba(20,20,20,.12); overflow: hidden; }
+#dayModeBox .app-dm-btn { width: 100%; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 16px; border: 0; background: none; font: inherit; color: #424242; text-align: left; cursor: pointer; }
+#dayModeBox .app-dm-btn span { flex: 1; font-size: 15px; }
+#dayModeBox .app-dm-btn b { font-size: 16px; font-weight: 600; color: var(--ink, #141414); }
+#dayModeBox .app-dm-btn svg { color: var(--ink, #141414); transition: transform .2s; }
+#dayModeBox .app-dm.open .app-dm-btn svg { transform: rotate(180deg); }
+#dayModeBox .app-dm-menu { list-style: none; margin: 0; padding: 4px 8px 8px; border-top: 1px solid rgba(20,20,20,.09); }
+#dayModeBox .app-dm-opt { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 8px; border: 0; border-radius: 8px; background: none; font: inherit; color: var(--ink, #141414); text-align: left; cursor: pointer; }
+#dayModeBox .app-dm-opt span { flex: 1; display: grid; gap: 2px; }
+#dayModeBox .app-dm-opt b { font-size: 15px; font-weight: 600; }
+#dayModeBox .app-dm-opt small { font-size: 13px; line-height: 1.35; color: #6f6f6f; }
+#dayModeBox .app-dm-opt.on { background: var(--accent-dim, #e8f3ec); }
+#dayModeBox .app-dm-opt.on svg { color: var(--accent); flex: none; }
+#dayModeBox .app-dm-opt:disabled { opacity: .4; cursor: default; }
+#dayModeBox .app-dm-opt:focus-visible, #dayModeBox .app-dm-btn:focus-visible { outline: 2px solid var(--ink, #141414); outline-offset: -2px; }
+#dayModeBox .app-dm-lock { margin: 0; padding: 0 16px 12px; font-size: 13px; color: #6f6f6f; }
+html[data-theme="dark"] #dayModeBox .app-dm { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+html[data-theme="dark"] #dayModeBox .app-dm-btn, html[data-theme="dark"] #dayModeBox .app-dm-btn b, html[data-theme="dark"] #dayModeBox .app-dm-btn svg, html[data-theme="dark"] #dayModeBox .app-dm-opt { color: #fff; }
+html[data-theme="dark"] #dayModeBox .app-dm-menu { border-top-color: rgba(255,255,255,.1); }

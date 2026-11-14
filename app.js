@@ -43,8 +43,8 @@
   function phaseOf(ds) {
     try { const cs = getCycleStart(); return cs ? getPhaseForDate(ds, cs) : null; } catch { return null; }
   }
-  function suggest(ds) {
-    const energy = energyFor(ds);
+  function suggest(ds, assumed) {
+    const energy = energyFor(ds) || assumed;   // the widget assumes "Okay" until she taps one
     if (!energy) return null;
     const info = phaseOf(ds), phase = info && info.phase;
     let kinds, mins, why;
@@ -94,6 +94,32 @@
     });
   }
 
+  // One suggested pairing: the top workout plus the food that suits it.
+  // Low energy: eat first for a lift. Good/High: protein after to recover.
+  // Okay: a food for this cycle phase after. Reason comes from the phase.
+  const PHASE_WHY = { menstrual: 'iron helps replace what your period takes', follicular: 'protein builds muscle fastest now',
+    ovulation: 'fibre helps clear the oestrogen peak', luteal: 'slow carbs keep cravings steady' };
+  function comboHTML(ds, s, foods) {
+    const w = s.options[0]; if (!w) return '';
+    const energy = energyFor(ds), info = phaseOf(ds), phase = info && info.phase;
+    const pf = phase ? (phaseFoods(phase, EB.getProfile().food.diet || 'veg') || {}).foods || [] : [];
+    const protein = foods.find(f => /protein/i.test(f.why));
+    let line, why;
+    if (energy === 1) {
+      const f = foods[0]; if (!f) return '';
+      line = `A little <b>${esc(f.n)}</b> first, then <b>${w.mins} min ${esc(w.name.toLowerCase())}</b>`;
+      why = 'Easy fuel before gentle movement lifts a low day.';
+    } else if (energy >= 3 && (protein || pf[0])) {
+      const n = protein ? protein.n : pf[0];
+      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b> within the hour`;
+      why = 'Protein after a hard session helps your muscles recover.';
+    } else {
+      const n = pf[0] || (foods[0] && foods[0].n); if (!n) return '';
+      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b>`;
+      why = phase ? `In this phase, ${PHASE_WHY[phase]}.` : 'Move, then refuel with something real.';
+    }
+    return `<div class="app-combo"><span class="app-meta">Today’s combo</span><p>${line}</p><small>${why}</small></div>`;
+  }
   function energyHTML(ds) {
     const cur = energyFor(ds);
     const s = suggest(ds);
@@ -105,7 +131,8 @@
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${cur === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${cur === e.v}">${e.t}</button>`).join('')}
       </div>
-      <p class="app-muted">${s ? esc(s.why) : 'Tap how you feel and I’ll suggest workouts and foods for your energy and cycle.'}</p>
+      ${s ? '' : '<p class="app-muted">Tap how you feel and I’ll suggest workouts and foods for your energy and cycle.</p>'}
+      ${s ? comboHTML(ds, s, foods) : ''}
       ${s ? `<p class="app-rail-label">Workouts</p>
       <div class="app-rail">${s.options.map(o => {
         const done = logged.find(a => a.name === o.name);
@@ -228,7 +255,6 @@
     const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
     const target = isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal;
     const left = target - eaten + burned;
-    const pct = Math.min(100, Math.round(eaten / target * 100));
     const info = phaseOf(ds);
     const meta = info && PHASE_META[info.phase];
     const nm = nextMeal();
@@ -247,6 +273,10 @@
           <span class="hero-stack" aria-hidden="true"><span class="hero-kicker">Day of your cycle${info.phase === 'luteal' ? ' · luteal' : ''}</span><span class="hero-phase">${st.word}</span></span>
         </h1>`
       : `<h1>${greeting(p.name)}</h1>`}`;
+    // The week card is a live element (Nutrition's code keeps it up to date):
+    // lift it out before Home is redrawn, then put it back in its slot.
+    const weekSec = $('weeklyTrackerSection'), homeBody = page.querySelector('.app-home-body');
+    if (weekSec && homeBody.contains(weekSec)) homeBody.after(weekSec);
     page.querySelector('.app-home-body').innerHTML = `
       <div class="app-card app-today app-today-hero">
         ${meta ? '' : `<button type="button" class="app-today-setup" data-go="cycle">Add your last period date to see your phase</button>`}
@@ -262,17 +292,18 @@
               <button type="button" class="app-opt-btn" data-go="food">Nutrition</button>
             </div>`}
         <button type="button" class="app-today-row app-food-sum" data-go="food">
-          <span class="app-today-text">${eaten ? `<b class="app-big">${eaten.toLocaleString()}</b> of ${target.toLocaleString()} today` : 'Nothing logged yet today'}<span id="homeWeekLine"></span></span>
+          <span class="app-today-text">${eaten ? `<b class="app-big">${eaten.toLocaleString()}</b> of ${target.toLocaleString()} today` : 'Nothing logged yet today'}</span>
         </button>
-        <span class="app-tile2-bar"><i style="width:${pct}%"></i></span>
+        ${weekStatsHTML()}
       </div>
+      <div class="app-home-week"></div>
       ${energyHTML(ds)}
       <div class="ch-home-slot">${window.EBChallenges ? EBChallenges.homeLine() : ''}</div>
 `;
+    const slot = page.querySelector('.app-home-week'); if (slot && weekSec) slot.appendChild(weekSec);
     rollUp(page.querySelector('.app-food-sum .app-big'), eaten);
     paintHomeWeek();
     maybeWeekSheet();
-    titleFor('home', st ? `Day ${info.dayNum} · ${st.word}` : greeting(p.name));
   }
 
   // ── Menstruation ──
@@ -378,7 +409,7 @@
     const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
     const crave = (d.cravings || []).filter(c => CRAVE_SWAP[c]);
     return `<div class="app-card app-daylog">
-      <div class="app-row"><p class="app-card-label">Log today</p><span class="app-muted small">${fmtDay(new Date(ds + 'T00:00'))}</span></div>
+      <div class="app-row"><p class="app-card-label">How are you feeling today?</p><span class="app-muted small">${fmtDay(new Date(ds + 'T00:00'))}</span></div>
       <div class="app-daylog-sec"><p>Flow</p>${chipRow(FLOW, d.flow, 'data-flow')}</div>
       <div class="app-daylog-sec"><p>Symptoms</p>${chipRow(SYMPTOMS.filter(([v]) => v !== 'cravings'), syms, 'data-sym')}
         ${tips.length ? `<div class="app-tips">${tips.map((v, i) => `<details class="app-tip"${i === 0 ? ' open' : ''}>
@@ -388,7 +419,8 @@
       <div class="app-daylog-sec"><p>Mood</p>${chipRow(MOODS, d.mood || [], 'data-mood')}</div>
       <div class="app-daylog-sec"><p>Cravings</p>${chipRow(CRAVINGS, d.cravings || [], 'data-crave')}
         ${crave.length ? `<div class="app-swaps">${crave.map(c => `<div class="app-swap"><span>Craving ${c}? Try</span>
-          ${CRAVE_SWAP[c].map(f => `<button type="button" class="app-opt-btn" data-food-idea="${esc(f)}">${f}</button>`).join('')}</div>`).join('')}</div>` : ''}</div>
+          ${CRAVE_SWAP[c].map(f => `<button type="button" class="app-opt-btn" data-food-idea="${esc(f)}">${f}</button>`).join('')}
+          <button type="button" class="app-swap-more" data-crave-more="${c}">More ideas</button></div>`).join('')}</div>` : ''}</div>
       <div class="app-daylog-sec app-water"><p>Water<small>${water} of 8 glasses${phase === 'luteal' ? ' · helps with bloating' : ''}</small></p>
         <div class="app-water-cups" role="group" aria-label="Glasses of water">${Array.from({ length: 8 }, (_, i) =>
           `<button type="button" class="app-cup${i < water ? ' on' : ''}" data-water="${i + 1}" aria-label="${i + 1} glass${i ? 'es' : ''}"></button>`).join('')}</div></div>
@@ -411,14 +443,44 @@
         foods: ['Pumpkin seeds', 'Banana', 'Oats', 'Sweet potato'] }
     }[phase];
   }
+  // What to eat more of in each phase, and why. General guidance only.
+  const PHASE_NUTRIENTS = {
+    menstrual: [['Iron', 'Replaces what your period takes', 'palak, rajma, dates'], ['Vitamin C', 'Helps your body absorb that iron', 'amla, lemon, guava'], ['Omega-3 fats', 'Can ease cramps', 'walnuts, flax seeds']],
+    follicular: [['Protein', 'Muscles build fastest now', 'paneer, eggs, dal'], ['Complex carbs', 'Fuel for rising energy', 'oats, millets, brown rice'], ['Probiotics', 'Support your gut and hormones', 'curd, idli, buttermilk']],
+    ovulation: [['Fibre', 'Helps clear the oestrogen peak', 'salads, sprouts, whole grains'], ['Antioxidants', 'Colourful food fights inflammation', 'berries, carrots, tomatoes'], ['Protein', 'For your strongest workouts', 'chana, paneer, eggs']],
+    luteal: [['Magnesium', 'Eases cramps and mood dips', 'pumpkin seeds, dark chocolate'], ['Slow carbs', 'Keep cravings steady', 'sweet potato, oats, brown rice'], ['Healthy fats', 'Keep you full for longer', 'nuts, seeds, a little ghee']]
+  };
+  // Full meals per phase. The protein follows your diet.
+  function phaseMeals(phase, diet) {
+    const by = m => m[diet] || m.veg;
+    return {
+      menstrual: [['Breakfast', 'Ragi dosa with peanut chutney', 350],
+        ['Lunch', by({ veg: 'Palak dal, brown rice and salad', vegan: 'Palak dal, brown rice and salad', jain: 'Moong dal, brown rice and salad', egg: 'Egg curry, brown rice and palak', pescatarian: 'Fish curry, rice and palak', nonveg: 'Chicken palak with rice' }), 520],
+        ['Dinner', 'Moong dal khichdi with veggies', 420]],
+      follicular: [['Breakfast', by({ veg: 'Moong dal chilla with curd', vegan: 'Moong dal chilla with mint chutney', jain: 'Moong dal chilla with curd', egg: 'Masala omelette with toast', pescatarian: 'Masala omelette with toast', nonveg: 'Masala omelette with toast' }), 380],
+        ['Lunch', by({ veg: 'Paneer bhurji, 2 roti and salad', vegan: 'Tofu bhurji, 2 roti and salad', jain: 'Paneer bhurji, 2 roti and salad', egg: 'Egg bhurji, 2 roti and salad', pescatarian: 'Grilled fish, 2 roti and salad', nonveg: 'Grilled chicken, 2 roti and salad' }), 550],
+        ['Dinner', 'Idli with sambar', 400]],
+      ovulation: [['Breakfast', 'Sprouts poha', 330],
+        ['Lunch', 'Chana and quinoa salad bowl', 480],
+        ['Dinner', by({ veg: 'Grilled paneer with sautéed veg', vegan: 'Grilled tofu with sautéed veg', jain: 'Grilled paneer with sautéed veg', egg: 'Egg and veg stir-fry', pescatarian: 'Grilled fish with sautéed veg', nonveg: 'Grilled chicken with sautéed veg' }), 450]],
+      luteal: [['Breakfast', 'Oats with banana and pumpkin seeds', 380],
+        ['Lunch', by({ veg: 'Rajma, brown rice and raita', vegan: 'Rajma, brown rice and salad', jain: 'Chana, brown rice and raita', egg: 'Rajma, brown rice and raita', pescatarian: 'Rajma, brown rice and raita', nonveg: 'Rajma, brown rice and raita' }), 560],
+        ['Dinner', 'Sweet potato and chana curry with roti', 480]]
+    }[phase] || [];
+  }
   function phaseFoodHTML(phase, diet) {
     const F = phaseFoods(phase, diet);
     if (!F) return '';
+    const row = (name, sub) => `<li><span><b>${esc(name)}</b>${sub ? `<small>${sub}</small>` : ''}</span>
+        <button type="button" class="app-opt-btn" data-food-idea="${esc(name)}">Add</button></li>`;
     return `<div class="app-card app-phasefood">
-      <div class="app-row"><p class="app-card-label">Eat for this phase</p><span class="app-phase"><i style="background:${PHASE_META[phase].color}"></i>${F.focus}</span></div>
-      <p class="app-muted">${F.why}</p>
-      <div class="app-rail">${F.foods.map(f => `<div class="app-rail-tile"><div><b>${f}</b></div>
-        <button type="button" class="app-opt-btn" data-food-idea="${esc(f)}">Add</button></div>`).join('')}</div>
+      <div class="app-row"><p class="app-card-label">Foods for you today</p><span class="app-phase"><i style="background:${PHASE_META[phase].color}"></i>${PHASE_META[phase].label === 'PMS' ? 'Luteal' : PHASE_META[phase].label}</span></div>
+      <div class="app-nutrients">${(PHASE_NUTRIENTS[phase] || []).map(([n, why, ex]) =>
+        `<p><span class="app-tag">${n}</span><span>${why}<small>${ex}</small></span></p>`).join('')}</div>
+      <p class="app-rail-label">Meals</p>
+      <ul class="app-food-list">${phaseMeals(phase, diet).map(([slot, m, cal]) => row(m, `${slot} · about ${cal} cal`)).join('')}</ul>
+      <p class="app-rail-label">Quick adds</p>
+      <ul class="app-food-list">${F.foods.map(f => row(f)).join('')}</ul>
     </div>`;
   }
 
@@ -569,32 +631,27 @@
     const guide = phaseGuide(p.food.diet);
     const tips = syms.filter(v => SYM_TIPS[v]);
     const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
+    // Each upcoming date opens what that phase means: body, eat, move, tip.
+    const nextRow = (k, head) => { const g = guide.find(x => x.k === k);
+      return `<li><details class="app-next-row"><summary><i style="background:${PHASE_META[k].color}"></i>${head}</summary>
+        ${g ? `<div class="app-next-body"><p class="app-phase-body">${g.body}</p>
+          <p><span class="app-tag">Eat</span>${g.eat}</p><p><span class="app-tag">Move</span>${g.move}</p><p><span class="app-tag">Tip</span>${g.tip}</p></div>` : ''}
+      </details></li>`; };
     body.innerHTML = `
       <div class="app-card app-cycle-card" style="--phase:${meta ? meta.color : '#e1e3e7'}">
         <div class="app-row"><p class="app-card-label">Your cycle</p>${meta ? `<span class="app-phase"><i style="background:${meta.color}"></i>${meta.label}</span>` : ''}</div>
         ${info ? cycleBar(info) : ''}
         ${next ? `<ul class="app-cycle-next">
-            <li><i style="background:${PHASE_META.menstrual.color}"></i><span>Next period<small>in ${until} day${until === 1 ? '' : 's'}</small></span><b>${fmtDay(next)}</b></li>
-            ${ovu && ovu > today ? `<li><i style="background:${PHASE_META.ovulation.color}"></i><span>Ovulation around<small>most fertile ${fmtDay(new Date(ovu - 2 * 86400000)).replace(/^\w+ /, '')} to ${fmtDay(new Date(+ovu + 86400000)).replace(/^\w+ /, '')}</small></span><b>${fmtDay(ovu)}</b></li>` : ''}
-            <li><i style="background:${PHASE_META.luteal.color}"></i><span>PMS likely from<small>${Math.round((next - pms) / 86400000)} days before your period</small></span><b>${fmtDay(pms)}</b></li>
+            ${nextRow('menstrual', `<span>Next period<small>in ${until} day${until === 1 ? '' : 's'}</small></span><b>${fmtDay(next)}</b>`)}
+            ${ovu && ovu > today ? `${nextRow('ovulation', `<span>Ovulation around<small>most fertile ${fmtDay(new Date(ovu - 2 * 86400000)).replace(/^\w+ /, '')} to ${fmtDay(new Date(+ovu + 86400000)).replace(/^\w+ /, '')}</small></span><b>${fmtDay(ovu)}</b>`)}` : ''}
+            ${nextRow('luteal', `<span>PMS likely from<small>${Math.round((next - pms) / 86400000)} days before your period</small></span><b>${fmtDay(pms)}</b>`)}
           </ul>` : '<p class="app-muted">Add the first day of your last period and I’ll predict the next one.</p>'}
-        <button type="button" class="eb-btn secondary sm" data-period-log>Log a period</button>
+        <p class="app-muted small">General guidance, not medical advice.</p>
       </div>
       ${todayLogHTML(ds, info && info.phase)}
       ${info ? phaseFoodHTML(info.phase, p.food.diet) : ''}
       ${patternsHTML(p)}
-      ${periodLogHTML(p)}
-      <div class="app-card">
-        <p class="app-card-label">Through your cycle</p>
-        <div class="app-phases">${guide.map(g => `<details class="app-phase-row${info && info.phase === g.k ? ' now' : ''}"${info && info.phase === g.k ? ' open' : ''}>
-          <summary><i style="background:${(PHASE_META[g.k] || {}).color}"></i><b>${g.n} <span>${g.d}</span></b>${info && info.phase === g.k ? '<em>Now</em>' : ''}</summary>
-          <p class="app-phase-body">${g.body}</p>
-          <p><span class="app-tag">Eat</span>${g.eat}</p>
-          <p><span class="app-tag">Move</span>${g.move}</p>
-          <p><span class="app-tag">Tip</span>${g.tip}</p>
-        </details>`).join('')}</div>
-        <p class="app-muted small">General guidance, not medical advice.</p>
-      </div>`;
+      ${periodLogHTML(p)}`;
   }
 
   // ── Fitness ──
@@ -845,12 +902,11 @@
     food.appendChild(foodHead);
     const calSlotFood = document.createElement('div'); calSlotFood.className = 'app-shared';
     food.appendChild(calSlotFood);
-    food.appendChild($('tracker'));
-    food.appendChild($('weeklyTrackerSection'));
-    const words = document.createElement('div'); words.className = 'app-card app-words'; words.id = 'weekWords'; words.hidden = true;
-    food.appendChild(words);
+    // Normal / PMS sits right under the date strip, above everything for the day.
     food.appendChild($('modeToggleBar'));
     if ($('modeNote')) food.appendChild($('modeNote'));
+    food.appendChild($('tracker'));
+    home.appendChild($('weeklyTrackerSection'));   // the week card lives on Home only
     food.appendChild($('cravingWrap'));
     food.appendChild($('slotSection'));
     const drawers = [...container.querySelectorAll(':scope > .drawer-group')];
@@ -936,8 +992,6 @@
 
     buildMini();
     buildWeekMini();
-    const tb = document.createElement('div'); tb.id = 'appTitlebar'; tb.className = 'app-titlebar'; tb.setAttribute('aria-hidden', 'true');
-    tb.innerHTML = '<b></b>'; document.body.appendChild(tb);
     stripEmoji(document.body);
     new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
       if (n.nodeType === 1) stripEmoji(n); else if (n.nodeType === 3 && EMOJI.test(n.data)) { EMOJI.lastIndex = 0; n.data = n.data.replace(EMOJI, ''); }
@@ -996,11 +1050,20 @@
       <div class="week-mini-bar"><i style="width:${fill ? fill.style.width : '0%'}"></i></div>`;
   }
   // Home: this week's calories (copied from the Nutrition tab's week card), tap to open it.
+  // This week at a glance on the Home food card: calories (from the weekly
+  // tracker) and workouts (count + calories burned), each opening its tab.
+  function weekStatsHTML() {
+    const d = weekData(), n = d.reduce((a, x) => a + x.workouts, 0), burned = d.reduce((a, x) => a + x.burned, 0);
+    return `<div class="app-week-stats">
+      <button type="button" data-go="food"><span>Calories this week</span><b id="homeWeekCal">–</b></button>
+      <button type="button" data-go="fitness"><span>Workouts this week</span><b>${n ? `${n} · ${burned.toLocaleString()} cal burned` : 'None yet'}</b></button>
+    </div>`;
+  }
   function paintHomeWeek() {
-    const box = $('homeWeekLine'), sec = $('weeklyTrackerSection'); if (!box) return;
+    const box = $('homeWeekCal'), sec = $('weeklyTrackerSection'); if (!box) return;
     const q = c => { const el = sec && sec.querySelector(c); return el ? el.textContent.trim() : ''; };
     const val = q('.week-card-val'), sub = q('.week-card-sub').replace(/\s*net$/, '');
-    box.textContent = val ? ` · ${val} ${sub} this week` : '';
+    box.innerHTML = val ? `${esc(val)} <small>${esc(sub)}</small>` : 'Nothing yet';
   }
   function updateMini() {
     const mini = $('trackerMini'), eq = $('calEquation'); if (!mini || !eq) return;
@@ -1013,7 +1076,7 @@
     try {
       updateMini();
       paintFoodHead(); markPicked(); updateWeekMini(); paintHomeWeek(); applyTint(); pushWidget();
-      if (active === 'food') paintWords();
+      if (active === 'food') { paintWords(); window.EBDayMode && EBDayMode.paint(); }
       if (active === 'home') renderHome();
       if (active === 'fitness') renderFitnessPage();
       if (active === 'cycle') renderCyclePage();
@@ -1056,6 +1119,15 @@
     if (window.EBAssistant && EBAssistant.isOpen && EBAssistant.isOpen()) EBAssistant.close(true);
     if (window.EBProfile && EBProfile.isOpen && EBProfile.isOpen()) EBProfile.close();
   }
+  // Cravings logged on Menstruation open the full craving finder on Nutrition.
+  const CRAVE_QUERY = { sweet: 'sweet', salty: 'salty', carbs: 'comfort', chocolate: 'chocolate', spicy: 'spicy', fried: 'fried' };
+  function openCraving(c) {
+    go('food');
+    const inp = $('cravingInput'); if (!inp) return;
+    inp.value = CRAVE_QUERY[c] || c;
+    try { handleCraving(); } catch {}
+    setTimeout(() => window.scrollTo({ top: $('cravingWrap').getBoundingClientRect().top + window.scrollY - 96, behavior: 'smooth' }), 60);
+  }
   function go(tab, initial) {
     if (tab === 'chat') { if (window.EBProfile && EBProfile.isOpen()) EBProfile.close(); if (window.EBAssistant && !EBAssistant.isOpen()) EBAssistant.open(); return markActive(); }
     if (tab === 'profile') { if (window.EBAssistant && EBAssistant.isOpen()) EBAssistant.close(true); if (window.EBProfile && !EBProfile.isOpen()) EBProfile.open(); return markActive(); }
@@ -1069,8 +1141,8 @@
     if (tab === 'cycle') { renderCyclePage(); survivalBadge(); }
     if (tab === 'home') { renderHome(); try { renderWeeklyTracker(); } catch {} }
     if (tab === 'fitness') { renderFitnessPage(); try { renderActivity(); } catch {} }
-    if (tab === 'food') { try { renderTracker(); renderSlotSection(); } catch {} paintFoodHead(); paintWords(); }
-    applyTint(); watchTitle();
+    if (tab === 'food') { try { renderTracker(); renderSlotSection(); } catch {} paintFoodHead(); paintWords(); window.EBDayMode && EBDayMode.paint(); }
+    applyTint();
     const mini = $('trackerMini'); if (mini && tab !== 'food') mini.classList.remove('show');
     const wm = $('weekMini'); if (wm && tab !== 'home') wm.classList.remove('show');
     history.replaceState(null, '', '#' + tab);
@@ -1103,6 +1175,8 @@
       acceptDefault(ln.dataset.logNext, selectedDateStr());
       EB.toast('Logged'); return repaint();
     }
+    const cm = t.closest('[data-crave-more]');
+    if (cm) { e.preventDefault(); return openCraving(cm.dataset.craveMore); }
     const g = t.closest('[data-go]'); if (g) { e.preventDefault(); return go(g.dataset.go); }
     const en = t.closest('[data-energy]');
     if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); return repaint(); }
@@ -1194,6 +1268,7 @@
     Object.values(log).forEach(v => (Array.isArray(v) ? v : [v]).forEach(m => { if (m && m.cal) { add(m); sig.add((m.name || '') + '|' + (m.cal || 0)); } }));
     try { add(wakeupTotals(ds)); } catch {}
     try { getCustomMeals(ds).forEach(m => { if (!sig.has((m.title || m.name || '') + '|' + (m.cal || 0))) add(m); }); } catch {}
+    try { if (window.EBDayMode) add(EBDayMode.estimate(ds)); } catch {}   // ticked Guide meals (estimate)
     return t;
   }
   // The goal decides the poster's headline: deficit, surplus or days at maintenance.
@@ -1335,25 +1410,6 @@
     text('Menu-fi', W - 72, 1318, 800, 30, 1, 'right');
     return cv.toDataURL('image/png');
   }
-  // ── Large titles: a slim bar with the page name appears once the big title scrolls away ──
-  const titles = {};
-  let titleHead = null, titleTick = false;
-  function titleFor(tab, text) { titles[tab] = text; if (tab === active) { const b = $('appTitlebar'); if (b) b.firstChild.textContent = text; } }
-  function checkTitle() {
-    titleTick = false;
-    const bar = $('appTitlebar'); if (!bar) return;
-    // Show once the bottom of the big header has gone under the bar.
-    bar.classList.toggle('show', !!titleHead && titleHead.isConnected && titleHead.getBoundingClientRect().bottom < bar.offsetHeight);
-  }
-  function watchTitle() {
-    const bar = $('appTitlebar'); if (!bar) return;
-    // Watch the header itself: Home re-renders its title on every repaint.
-    const page = pageEl(active), head = page && page.querySelector('.app-head'), h = head && head.querySelector('h1');
-    if (!titles[active]) titles[active] = h ? h.textContent.trim() : '';
-    bar.firstChild.textContent = titles[active];
-    titleHead = head; checkTitle();
-  }
-  window.addEventListener('scroll', () => { if (!titleTick) { titleTick = true; requestAnimationFrame(checkTitle); } }, { passive: true });
 
   // ── Widget: two weeks of cycle days + today's meals, for the home and lock screen ──
   function pushWidget() {
@@ -1366,13 +1422,35 @@
       days.push({ d: ds, day: info.dayNum, label: st.word, color: PHASE_META[info.phase].color, deep: st.deep, periodIn: info.cycleLength - info.dayNum + 1 });
     }
     const ds = todayStr(), log = getSlotLog(ds), tk = todayKey();
-    const meals = mealSlots().map(sl => {
-      const w = slotWindow(sl.time) || { start: 0, end: 24 };
-      const v = log[sl.id], items = (Array.isArray(v) ? v : v ? [v] : []).filter(it => it && it.name);
-      const m = getEffectiveDefaultMeal(sl, tk, isPMSMode());
-      return { slot: sl.name, time: sl.time, start: w.start, end: w.end, name: items.length ? items[0].name : m ? m.name : sl.name, logged: !!(items.length || getSlotEaten(ds, sl.id)) };
-    });
-    EBNative.widget({ name: firstName(), days, mealsDate: ds, meals });
+    const plain = t => String(t || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+    const mode = window.EBDayMode ? EBDayMode.modeFor(ds) : 'plan';
+    let meals;
+    if (mode === 'guide' && window.EBDayMode) {
+      // Guide days: each meal's calorie range, in rough clock windows.
+      const WIN = { Breakfast: [7, 10, '7–10am'], 'Mid-morning': [10, 12, '10am–12pm'], Lunch: [12, 15, '12–3pm'], Snack: [15, 18, '3–6pm'], Dinner: [18, 22, '6–10pm'] };
+      meals = EBDayMode.guideMeals(ds).map(g => { const w = WIN[g.name] || [0, 24, '']; return {
+        slot: g.name, time: w[2], start: w[0], end: w[1], name: `${g.lo}–${g.hi} cal`, detail: `About ${g.p} g protein`, logged: !!g.done }; });
+    } else {
+      meals = mealSlots().map(sl => {
+        const w = slotWindow(sl.time) || { start: 0, end: 24 };
+        const v = log[sl.id], items = (Array.isArray(v) ? v : v ? [v] : []).filter(it => it && it.name);
+        const m = getEffectiveDefaultMeal(sl, tk, isPMSMode());
+        const cal = m && (m.cal || (m.macros && m.macros.cal));
+        return { slot: sl.name, time: sl.time, start: w.start, end: w.end, name: plain(items.length ? items[0].name : m ? m.name : sl.name),
+          detail: !items.length && cal ? `About ${Math.round(cal)} cal` : null, logged: !!(items.length || getSlotEaten(ds, sl.id)) };
+      });
+    }
+    // Today's workout: what she logged, or the same suggestion Fitness shows.
+    const acts = getActivities(ds), burned = acts.reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
+    let workout = null;
+    if (acts.length) {
+      const a = acts[0], more = acts.length > 1 ? ` +${acts.length - 1} more` : '';
+      workout = { name: `${plain(a.name || 'Workout')}${a.mins ? ` · ${a.mins} min` : ''}${more}`, detail: burned ? `${burned} cal burned` : null, done: true };
+    } else {
+      const sg = suggest(ds, 2), o = sg && sg.options[0];
+      if (o) workout = { name: `${o.mins} min ${o.name.toLowerCase()}`, detail: `About ${o.kcal} cal`, done: false, guess: !energyFor(ds) };
+    }
+    EBNative.widget({ name: firstName(), days, mealsDate: ds, meals, workout });
   }
 
   // ── Food as words, not emoji ──

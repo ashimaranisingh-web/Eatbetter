@@ -154,9 +154,14 @@
     const bmi = cm > 0 ? Math.round(kg / ((cm / 100) ** 2) * 10) / 10 : null;
     const bmiCat = bmi == null ? '' : bmi < 18.5 ? 'underweight' : bmi < 23 ? 'healthy' : bmi < 25 ? 'overweight' : 'obese';
     const bmr = cm > 0 && age > 0 ? r(10 * kg + 6.25 * cm - 5 * age - 161) : null;
-    const tdee = r((bmr ? bmr * factor : kg * ({ sedentary: 25, light: 28, moderate: 31, very: 34 }[p.activity.level] || 28)) / 10) * 10;
+    const tdeeCalc = r((bmr ? bmr * factor : kg * ({ sedentary: 25, light: 28, moderate: 31, very: 34 }[p.activity.level] || 28)) / 10) * 10;
     // Never plan below BMR or 1,200 cal, and keep deficits under 25% of maintenance.
     const floor = Math.max(1200, bmr || 0);
+    // Your own maintenance number (from a dietitian or a tracker) replaces the
+    // formula, but never below the floor or above 4,500.
+    const own = p.plan && p.plan.maintenance != null && p.plan.maintenance !== '' ? +p.plan.maintenance : null;
+    const overridden = own > 0;
+    const tdee = overridden ? Math.min(4500, Math.max(floor, r(own / 10) * 10)) : tdeeCalc;
     const losing = p.goal === 'lose' || goalKg < kg - 0.5;
     const gaining = p.goal === 'muscle' || goalKg > kg + 0.5;
     const recommended = losing ? Math.min(500, r(tdee * 0.2 / 50) * 50) : gaining ? -250 : 0;
@@ -168,7 +173,7 @@
     const weeks = perWeekKg !== 0 && Math.abs(goalKg - kg) > 0.4 ? Math.ceil(Math.abs(goalKg - kg) / Math.abs(perWeekKg)) : null;
     const warn = losing && deficit > maxDeficit ? (target < floor ? 'below' : 'steep')
                : losing && deficit < 200 ? 'slow' : '';
-    return { kg, goalKg, cm, age, bmi, bmiCat, bmr, factor, actLabel, tdee, floor, losing, gaining,
+    return { kg, goalKg, cm, age, bmi, bmiCat, bmr, factor, actLabel, tdee, tdeeCalc, overridden, floor, losing, gaining,
              recommended, maxDeficit, deficit, target, perWeekKg, weeks, warn };
   }
 

@@ -16,7 +16,7 @@
       goal: '', goals: [],
       weight: { unit: 'kg', current: '', goal: '' },
       body: { height: '', age: '' },
-      plan: { deficit: null },
+      plan: { deficit: null, maintenance: null },
       cycle: { tracks: null, lastStart: '', cycleLength: 28, periodLength: 5,
                regular: '', symptoms: [], pmsStart: '', history: [], claimedLength: null },
       activity: { level: '', types: [] },

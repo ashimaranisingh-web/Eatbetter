@@ -44,5 +44,9 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
 
-  window.EBNative = { native, haptic, share, widget, reduce };
+  // Opens the camera barcode reader. Resolves { code } or { cancelled: true };
+  // rejects with code CAMERA_DENIED / NO_CAMERA. Not available on the website.
+  function scanBarcode() { return M ? M.scanBarcode() : Promise.reject(Object.assign(new Error('unavailable'), { code: 'UNAVAILABLE' })); }
+
+  window.EBNative = { native, haptic, share, widget, reduce, scanBarcode };
 })();
