@@ -118,6 +118,23 @@
     const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
     if (error) throw error;
   }
+  // App Review account: Apple's reviewer can't receive email codes, so this one
+  // address signs in with a password instead. Only its SHA-256 is stored here
+  // (the repo is public); the password lives in Supabase and App Store Connect.
+  const REVIEW_HASH = 'aeb3f677a91d638b496910d495620aff519c91922959a3118f1a922a197d3e68';
+  async function isReviewEmail(email) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(email).trim().toLowerCase()));
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('') === REVIEW_HASH;
+    } catch { return false; }
+  }
+  async function signInReview(email, password) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    session = data.session;
+    if (window.EBAnalytics && EBAnalytics.identifyTester) EBAnalytics.identifyTester();
+    await syncAndRepaint();
+  }
   async function verifyCode(email, token) {
     const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
     if (error) throw error;
@@ -155,15 +172,16 @@
     const { esc } = EB;
     const ov = document.createElement('div');
     ov.className = 'eb-cal-overlay app-sheet-overlay';
-    let email = '', step = 'email', busy = false, err = '';
+    let email = '', step = 'email', busy = false, err = '', review = false;
     const body = () => step === 'email' ? `
         <p class="acct-lead">Back up your plan, logs and cycle history, and use Menu-fi on more than one phone. We’ll email you a 6-digit code. No password.</p>
         <label class="ch-field"><span>Email</span><input class="eb-input" id="acctEmail" type="email" inputmode="email" autocomplete="email" value="${esc(email)}"></label>
         ${err ? `<p class="acct-err" role="alert">${esc(err)}</p>` : ''}
         <button type="button" class="eb-btn primary" data-acct="send" ${busy ? 'disabled' : ''}>${busy ? 'Sending…' : 'Send code'}</button>`
       : `
-        <p class="acct-lead">Enter the code we sent to <b>${esc(email)}</b>.</p>
-        <label class="ch-field"><span>Code</span><input class="eb-input" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
+        <p class="acct-lead">${review ? `Enter the password for <b>${esc(email)}</b>.` : `Enter the code we sent to <b>${esc(email)}</b>.`}</p>
+        ${review ? `<label class="ch-field"><span>Password</span><input class="eb-input" id="acctCode" type="password" autocomplete="current-password"></label>`
+          : `<label class="ch-field"><span>Code</span><input class="eb-input" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>`}
         ${err ? `<p class="acct-err" role="alert">${esc(err)}</p>` : ''}
         <button type="button" class="eb-btn primary" data-acct="verify" ${busy ? 'disabled' : ''}>${busy ? 'Checking…' : 'Sign in'}</button>
         <button type="button" class="eb-btn ghost" data-acct="back">Use a different email</button>`;
@@ -177,14 +195,24 @@
       if (e.target === ov || a?.dataset.acct === 'close') return ov.remove();
       if (!a || busy) return;
       err = '';
-      if (a.dataset.acct === 'back') { step = 'email'; return paint(); }
+      if (a.dataset.acct === 'back') { step = 'email'; review = false; return paint(); }
       if (a.dataset.acct === 'send') {
         email = ov.querySelector('#acctEmail').value.trim();
         if (!/^\S+@\S+\.\S+$/.test(email)) { err = 'Enter an email address like name@example.com.'; return paint(); }
         busy = true; paint();
+        review = await isReviewEmail(email);
+        if (review) { busy = false; step = 'code'; return paint(); }
         try { await sendCode(email); step = 'code'; }
         catch (x) { err = x.status === 429 ? 'Too many codes sent. Wait a minute and try again.' : 'Couldn’t send the code. Check your connection and try again.'; }
         busy = false; return paint();
+      }
+      if (a.dataset.acct === 'verify' && review) {
+        const pw = ov.querySelector('#acctCode').value;
+        if (!pw) { err = 'Enter the password.'; return paint(); }
+        busy = true; paint();
+        try { await signInReview(email, pw); ov.remove(); EB.toast('Signed in. Your data is backed up.'); onDone && onDone(); }
+        catch { busy = false; err = 'That password didn’t work.'; paint(); }
+        return;
       }
       if (a.dataset.acct === 'verify') {
         const code = ov.querySelector('#acctCode').value.replace(/\D/g, '');
