@@ -23,12 +23,25 @@ public class MenufiPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "haptic", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shareImage", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scanBarcode", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "readLabel", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "readLabel", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "buildInfo", returnType: CAPPluginReturnPromise)
     ]
     private var labelReader: LabelReader?
 
     static let appGroup = "group.com.ashimaranisingh.menufi"
     static let widgetKey = "widgetData"
+
+    // TestFlight builds carry a sandbox receipt; App Store builds don't.
+    @objc func buildInfo(_ call: CAPPluginCall) {
+        let receipt = Bundle.main.appStoreReceiptURL?.lastPathComponent ?? ""
+        #if DEBUG
+        let test = true
+        #else
+        let test = receipt == "sandboxReceipt"
+        #endif
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        call.resolve(["testflight": test, "build": build])
+    }
 
     @objc func updateWidget(_ call: CAPPluginCall) {
         guard let json = call.getString("json"),

@@ -19,7 +19,7 @@
   };
   TAB_ICONS.cycle = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4.2 6 7.6 6 11a6 6 0 01-12 0c0-3.4 2.5-6.8 6-11z"/></svg>';
   // Plain labels: the Me·Nu·Fi letter play lives on the splash screen only.
-  const TABS = [['home', 'Home'], ['cycle', 'Menstruation'], ['food', 'Nutrition'], ['fitness', 'Fitness']];
+  const TABS = [['home', 'Home'], ['cycle', 'Menstruation'], ['food', 'Nutrition'], ['fitness', 'Fitness'], ['profile', 'Account']];
   const PAGES = ['home', 'cycle', 'food', 'fitness'];
   const pageEl = t => $('page' + t[0].toUpperCase() + t.slice(1));
   // Luna (chat) sits apart from the tabs as a round button, like an assistant key.
@@ -251,8 +251,14 @@
 
   function renderHome() {
     const page = $('pageHome'); if (!page) return;
-    if (currentDay !== todayKey()) { currentDay = todayKey(); try { renderTabs(); } catch {} }
-    const ds = selectedDateStr();
+    // Home shows today, or the day picked on its strip (homeDs). Days in this
+    // week also move the meal log there, so food numbers are that day's.
+    const todayDs = dateToStr(new Date());
+    if (homeDs === todayDs) homeDs = null;
+    const wantKey = homeDs ? dayKeyFor(homeDs) || todayKey() : todayKey();
+    if (currentDay !== wantKey) { currentDay = wantKey; try { renderTabs(); } catch {} }
+    const ds = homeDs || selectedDateStr();
+    const isToday = !homeDs, dayDate = new Date(ds + 'T00:00');
     const p = EB.getProfile();
     const eaten = Math.round(computeConsumed(currentDay).cal);
     const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
@@ -268,37 +274,41 @@
     // One loud thing per screen: today's cycle day, set big, in her phase colour.
     page.querySelector('.app-home-head').innerHTML = `
       <div class="app-head-row app-head-top">
-        <p class="app-date">${first ? `${esc(first)}’s ` : ''}${now.toLocaleDateString(undefined, { weekday: 'long' })} · ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-        <button type="button" class="app-avatar" data-go="profile" aria-label="Profile">${p.photo ? `<img src="${p.photo}" alt="">` : initial ? esc(initial) : TAB_ICONS.profile}</button>
-      </div>
-      ${st ? `<h1 class="hero-cycle" aria-label="Day ${info.dayNum} of your cycle, ${esc(meta.label === 'PMS' ? 'luteal phase (PMS)' : meta.label)}">
+        <p class="app-date">${first ? `${esc(first)}’s ` : ''}${dayDate.toLocaleDateString(undefined, { weekday: 'long' })} · ${dayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${isToday ? '' : ` <button type="button" class="app-back-today" data-home-today>Today</button>`}</p>
+      </div>`;
+    // Under the calendar: the cycle day, set big, and how she might feel.
+    const heroHTML = st ? `<div class="app-card app-hero-card" style="--phase:${meta.color}">
+        <h1 class="hero-cycle" aria-label="Day ${info.dayNum} of your cycle, ${esc(meta.label === 'PMS' ? 'luteal phase (PMS)' : meta.label)}">
           <span class="hero-num" aria-hidden="true">${info.dayNum}</span>
           <span class="hero-stack" aria-hidden="true"><span class="hero-kicker">Day of your cycle${info.phase === 'luteal' ? ' · luteal' : ''}</span><span class="hero-phase">${st.word}</span></span>
-        </h1>`
-      : `<h1>${greeting(p.name)}</h1>`}`;
+        </h1>
+        <p class="app-hero-feel">${PHASE_LINE[info.phase] || ''}</p>
+      </div>` : `<button type="button" class="app-card app-today-setup" data-go="cycle">Add your last period date to see your phase</button>`;
+    const chLine = isToday && window.EBChallenges ? EBChallenges.homeLine() : '';
     // The week card is a live element (Nutrition's code keeps it up to date):
     // lift it out before Home is redrawn, then put it back in its slot.
     const weekSec = $('weeklyTrackerSection'), homeBody = page.querySelector('.app-home-body');
     if (weekSec && homeBody.contains(weekSec)) homeBody.after(weekSec);
     page.querySelector('.app-home-body').innerHTML = `
+      ${heroHTML}
+      ${energyHTML(ds)}
       ${weekCardHTML(eaten, target)}
       <div class="app-card app-shortcuts">
-        ${meta ? '' : `<button type="button" class="app-today-setup" data-go="cycle">Add your last period date to see your phase</button>`}
-        ${nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
+        ${chLine ? `<div class="ch-home-slot">${chLine}</div>` : ''}
+        ${!isToday ? dayFoodHTML(ds, target) : nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
             <div class="app-next-text">
               <span class="app-meta">${nm.now ? 'Now' : 'Up next'} · ${esc(nm.slot)} · ${esc(nm.time)}</span>
               <b class="app-next-name">${esc(nm.name)}</b>
               ${nm.missed ? `<span class="app-tolog-line" data-go="food">${nm.missed} earlier meal${nm.missed > 1 ? 's' : ''} to log</span>` : ''}
             </div>
-            <button type="button" class="app-opt-btn" data-log-next="${nm.slotId}">Log it</button>
+            <button type="button" class="app-tick" data-log-next="${nm.slotId}" role="checkbox" aria-checked="false" aria-label="Mark ${esc(nm.slot)} eaten"></button>
           </div>`
           : `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="All meals logged. Open Nutrition">
               <div class="app-next-text"><span class="app-meta">All meals logged</span><b class="app-next-name">Done for today</b></div>
               <button type="button" class="app-opt-btn" data-go="food">Nutrition</button>
             </div>`}
-        <div class="ch-home-slot">${window.EBChallenges ? EBChallenges.homeLine() : ''}</div>
+        ${chLine ? '' : workoutRowHTML(ds)}
       </div>
-      ${energyHTML(ds)}
 `;
     if (weekSec && $('appParking') && weekSec.parentElement !== $('appParking')) $('appParking').appendChild(weekSec);
     paintHomeWeek();
@@ -451,9 +461,6 @@
         ${crave.length ? `<div class="app-swaps">${crave.map(c => `<div class="app-swap"><span>Craving ${c}? Try</span>
           ${CRAVE_SWAP[c].map(f => `<button type="button" class="app-opt-btn" data-food-idea="${esc(f)}">${f}</button>`).join('')}
           <button type="button" class="app-swap-more" data-crave-more="${c}">More ideas</button></div>`).join('')}</div>` : ''}</div>
-      <div class="app-daylog-sec app-water"><p>Water<small>${water} of 8 glasses</small></p>
-        <div class="app-water-cups" role="group" aria-label="Glasses of water">${Array.from({ length: 8 }, (_, i) =>
-          `<button type="button" class="app-cup${i < water ? ' on' : ''}" data-water="${i + 1}" aria-label="${i + 1} glass${i ? 'es' : ''}"></button>`).join('')}</div></div>
       <div class="app-daylog-actions">
         <button type="button" class="eb-btn primary" data-cyclog-save>Save</button>
         <button type="button" class="eb-link" data-cyclog-cancel>Cancel</button>
@@ -580,12 +587,8 @@
       ['Average period', `${s.period} days`, hist.some(st => flowDays(st) >= 2) ? 'from your flow logs' : 'your estimate'],
       ['Varies by', gaps.length >= 2 ? `${Math.max(...gaps) - Math.min(...gaps)} days` : '—', gaps.length >= 2 ? (Math.max(...gaps) - Math.min(...gaps) <= 7 ? 'regular' : 'irregular') : 'after 3 periods']
     ];
-    return `<div class="app-card app-patterns">
-      <p class="app-card-label">Your patterns</p>
-      <div class="app-stats3">${stats.map(([k, v, n]) => `<div><span>${k}</span><b>${v}</b><small>${n}</small></div>`).join('')}</div>
-      ${out.length ? `<ul class="app-insights">${out.map(x => `<li>${x}</li>`).join('')}</ul>`
-        : '<p class="app-muted">Log for a cycle to see when symptoms and cravings show up.</p>'}
-    </div>`;
+    return `<div class="app-stats3">${stats.map(([k, v, n]) => `<div><span>${k}</span><b>${v}</b><small>${n}</small></div>`).join('')}</div>
+      ${out.length ? `<ul class="app-insights">${out.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}`;
   }
 
   // A bar of the whole cycle, coloured by phase, with today marked.
@@ -606,7 +609,7 @@
 
   // Logged period starts, the real gap between each, and how that compares
   // with the cycle length typed at onboarding.
-  function periodLogHTML(p) {
+  function periodLogHTML(p, patterns) {
     const hist = periodHistory();
     const gaps = periodGaps(hist);
     const real = gaps.filter(g => g >= 15 && g <= 60);
@@ -639,8 +642,9 @@
       </li>`;
     }).join('');
     return `<div class="app-card app-period-log">
-        <div class="app-row"><p class="app-card-label">Cycle history</p>
+        <div class="app-row"><p class="app-card-label">Your cycles</p>
           <button type="button" class="app-link" data-period-log>Add a date</button></div>
+        ${patterns || ''}
         <p class="app-muted">${verdict}${spread}</p>
         ${rows ? `<ul class="app-period-list">${rows}</ul>` : ''}
       </div>`;
@@ -680,7 +684,7 @@
         <button type="button" class="app-opt-btn" data-food-idea="${esc(m)}" data-idea-cal="${cal}" data-idea-slot="${slot.toLowerCase()}">Add</button></li>`).join('')}</ul>` : ''}`;
   }
 
-  let nowOpen = true;   // the current-phase section, open unless she folds it
+  let nowOpen = false;  // the current-phase section, folded until she opens it
   document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cyc-now]')) nowOpen = e.target.open; }, true);
   function renderCyclePage() {
     const page = $('pageCycle'); if (!page) return;
@@ -695,29 +699,31 @@
     sub.innerHTML = meta
       ? `<span class="app-hero-line"><b>Day ${info.dayNum}</b> · ${PHASE_NAME[info.phase]}${isToday ? '' : ` · ${short(ds)}`}</span>`
       : '<span class="app-hero-sub">Add your last period date to start</span>';
+    // "13–15 Nov", or "29 Nov – 3 Dec" across months.
+    const span = r => { const a = new Date(r.start + 'T00:00'), z = new Date(r.end + 'T00:00'), m = { month: 'short' };
+      return a.getMonth() === z.getMonth() ? `${a.getDate()}–${z.getDate()} ${z.toLocaleDateString(undefined, m)}`
+        : `${a.getDate()} ${a.toLocaleDateString(undefined, m)} – ${z.getDate()} ${z.toLocaleDateString(undefined, m)}`; };
     const fertile = r => r.phase === 'ovulation' ? ` · most fertile ${short(addDays(r.start, -2)).replace(/^\w+ /, '')}–${short(addDays(r.end, 0)).replace(/^\w+ /, '')}` : '';
     // PMS symptoms start a set number of days before the period (from onboarding).
     const lead = { '1-3': 3, '4-7': 7, '7+': 10 }[p.cycle.pmsStart] || 5;
     const nextPeriod = runs.find((r, i) => i > 0 && r.phase === 'menstrual');
     const pmsFrom = r => r.phase === 'luteal' && nextPeriod ? ` · PMS likely from ${short(addDays(nextPeriod.start, -lead))}` : '';
     body.innerHTML = `
+      ${logCardHTML(ds, info && info.phase)}
       <div class="app-card app-cycle-card">
         <p class="app-card-label">Your cycle</p>
         ${info ? cycleBar(info) : ''}
         ${cur ? `<details class="cyc-now" style="--phase:${PHASE_META[cur.phase].color}"${nowOpen ? ' open' : ''} data-cyc-now>
-            <summary class="cyc-now-head"><i></i><b>${PHASE_NAME[cur.phase]}</b>
-              <span>until ${short(cur.end)} · ${left <= 1 ? 'last day' : `${left} days left`}${pmsFrom(cur)}</span></summary>
-            ${phaseDetail(cur.phase, diet, true)}
+            <summary class="cyc-now-head"><i></i><span><b>${PHASE_NAME[cur.phase]} <em class="cyc-now-tag">Now</em></b><small>${span(cur)}</small></span></summary>
+            <div class="cyc-next-body">${phaseDetail(cur.phase, diet, true)}</div>
           </details>
           <ul class="cyc-next">${runs.slice(1).map(r => `<li><details>
-              <summary><i style="background:${PHASE_META[r.phase].color}"></i><span><b>${PHASE_NAME[r.phase]}</b><small>${short(r.start)}${fertile(r)}${pmsFrom(r)}</small></span></summary>
+              <summary><i style="background:${PHASE_META[r.phase].color}"></i><span><b>${PHASE_NAME[r.phase]}</b><small>${span(r)}</small></span></summary>
               <div class="cyc-next-body">${phaseDetail(r.phase, diet, false)}</div></details></li>`).join('')}</ul>`
           : '<p class="app-muted">Add the first day of your last period and I’ll map your cycle.</p>'}
         <p class="app-muted small">General guidance, not medical advice.</p>
       </div>
-      ${logCardHTML(ds, info && info.phase)}
-      ${patternsHTML(p)}
-      ${periodLogHTML(p)}`;
+      ${periodLogHTML(p, patternsHTML(p))}`;
     // The strip shows which day this page is about.
     document.querySelectorAll('#cycleSection .cycle-day-cell').forEach(c => c.classList.toggle('picked', active === 'cycle' && c.dataset.date === ds));
   }
@@ -749,7 +755,39 @@
     const chs = page.querySelector('.app-fit-challenges');
     if (chs && window.EBChallenges) chs.innerHTML = EBChallenges.cardHTML();
     const h = page.querySelector('.app-fit-health'); if (h) h.innerHTML = healthHTML();
+    const bn = page.querySelector('.app-fit-burned'); if (bn) bn.innerHTML = burnedHTML();
   }
+  // Fitness: what was burned on the picked day, and where each number came from.
+  function burnedHTML() {
+    let ds = ''; try { ds = selectedDateStr(); } catch {}
+    const acts = getActivities(ds); if (!acts.length) return '';
+    const total = acts.reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
+    const src = a => a.hk === 'daily' ? 'Apple Health · steps and movement' : a.hk ? 'Apple Health · workout' : a.suggested ? 'Logged from a suggestion' : 'Logged by you';
+    const isToday = ds === dateToStr(new Date());
+    return `<div class="app-card app-burned" id="burnedCard">
+      <div class="app-row"><p class="app-card-label">Burned ${isToday ? 'today' : 'this day'}</p><b class="app-burned-total">${total.toLocaleString()} cal</b></div>
+      <ul class="app-burned-list">${acts.map(a => `<li><span><b>${esc(String(a.name || 'Activity').replace(/<[^>]*>/g, ''))}</b><small>${src(a)}</small></span><em>${(parseInt(a.cal) || 0).toLocaleString()} cal</em></li>`).join('')}</ul>
+    </div>`;
+  }
+  // Nutrition: tapping "Burned" opens Fitness at that list.
+  document.addEventListener('click', e => {
+    const t = e.target.closest('#calEquation .cal-term'); if (!t || !t.querySelector('.burned')) return;
+    go('fitness');
+    setTimeout(() => { const c = $('burnedCard'); if (!c) return; c.scrollIntoView({ block: 'center', behavior: 'smooth' }); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 1200); }, 80);
+  });
+  // Nutrition day card: just eaten − burned = net; the arrow opens the deficit line and macros.
+  let macrosOpen = false;
+  function trackerFold() {
+    const tr = $('tracker'), eq = $('calEquation'); if (!tr || !eq) return;
+    let b = $('macrosToggle');
+    if (!b) { b = document.createElement('button'); b.type = 'button'; b.id = 'macrosToggle'; b.className = 'app-macros-toggle'; }
+    if (eq.nextElementSibling !== b) eq.after(b);
+    b.setAttribute('aria-expanded', macrosOpen);
+    b.setAttribute('aria-label', macrosOpen ? 'Hide macros' : 'Show macros');
+    b.innerHTML = `<span>${macrosOpen ? 'Hide macros' : 'Macros'}</span><i aria-hidden="true">▾</i>`;
+    tr.classList.toggle('macros-open', macrosOpen);
+  }
+  document.addEventListener('click', e => { if (e.target.closest('#macrosToggle')) { macrosOpen = !macrosOpen; trackerFold(); } });
 
   // ── Food: a line that reacts to how the day is going ──
   const JUNK = /pizza|burger|chips|fries|ice ?cream|chocolate bar|maggi|samosa|momo|cake|pastry|brownie|gulab jamun|jalebi|sweet|mithai|ladoo|cola|soda|kachori|pakora|vada pav|pav bhaji|biscuit|cookie|donut|nachos|junk/i;
@@ -1029,7 +1067,8 @@
         activityGroup.after(goals);
         const ch = document.createElement('div'); ch.className = 'app-fit-challenges';
         const hl = document.createElement('div'); hl.className = 'app-fit-health';
-        activityGroup.before(ch); goals.after(hl);
+        const bn = document.createElement('div'); bn.className = 'app-fit-burned';
+        activityGroup.before(ch); ch.after(bn); goals.after(hl);
       }
     }
 
@@ -1064,7 +1103,7 @@
     ['switchDay', 'renderTracker', 'renderActivity', 'setMode', 'renderWeeklyTracker'].forEach(wrap);
     // Meals as a timeline: a check per meal in a left gutter, joined by a dashed line.
     const origSlots = window.renderSlotSection;
-    if (typeof origSlots === 'function') window.renderSlotSection = function () { const r = origSlots.apply(this, arguments); timeline(); return r; };
+    if (typeof origSlots === 'function') window.renderSlotSection = function () { const r = origSlots.apply(this, arguments); mealList(); return r; };
     window.checkAndRenderSurvivalBadge = survivalBadge;
     // Replace / Add and the old "Add a meal" sheet now open the page's own search.
     const origReplace = window.enterReplaceMode, origAdd = window.openAddMeal;
@@ -1114,12 +1153,152 @@
     });
   });
 
+  // ⋯ menus on meal cards close when she taps anywhere else.
+  document.addEventListener('click', e => {
+    document.querySelectorAll('#slotSection .slot-more[open]').forEach(d => { if (!d.contains(e.target)) d.removeAttribute('open'); });
+  });
+
+  // ── Meals as one grouped list (Apple Reminders / Health "Today") ──
+  // Each meal is a small section header with its rows: a circle to tick, the food,
+  // calories and protein. Tap a row for details and actions; swipe left for quick ones.
+  const r1n = v => Math.round((+v || 0) * 10) / 10;
+  const plainName = t => String(t || '').replace(/<[^>]*>/g, '');
+  const TICK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function mlRow({ done, name, cal, p, sub, tick, open, swipe }) {
+    return `<div class="ml-row-wrap">${swipe ? `<div class="ml-swipe">${swipe}</div>` : ''}
+      <div class="ml-row${done ? ' done' : ''}">
+        <button type="button" class="ml-main" ${open || ''}><span class="ml-name">${esc(name)}</span><span class="ml-sub">${sub || `${r1n(p)} g protein`}</span></button>
+        <span class="ml-cal">${Math.round(+cal || 0)} cal</span>
+        <button type="button" class="ml-tick${done ? ' on' : ''}" ${tick} role="checkbox" aria-checked="${!!done}" aria-label="${done ? 'Eaten. Tap to undo' : 'Mark eaten'}">${done ? TICK : ''}</button>
+      </div></div>`;
+  }
+  function mealList() {
+    const el = $('slotSection'); if (!el) return;
+    let ds; try { ds = selectedDateStr(); } catch { return; }
+    const log = getSlotLog(ds), pms = isPMSMode(), slots = pms ? PMS_MEAL_SLOTS : MEAL_SLOTS;
+    const html = slots.map(slot => {
+      const head = (right) => `<p class="ml-head"><span>${esc(slot.name)}${slot.time ? ` · ${esc(slot.time)}` : ''}</span>${right ? `<em>${right}</em>` : ''}</p>`;
+      // Wake up: tick each item
+      if (slot.fixed) {
+        const picked = getWakeupItems(ds);
+        return `<section class="ml-sec" data-slot="${slot.id}">${head('')}<div class="ml-group">${WAKEUP_ITEMS.map(it =>
+          mlRow({ done: picked.includes(it.id), name: it.name, cal: it.cal, p: it.p, sub: `${esc(it.unit)}${it.p ? ` · ${r1n(it.p)} g protein` : ''}`, tick: `data-ml-wake="${it.id}"` })).join('')}</div></section>`;
+      }
+      let items = log[slot.id]; items = !items ? [] : Array.isArray(items) ? items : [items];
+      const target = slot.targetCal ? `~${Math.round(slot.targetCal)} cal` : '';
+      const rows = [];
+      const planned = !items.length && slot.defaultMeal && !replaceModeSlots.has(slot.id);
+      if (planned) {
+        const d = getEffectiveDefaultMeal(slot, currentDay, pms);
+        if (d) rows.push(mlRow({ done: false, name: plainName(d.name), cal: d.cal, p: d.p, tick: `data-ml-accept="${slot.id}"`, open: `data-ml-info="${slot.id}:plan"`,
+          swipe: `${d.items ? `<button type="button" data-ml-part="${slot.id}">Ate part</button>` : ''}<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button>` }));
+        if (d && d.items && partialMode.has(slot.id)) {
+          const skipped = partialSkips[slot.id] || [], kept = d.items.filter((_, i) => !skipped.includes(i));
+          const eff = kept.reduce((a, it) => a + (it.cal || 0), 0);
+          rows.push(`<div class="ml-partial"><p>Tap what you skipped</p><div class="ml-partial-items">${d.items.map((it, i) =>
+            `<button type="button" class="${skipped.includes(i) ? 'skipped' : ''}" onclick="togglePartialItem('${slot.id}', ${i})">${esc(it.n)} <small>${it.cal} cal</small></button>`).join('')}</div>
+            <button type="button" class="eb-btn primary" onclick="logPartial('${slot.id}', '${ds}')">${kept.length ? `Log what I ate · ${Math.round(eff)} cal` : 'Skipped the whole meal'}</button>
+            <button type="button" class="eb-link" onclick="togglePartialMode('${slot.id}')">Cancel</button></div>`);
+        }
+      }
+      const plannedOnly = items.length && slot.defaultMeal && isPlannedOnly(slot, ds);
+      items.forEach((m, i) => rows.push(mlRow({ done: true, name: plainName(m.name), cal: m.cal, p: m.p, tick: plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`,
+        open: `data-ml-info="${slot.id}:${i}"`, swipe: `<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button><button type="button" class="del" ${plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`}>${plannedOnly ? 'Undo' : 'Delete'}</button>` })));
+      // Coffee / protein: build from parts
+      if (BUILDERS[slot.id]) {
+        const last = getLastBuild(slot.id); let lastT = 0;
+        if (last && last.length) BUILDERS[slot.id].items.forEach(it => { if (last.includes(it.id)) lastT += it.cal; });
+        if (lastT > 0) rows.push(`<button type="button" class="ml-add" onclick="repeatLastBuild('${slot.id}', '${ds}')">↻ Repeat last · ${lastT} cal</button>`);
+        rows.push(`<button type="button" class="ml-add" onclick="openBuilder('${slot.id}', '${ds}')">+ ${slot.id === 'protein' ? 'Build shake' : 'Build coffee'}</button>`);
+      } else rows.push(`<button type="button" class="ml-add" data-ml-add="${slot.id}">+ Add food</button>`);
+      const eaten = items.reduce((a, m) => a + (+m.cal || 0), 0);
+      return `<section class="ml-sec" data-slot="${slot.id}">${head(items.length && !plannedOnly ? `${Math.round(eaten)} of ${target.replace('~', '')}` : target)}<div class="ml-group">${rows.join('')}</div></section>`;
+    }).join('');
+    el.innerHTML = `<div class="ml">${html}</div>`;
+  }
+  // Details sheet for a meal row (what's in it + actions)
+  function mealInfo(key) {
+    const [slotId, which] = key.split(':'); let ds; try { ds = selectedDateStr(); } catch { return; }
+    const pms = isPMSMode(), slot = (pms ? PMS_MEAL_SLOTS : MEAL_SLOTS).find(s => s.id === slotId); if (!slot) return;
+    const log = getSlotLog(ds); let items = log[slotId]; items = !items ? [] : Array.isArray(items) ? items : [items];
+    const isPlan = which === 'plan', m = isPlan ? getEffectiveDefaultMeal(slot, currentDay, pms) : items[+which]; if (!m) return;
+    const plannedOnly = !isPlan && slot.defaultMeal && isPlannedOnly(slot, ds);
+    const what = m.qty ? String(m.qty).replace(/<br\s*\/?>/g, '\n') : (m.items ? m.items.map(it => `${it.n} · ${it.cal} cal`).join('\n') : '');
+    const acts = [
+      isPlan && `<button type="button" data-mi="accept">Mark eaten</button>`,
+      isPlan && m.items && `<button type="button" data-mi="part">Ate part of this</button>`,
+      `<button type="button" data-mi="replace">Replace / Add</button>`,
+      !isPlan && slot.defaultMeal && !plannedOnly && `<button type="button" data-mi="restore">Back to planned meal</button>`,
+      !isPlan && `<button type="button" class="del" data-mi="${plannedOnly ? 'unplan' : 'del'}">${plannedOnly ? 'Mark not eaten' : 'Remove'}</button>`
+    ].filter(Boolean).join('');
+    const ov = document.createElement('div'); ov.className = 'eb-cal-overlay app-sheet-overlay';
+    ov.innerHTML = `<div class="eb-cal app-sheet ml-info" role="dialog" aria-modal="true" aria-label="${esc(plainName(m.name))}">
+      <div class="app-sheet-head"><b>${esc(plainName(m.name))}</b><button type="button" class="eb-icon-btn" data-sheet-close aria-label="Close">${ICONS.close}</button></div>
+      <div class="ml-info-num"><b>${Math.round(+m.cal || 0)}</b><span>cal · ${r1n(m.p)} g protein${m.c != null ? ` · ${r1n(m.c)} g carbs · ${r1n(m.f)} g fat` : ''}</span></div>
+      ${what ? `<div class="ml-info-what"><p>What’s in it</p><span>${esc(what).replace(/\n/g, '<br>')}</span></div>` : ''}
+      <div class="ml-info-acts">${acts}</div></div>`;
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', e => {
+      if (e.target === ov || e.target.closest('[data-sheet-close]')) return close();
+      const a = e.target.closest('[data-mi]'); if (!a) return; close();
+      const k = a.dataset.mi;
+      if (k === 'accept') acceptDefault(slotId, ds);
+      if (k === 'part') togglePartialMode(slotId);
+      if (k === 'replace') window.enterReplaceMode(slotId);
+      if (k === 'restore') restoreDefault(slotId, ds);
+      if (k === 'unplan') restoreDefault(slotId, ds);
+      if (k === 'del') delItem(slotId, +which, ds);
+    });
+  }
+  function delItem(slotId, i, ds) {
+    const before = JSON.parse(JSON.stringify(getSlotLog(ds)[slotId] || null));
+    const nm = (Array.isArray(before) ? before[i] : before) || {};
+    removeSlotMeal(slotId, i, ds);
+    undoToast(`${plainName(nm.name || 'Item')} removed`, () => { const l = getSlotLog(ds); l[slotId] = before; setSlotLog(ds, l); repaintMeals(); });
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part]');
+    if (!t) return;
+    let ds; try { ds = selectedDateStr(); } catch { return; }
+    const d = t.dataset;
+    try { window.EBNative && EBNative.haptic && EBNative.haptic('light'); } catch {}
+    if (d.mlWake) return toggleWakeupItem(ds, d.mlWake);
+    if (d.mlAccept) return acceptDefault(d.mlAccept, ds);
+    if (d.mlUnplan) { const sid = d.mlUnplan; return undoToast('Marked not eaten', () => acceptDefault(sid, ds)), restoreDefault(sid, ds); }
+    if (d.mlDel) { const [sid, i] = d.mlDel.split(':'); return delItem(sid, +i, ds); }
+    if (d.mlInfo) return mealInfo(d.mlInfo);
+    if (d.mlAdd) return window.EBFoodLog ? EBFoodLog.focusSearch(d.mlAdd) : null;
+    if (d.mlReplace) return window.enterReplaceMode(d.mlReplace);
+    if (d.mlPart) return togglePartialMode(d.mlPart);
+  });
+  // Swipe a row left to reveal its quick actions
+  let sw = null;
+  document.addEventListener('touchstart', e => {
+    const row = e.target.closest && e.target.closest('#slotSection .ml-row'); if (!row || !row.parentElement.querySelector('.ml-swipe')) return;
+    document.querySelectorAll('#slotSection .ml-row.open').forEach(r => { if (r !== row) { r.classList.remove('open'); r.style.transform = ''; } });
+    sw = { row, x: e.touches[0].clientX, y: e.touches[0].clientY, dx: 0, w: row.parentElement.querySelector('.ml-swipe').offsetWidth, open: row.classList.contains('open') };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!sw) return; const dx = e.touches[0].clientX - sw.x, dy = e.touches[0].clientY - sw.y;
+    if (Math.abs(dy) > Math.abs(dx) && !sw.moving) { sw = null; return; }
+    sw.moving = true; sw.dx = Math.max(-sw.w, Math.min(0, dx + (sw.open ? -sw.w : 0)));
+    sw.row.style.transition = 'none'; sw.row.style.transform = `translateX(${sw.dx}px)`;
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (!sw) return; const open = sw.dx < -sw.w / 2;
+    sw.row.style.transition = ''; sw.row.style.transform = open ? `translateX(${-sw.w}px)` : '';
+    sw.row.classList.toggle('open', open); sw = null;
+  });
+
   function timeline() {
     let log = {}; try { log = getSlotLog(selectedDateStr()) || {}; } catch {}
     document.querySelectorAll('#slotSection .slot-card').forEach(card => {
       if (card.querySelector(':scope > .slot-gutter')) return;
       const gutter = document.createElement('span'); gutter.className = 'slot-gutter';
       const check = card.querySelector(':scope > .slot-header > .slot-check');
+      // Cards that tick each item (Wake up) get no card-level tick: one tick per thing.
+      if (!check && card.querySelector('.wake-row')) return;
       if (check) gutter.appendChild(check);
       else {
         const v = log[card.dataset.slot];
@@ -1170,19 +1349,61 @@
   // Today, this week and workouts as three equal stats. "This week" opens the
   // week card (‹ Week 3 of 6 ›, bar, Details) inside the same card.
   let homeWeekOpen = false;
-  // What the plan allowed on the finished days (target + what workouts burned) vs what was eaten.
-  function budgetBar(done, T) {
-    const allowed = Math.round(done.reduce((a, x) => a + T + x.burned, 0)), ate = Math.round(done.reduce((a, x) => a + x.eat.cal, 0));
-    const over = ate > allowed, pct = allowed ? Math.min(100, ate / allowed * 100) : 0;
-    return `<div class="app-budget" role="img" aria-label="Ate ${ate.toLocaleString()} of ${allowed.toLocaleString()} calories allowed">
-        <div class="app-budget-bar"><i class="${over ? 'over' : ''}" style="width:${pct}%"></i></div>
-        <div class="app-budget-ends"><span>Ate <b>${ate.toLocaleString()}</b></span><span>${over ? `${(ate - allowed).toLocaleString()} over the ${allowed.toLocaleString()} allowed` : `of ${allowed.toLocaleString()} allowed`}</span></div>
-      </div>`;
-  }
   // 7,700 cal of deficit ≈ 1 kg of body fat, however long that takes.
-  function fatLine(real, gap) {
+  function fatLine(gap) {
     const pace = gap > 0 ? ` At ${gap.toLocaleString()} a day, that’s about <b>1 kg every ${Math.round(CAL_PER_KG / gap)} days</b>.` : '';
     return `1 kg of fat is about <b>${CAL_PER_KG.toLocaleString()} cal</b> of deficit in total.${pace}`;
+  }
+  // Today's workout in the quick card: what she logged, or the day's suggestion.
+  // ── Home on another day (picked on the strip) ──
+  let homeDs = null;
+  const dayCal = ds => { try { if (typeof getDayCalories === 'function') return Math.round(getDayCalories(ds)); } catch {}
+    const log = getSlotLog(ds) || {}; return Math.round(Object.values(log).flat().reduce((a, m) => a + (+(m && m.cal) || 0), 0)); };
+  function dayFoodHTML(ds, target) {
+    const past = ds < dateToStr(new Date()), cal = dayCal(ds);
+    const log = getSlotLog(ds) || {}, meals = Object.values(log).filter(v => Array.isArray(v) ? v.length : v).length;
+    const title = past ? (cal ? `${cal.toLocaleString()} of ${target.toLocaleString()} cal` : 'Nothing logged') : 'Not here yet';
+    const sub = past ? (cal ? `${meals} meal${meals === 1 ? '' : 's'} logged` : 'Add what you ate in Nutrition') : 'Your meals for this day are in Nutrition';
+    return `<div class="app-today-next" data-go="food" role="button" tabindex="0">
+        <div class="app-next-text"><span class="app-meta">Food</span><b class="app-next-name">${title}</b><span class="app-quick-sub">${sub}</span></div>
+        <button type="button" class="app-opt-btn" data-go="food">${past ? 'Open' : 'See plan'}</button>
+      </div>`;
+  }
+  // Tapping a day on Home's strip shows that day on Home (no popup).
+  document.addEventListener('click', e => {
+    if (active !== 'home') return;
+    const cell = e.target.closest('#cycleSection .cycle-day-cell'); if (!cell || !cell.dataset.date) return;
+    e.stopPropagation(); e.preventDefault();
+    homeDs = cell.dataset.date === dateToStr(new Date()) ? null : cell.dataset.date;
+    renderHome(); markHomePicked();
+  }, true);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('[data-home-today]')) return;
+    homeDs = null; renderHome(); markHomePicked();
+  });
+  function markHomePicked() {
+    if (active !== 'home') return;
+    const ds = homeDs || dateToStr(new Date());
+    document.querySelectorAll('#cycleSection .cycle-day-cell').forEach(c => c.classList.toggle('picked', c.dataset.date === ds));
+  }
+
+  function workoutRowHTML(ds) {
+    const acts = getActivities(ds), isToday = ds === dateToStr(new Date());
+    const when = isToday ? 'Workout today' : 'Workout';
+    if (acts.length) {
+      const cal = acts.reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
+      return `<div class="app-quick-row" data-go="fitness" role="button" tabindex="0">
+        <div class="app-next-text"><span class="app-meta">${when} · done</span><b class="app-next-name">${esc(acts.map(a => a.name).join(', '))}</b>
+          <span class="app-quick-sub">${cal.toLocaleString()} cal burned</span></div>
+        <span class="app-quick-done" aria-label="Done"></span></div>`;
+    }
+    if (ds < dateToStr(new Date())) return `<div class="app-quick-row" data-go="fitness" role="button" tabindex="0">
+        <div class="app-next-text"><span class="app-meta">Workout</span><b class="app-next-name">No workout logged</b></div></div>`;
+    const sg = suggest(ds, 2), o = sg && sg.options[0]; if (!o) return '';
+    return `<div class="app-quick-row" data-go="fitness" role="button" tabindex="0">
+        <div class="app-next-text"><span class="app-meta">${when}</span><b class="app-next-name">${o.mins} min ${esc(o.name.toLowerCase())}</b>
+          <span class="app-quick-sub">About ${o.kcal} cal${energyFor(ds) ? '' : ' · suggested'}</span></div>
+        <button type="button" class="app-tick" data-log-opt="${o.kind}" role="checkbox" aria-checked="false" aria-label="Log ${o.mins} min ${esc(o.name.toLowerCase())}"></button></div>`;
   }
   function weekCardHTML(eaten, target) {
     const d = weekData(), S = weekSummary(d);
@@ -1202,36 +1423,37 @@
         <span class="wk-diff ${diff < 0 ? 'over' : ''}">${!c || future ? '' : x.ds === today ? 'so far' : diff >= 0 ? `−${diff.toLocaleString()}` : `+${(-diff).toLocaleString()}`}</span>
       </li>`;
     }).join('');
-    // Deficit so far vs the plan, over finished days only (today isn't over yet).
-    const gap = TDEE - T, done = d.filter(x => x.ds < today && x.eat.cal > 0);
-    let head;
-    if (gap > 0 && lose !== null) {
-      const real = Math.round(done.reduce((a, x) => a + (TDEE + x.burned - x.eat.cal), 0));
-      const planned = gap * done.length, diff = real - planned, n0 = v => Math.abs(Math.round(v)).toLocaleString();
-      head = !done.length
-        ? `<div class="app-weekbig"><b>0</b><span>of ${gap.toLocaleString()} cal planned deficit</span></div>
-           <p class="app-week-sub">Your plan: a ${gap.toLocaleString()} cal deficit a day. Days count once they’re over.</p>`
-        : `${budgetBar(done, T)}
-           <p class="app-week-insight">${fatLine(real, gap)}</p>`;
-    } else {
-      head = `<div class="app-weekbig"><b class="${lose ? 'good' : ''}">${S.big}</b><span>${S.label.toLowerCase()}</span></div>
-      <p class="app-week-sub">${esc(S.sub)}</p>`;
+    // The week's food so far vs its allocation (target × 7 + what workouts burned).
+    // The marker shows where intake should be by now, and moves through the week.
+    const gap = TDEE - T, burnedWk = d.reduce((a, x) => a + x.burned, 0);
+    const ate = Math.round(d.reduce((a, x) => a + x.eat.cal, 0));
+    const alloc = Math.round(T * 7 + burnedWk);
+    const idx = Math.max(0, d.findIndex(x => x.ds === today)), now = new Date();
+    const expected = Math.round(T * (idx + (now.getHours() + now.getMinutes() / 60) / 24) + burnedWk);
+    const pct = v => alloc ? Math.min(100, v / alloc * 100) : 0;
+    // Two lines and the bar: what she ate, what she should have by now (the marker).
+    const head = `<div class="app-budget" role="img" aria-label="${ate.toLocaleString()} of ${alloc.toLocaleString()} calories consumed this week. Should have consumed about ${expected.toLocaleString()} by now.">
+        <p class="app-budget-line"><b>${ate.toLocaleString()}</b> of ${alloc.toLocaleString()} cal consumed</p>
+        <div class="app-budget-bar"><i class="${ate > expected + T * 0.1 ? 'over' : ''}" style="width:${pct(ate)}%"></i><b class="app-budget-mark" style="left:${pct(expected)}%"><span class="${pct(expected) > 80 ? 'end' : pct(expected) < 20 ? 'start' : ''}">${expected.toLocaleString()} by now</span></b></div>
+      </div>`;
+    const note = gap > 0 ? `<p class="app-week-insight">${fatLine(gap)}</p>` : '';
+    // When she'd reach 1 kg at this week's real pace (finished days, workouts included).
+    const fin = d.filter(x => x.ds < today && x.eat.cal > 0);
+    const real = fin.reduce((a, x) => a + (TDEE + x.burned - x.eat.cal), 0), avg = fin.length ? real / fin.length : 0;
+    // Days until 1 kg at this week's real pace.
+    let kgVal = fin.length ? 'No deficit yet' : 'After a full day';
+    if (avg > 0) {
+      if (real >= CAL_PER_KG) kgVal = 'Done this week';
+      else { const n = Math.ceil((CAL_PER_KG - real) / avg); kgVal = `${n} day${n === 1 ? '' : 's'}`; }
     }
     return `<div class="app-card app-weekcard">
       <div class="app-row"><p class="app-card-label">This week</p><span class="app-muted small">${range}</span></div>
       ${head}
-      <div class="app-week-stats">
-        <button type="button" data-go="food"><span>Pace</span>${(() => {
-          // Days to lose 1 kg at this week's real average deficit (finished days only).
-          const fin = d.filter(x => x.ds < today && x.eat.cal > 0);
-          const avg = fin.length ? fin.reduce((a, x) => a + (TDEE + x.burned - x.eat.cal), 0) / fin.length : 0;
-          return avg > 0 ? `<b class="app-big">${Math.round(CAL_PER_KG / avg)} days</b><small>to lose 1 kg</small>`
-            : `<b>–</b><small>${fin.length ? 'no deficit yet' : 'after a full day'}</small>`;
-        })()}</button>
-        <button type="button" data-go="fitness"><span>Burned</span><b>${S.burned.toLocaleString()}</b><small>cal this week</small></button>
-        <button type="button" data-go="fitness"><span>Workouts</span><b>${S.workouts}</b><small>this week</small></button>
+      <div class="app-week-lines">
+        <button type="button" data-go="food"><span>1 kg in</span><b>${kgVal}</b></button>
+        <button type="button" data-go="fitness"><span>Burned this week</span><b>${burnedWk.toLocaleString()} cal</b></button>
       </div>
-      ${homeWeekOpen ? `<ul class="app-weekdays" aria-label="Calories by day, target ${T.toLocaleString()}">${days}</ul>` : ''}
+      ${homeWeekOpen ? `<ul class="app-weekdays" aria-label="Calories by day, target ${T.toLocaleString()}">${days}</ul>${note}` : ''}
       <button type="button" class="app-week-more" data-home-week aria-expanded="${homeWeekOpen}">${homeWeekOpen ? 'Hide days' : 'Show each day'} <i aria-hidden="true">▾</i></button>
     </div>`;
   }
@@ -1258,7 +1480,7 @@
     if (painting) return; painting = true;
     try {
       updateMini();
-      paintFoodHead(); markPicked(); updateWeekMini(); paintHomeWeek(); applyTint(); pushWidget();
+      paintFoodHead(); markPicked(); markHomePicked(); presetToggle(); trackerFold(); try { const bn = document.querySelector('#pageFitness .app-fit-burned'); if (bn) bn.innerHTML = burnedHTML(); } catch {} updateWeekMini(); paintHomeWeek(); applyTint(); pushWidget();
       if (active === 'food') { paintWords(); window.EBDayMode && EBDayMode.paint(); }
       if (active === 'home') renderHome();
       if (active === 'fitness') renderFitnessPage();
@@ -1301,6 +1523,7 @@
   function closeOverlays() {
     if (window.EBAssistant && EBAssistant.isOpen && EBAssistant.isOpen()) EBAssistant.close(true);
     if (window.EBProfile && EBProfile.isOpen && EBProfile.isOpen()) EBProfile.close();
+    if (window.EBDayMode && EBDayMode.closeSubpages) EBDayMode.closeSubpages();
   }
   // Cravings logged on Menstruation open the full craving finder on Nutrition.
   const CRAVE_QUERY = { sweet: 'sweet', salty: 'salty', carbs: 'comfort', chocolate: 'chocolate', spicy: 'spicy', fried: 'fried' };
@@ -1317,6 +1540,7 @@
     closeOverlays(); toggleQuick(false);
     if (!PAGES.includes(tab)) tab = 'home';
     if (!initial && tab !== active) window.EBAnalytics && EBAnalytics.track('tab_viewed', { tab });
+    if (tab !== 'home' && active === 'home' && homeDs) { homeDs = null; currentDay = todayKey(); try { renderTabs(); } catch {} }
     active = tab;
     document.body.dataset.tab = tab;
     PAGES.forEach(t => { pageEl(t).hidden = t !== tab; });
@@ -1333,8 +1557,24 @@
     markActive();
   }
   // Luna and Profile are overlays: their tab lights up while they're open.
+  // Fitness: "Log a workout" shows just name + cal; common workouts open on demand.
+  let presetsOpen = false;
+  function presetToggle() {
+    const box = $('activityPresets'); if (!box) return;
+    let t = $('presetsToggle');
+    if (!t) { t = document.createElement('button'); t.type = 'button'; t.id = 'presetsToggle'; t.className = 'app-week-more app-presets-toggle'; box.before(t); }
+    // Keep the toggle under the name/cal row
+    const custom = box.parentElement.querySelector('.activity-custom');
+    if (custom && custom.nextElementSibling !== t) custom.after(t);
+    if (t.nextElementSibling !== box) t.after(box);
+    t.setAttribute('aria-expanded', presetsOpen);
+    t.innerHTML = `${presetsOpen ? 'Hide common workouts' : 'Common workouts'} <i aria-hidden="true">▾</i>`;
+    box.hidden = !presetsOpen;
+  }
+  document.addEventListener('click', e => { if (e.target.closest('#presetsToggle')) { presetsOpen = !presetsOpen; presetToggle(); } });
+
   function markActive() {
-    const overlay = document.querySelector('.as-overlay') ? 'chat' : null;
+    const overlay = document.querySelector('.as-overlay') ? 'chat' : (window.EBProfile && EBProfile.isOpen && EBProfile.isOpen()) ? 'profile' : null;
     document.querySelectorAll('.eb-tabbar [data-tab]').forEach(b => {
       const on = b.dataset.tab === (overlay || active);
       b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'page' : 'false');
@@ -1342,6 +1582,7 @@
   }
 
   function logWorkout(ds, o) {
+    window.EBAnalytics && EBAnalytics.track('workout_logged', { source: 'suggested', kind: o.kind || '' });
     const list = getActivities(ds);
     list.push({ name: o.name, cal: o.kcal, ts: Date.now(), suggested: ds });
     setActivities(ds, list);
@@ -1358,19 +1599,20 @@
       acceptDefault(ln.dataset.logNext, selectedDateStr());
       EB.toast('Logged'); return repaint();
     }
+    const lo = t.closest('[data-log-opt]');
+    if (lo && !lo.disabled) {
+      e.stopPropagation();
+      const ds = selectedDateStr(), s = suggest(ds) || suggest(ds, 2); if (!s) return;
+      const o = s.options.find(x => x.kind === lo.dataset.logOpt); if (o) { logWorkout(ds, o); repaint(); }
+      return;
+    }
     const cm = t.closest('[data-crave-more]');
     if (cm) { e.preventDefault(); return openCraving(cm.dataset.craveMore); }
     const g = t.closest('[data-go]'); if (g) { e.preventDefault(); return go(g.dataset.go); }
     const en = t.closest('[data-energy]');
-    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); return repaint(); }
+    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
     const fi = t.closest('[data-food-idea]');
     if (fi) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(fi.dataset.ideaSlot || null, fi.dataset.foodIdea, { cal: +fi.dataset.ideaCal || null }); } else if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
-    const lo = t.closest('[data-log-opt]');
-    if (lo && !lo.disabled) {
-      const ds = selectedDateStr(), s = suggest(ds); if (!s) return;
-      const o = s.options.find(x => x.kind === lo.dataset.logOpt); if (o) logWorkout(ds, o);
-      return;
-    }
     if (t.closest('[data-cyclog-open]')) { logDraft = draftFor(viewDs()); return renderCyclePage(); }
     if (t.closest('[data-cyclog-cancel]')) { logDraft = null; return renderCyclePage(); }
     if (t.closest('[data-cyclog-save]')) { saveLog(); return renderCyclePage(); }
@@ -1635,7 +1877,8 @@
       const sg = suggest(ds, 2), o = sg && sg.options[0];
       if (o) workout = { name: `${o.mins} min ${o.name.toLowerCase()}`, detail: `About ${o.kcal} cal`, done: false, guess: !energyFor(ds) };
     }
-    EBNative.widget({ name: firstName(), days, mealsDate: ds, meals, workout });
+    let challenge = null; try { challenge = window.EBChallenges && EBChallenges.widgetLine ? EBChallenges.widgetLine() : null; } catch {}
+    EBNative.widget({ name: firstName(), days, mealsDate: ds, meals, workout, challenge });
   }
 
   // ── Food as words, not emoji ──

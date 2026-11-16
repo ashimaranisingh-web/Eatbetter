@@ -215,8 +215,8 @@
       const light = st.factor < 1 && (st.status === 'active' || st.status === 'done')
         ? `<p class="ch-note">Lighter today: ${amount(ch, st.target)} instead of ${amount(ch, st.base)}. ${cyclePhase(ds) === 'period' ? 'Period days' : 'PMS days'} count just the same.</p>` : '';
       const repeat = st.repeat && st.status === 'active' ? '<p class="ch-note">Yesterday’s target is back. No rush, it’s still yours.</p>' : '';
-      const right = st.status === 'done' ? `<button type="button" class="ch-done on" data-ch-undo="${ch.id}" aria-label="Mark not done">${CHECK}<span>Done</span></button>`
-        : st.status === 'active' ? `<button type="button" class="ch-done" data-ch-done="${ch.id}">Done</button>`
+      const right = st.status === 'done' ? `<button type="button" class="ch-done ch-tick on" data-ch-undo="${ch.id}" role="checkbox" aria-checked="true" aria-label="Done. Tap to undo">${CHECK}</button>`
+        : st.status === 'active' ? `<button type="button" class="ch-done ch-tick" data-ch-done="${ch.id}" role="checkbox" aria-checked="false" aria-label="Mark done"></button>`
         : `<span class="ch-tag">${st.status === 'rest' ? 'Rest day' : st.status === 'paused' ? 'Paused' : 'Starts ' + new Date(ch.start + 'T00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>`;
       return `<li class="ch-row ${st.status}">
         <div class="ch-main">
@@ -246,6 +246,14 @@
         <span class="ch-home-dot${todo.length ? '' : ' done'}">${todo.length ? '' : CHECK}</span>
         <span><small>${todo.length ? 'Today’s challenge' : 'Challenges done'}</small><b>${(todo.length ? todo : items).map(x => phrase(x.ch, x.st.target)).join(', ')}</b></span>
       </button>`;
+  }
+  // Plain text for the home screen widget: today's challenge, or null.
+  function widgetLine() {
+    const s = load(), ds = today(s.settings.tz);
+    const items = s.list.filter(ch => !ch.archived).map(ch => ({ ch, st: state(ch, ds, ctx) })).filter(x => x.st.status === 'active' || x.st.status === 'done');
+    if (!items.length) return null;
+    const todo = items.filter(x => x.st.status === 'active');
+    return { name: (todo.length ? todo : items).map(x => phrase(x.ch, x.st.target)).join(', '), done: !todo.length };
   }
   function refresh() {
     const slot = document.querySelector('#pageFitness .app-fit-challenges');
@@ -313,12 +321,14 @@
       if (t.closest('[data-ch-cycle]')) { ch.cycle = !ch.cycle; return paint(); }
       if (t.closest('[data-ch-delete]')) {
         if (!confirm(`Delete ${ch.name}? Its progress goes too.`)) return;
+        window.EBAnalytics && EBAnalytics.track('challenge_deleted');
         const s2 = load(); s2.list = s2.list.filter(c => c.id !== ch.id); save(s2); close(); return;
       }
       if (t.closest('[data-ch-save]')) {
         ch.name = ch.name.trim();
         const s2 = load(), i = s2.list.findIndex(c => c.id === ch.id);
-        if (i >= 0) s2.list[i] = ch; else { s2.list.push(ch); window.EBAnalytics && EBAnalytics.track('challenge_started', { preset: PRESETS.some(p => p[0] === ch.name) ? ch.name : 'custom' }); }
+        const preset = PRESETS.some(p => p[0] === ch.name) ? ch.name : 'custom';
+        if (i >= 0) { s2.list[i] = ch; window.EBAnalytics && EBAnalytics.track('challenge_edited', { preset }); } else { s2.list.push(ch); window.EBAnalytics && EBAnalytics.track('challenge_created', { preset, days: (ch.plan && ch.plan.days) || '' }); }
         close();
         if (i < 0) await askPermission();
         save(s2);
@@ -396,15 +406,16 @@
       const st = state(ch, ds, ctx); if (st.status !== 'active') return;
       ch.done = { ...(ch.done || {}), [ds]: st.target };
       if (st.last) { ch.archived = true; ch.finishedAt = ds; }
+      window.EBAnalytics && EBAnalytics.track(st.last ? 'challenge_completed' : 'challenge_day_done');
       save(s);
       if (st.last) celebrate(ch); else window.EB && EB.toast(pick(['Done. Nice one.', 'Ticked off. Well done.', 'That’s today sorted.', 'Another day in the bank.'], ds + ch.id));
       return;
     }
     const un = t.closest('[data-ch-undo]');
-    if (un) { const s = load(), ds = today(s.settings.tz), ch = s.list.find(c => c.id === un.dataset.chUndo); if (!ch) return; delete ch.done[ds]; save(s); }
+    if (un) { const s = load(), ds = today(s.settings.tz), ch = s.list.find(c => c.id === un.dataset.chUndo); if (!ch) return; delete ch.done[ds]; window.EBAnalytics && EBAnalytics.track('challenge_day_undone'); save(s); }
   });
 
-  window.EBChallenges = { ...core, load, cardHTML, homeLine, refresh, schedule, ctx, today };
+  window.EBChallenges = { ...core, load, cardHTML, homeLine, widgetLine, refresh, schedule, ctx, today };
   // Top up the reminder schedule on launch (it covers up to ~4 weeks ahead).
   setTimeout(schedule, 1500);
 })();

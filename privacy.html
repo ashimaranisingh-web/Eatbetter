@@ -32,7 +32,7 @@
     <ul>
       <li>Your cycle, health, weight and food data stay on your phone unless you turn on account backup.</li>
       <li>We don’t sell your data, show ads, or track you across other apps.</li>
-      <li>Usage stats are off unless you say yes, and never include health, cycle or food details.</li>
+      <li>Usage stats and screen replays are optional, linked to your email if you agree, and never include health, cycle or food details, as explained below.</li>
       <li>Photos of food labels are read on your phone and never uploaded.</li>
       <li>You can delete your account and its data from inside the app at any time.</li>
     </ul>
@@ -73,8 +73,17 @@
   <h2>Meal assistant (optional)</h2>
   <p>If you add your own Claude API key in Profile, the meal text you type into the assistant is sent to Anthropic to estimate nutrition. The key stays on your device. Without a key, the assistant works entirely on your phone.</p>
 
-  <h2>Usage stats (optional)</h2>
-  <p>On first launch, Menu-fi asks whether you’d like to share anonymous usage stats. If you say yes, we send a short list of events to PostHog (EU servers), such as “a tab was opened”, “a meal was logged” or “a barcode scan found a match”. These events never contain your health, cycle, weight or food details, food names, barcodes, or your identity. Session recording and automatic tracking are off. You can change your answer any time.</p>
+  <h2>Usage stats and screen replays (optional)</h2>
+  <p>During setup, Menu-fi asks whether you’ll help improve it. Nothing is sent unless you tap “Got it”, and you can turn it on or off any time in Account. If you agree, we send the following to PostHog (EU servers), linked to the email you sign in with:</p>
+  <ul>
+    <li>Named events, such as “a tab was opened”, “a meal was logged” or “a barcode scan found a match”, and which setup step you reached.</li>
+    <li>Which buttons and links you tap, identified by the app’s internal names, with their text hidden.</li>
+    <li>Which screen you are on and how long you stay.</li>
+    <li>Crash reports and app speed, with network addresses cut short so they never include barcodes or search words.</li>
+    <li>Screen replays that show where you tap and scroll, with all text, numbers, photos and anything you type hidden on your phone before anything is sent.</li>
+  </ul>
+  <p>None of this includes your health, cycle, weight or food details, or anything from Apple Health.</p>
+  <p><b>Linked to your email:</b> during setup the app tells you that the list of events above is linked to the email you sign in with, so we can follow up on your feedback and fix what matters most. It never includes your health, cycle, weight or food details, and screen replays hide all text, numbers, photos and typing. You can turn this off any time in Account, and ask us to delete what was recorded by emailing ashimasinghh@gmail.com.</p>
 
   <h2>Reminders and widget</h2>
   <p>Reminders are scheduled on your phone. The home and lock screen widget reads your upcoming cycle days, meals and workout from your phone only.</p>

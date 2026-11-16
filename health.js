@@ -2,7 +2,7 @@
 // Only active inside the iOS app (Capacitor + the native HealthPlugin in
 // ios/App/App). On the website every call is a no-op.
 //
-// Reads: weight, period days, workouts.  Writes: each day's eaten calories
+// Reads: weight, period days, workouts, daily steps and active calories.  Writes: each day's eaten calories
 // and macros (replaced in place, so re-logging a day never double-counts).
 (function () {
   const cap = window.Capacitor;
@@ -38,9 +38,11 @@
   function disconnect() { setState({ connected: false }); }
   const isConnected = () => !!state().connected;
 
+  let authAsked = false;
   // ── Health → app ──
   async function syncIn() {
     if (!Health || !isConnected()) return;
+    window.EBAnalytics && EBAnalytics.track('health_synced');
     const p = EB.getProfile();
     let changed = false;
 
@@ -83,6 +85,30 @@
         added = true;
       });
       if (added) { renderActivity(); renderTracker(); renderWeeklyTracker(); }
+    } catch {}
+
+    // Everyday movement: each day's steps and active calories. Calories already
+    // counted by imported workouts are subtracted, so nothing is counted twice.
+    try {
+      // Asks only for permissions not yet answered (steps were added later), so it's silent after the first time.
+      if (!authAsked) { authAsked = true; try { await Health.requestAuthorization(); } catch {} }
+      const { days } = await Health.dailyActivity({ days: 7 });
+      let touched = false;
+      (days || []).forEach(day => {
+        const list = getActivities(day.date);
+        const workoutKcal = list.filter(a => a.hk && a.hk !== 'daily').reduce((n, a) => n + (parseInt(a.cal) || 0), 0);
+        const extra = Math.max(0, Math.round((day.kcal || 0) - workoutKcal));
+        const i = list.findIndex(a => a.hk === 'daily');
+        const entry = day.steps > 0 || extra > 0
+          ? { name: day.steps > 0 ? `Steps · ${day.steps.toLocaleString()}` : 'Everyday movement', cal: extra, ts: Date.parse(day.date + 'T12:00') || Date.now(), hk: 'daily', steps: day.steps }
+          : null;
+        const old = i >= 0 ? list[i] : null;
+        if (entry && old && old.cal === entry.cal && old.steps === entry.steps) return;
+        if (i >= 0) list.splice(i, 1);
+        if (entry) list.push(entry);
+        if (entry || old) { setActivities(day.date, list); touched = true; }
+      });
+      if (touched) { renderActivity(); renderTracker(); renderWeeklyTracker(); }
     } catch {}
     setState({ lastSync: Date.now() });
   }

@@ -83,5 +83,14 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', check); else check();
   }
 
-  window.EBNative = { native, haptic, share, widget, reduce, scanBarcode, readLabel, getJSON };
+  // Is this a TestFlight (test) build? Remembered so the rest of the app can read it at once.
+  async function buildInfo() {
+    if (!M || !M.buildInfo) return { testflight: false };
+    try { const r = await M.buildInfo(); try { localStorage.setItem('eb_test_build', r.testflight ? '1' : '0'); } catch {} return r; }
+    catch { return { testflight: false }; }
+  }
+  if (native) buildInfo();
+  const isTestBuild = () => { try { return localStorage.getItem('eb_test_build') === '1'; } catch { return false; } };
+
+  window.EBNative = { native, haptic, share, widget, reduce, scanBarcode, readLabel, getJSON, buildInfo, isTestBuild };
 })();

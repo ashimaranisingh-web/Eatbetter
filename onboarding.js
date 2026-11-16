@@ -71,7 +71,13 @@
     { v: 'strength', t: 'Strength', syn: ['strength', 'weight', 'gym', 'lift'] }, { v: 'yoga', t: 'Yoga', syn: ['yoga'] },
     { v: 'pilates', t: 'Pilates', syn: ['pilates'] }, { v: 'cycling', t: 'Cycling', syn: ['cycl', 'bike', 'spin'] },
     { v: 'swimming', t: 'Swimming', syn: ['swim'] }, { v: 'hiit', t: 'HIIT', syn: ['hiit', 'crossfit', 'interval'] },
-    { v: 'dance', t: 'Dance', syn: ['danc', 'zumba'] }, { v: 'sports', t: 'Sports', syn: ['sport', 'tennis', 'badminton', 'football', 'cricket', 'basketball'] }
+    { v: 'dance', t: 'Dance', syn: ['danc', 'zumba'] }, { v: 'sports', t: 'Sports', syn: ['sport', 'tennis', 'badminton', 'football', 'cricket', 'basketball'] },
+    { v: 'other', t: 'Other', syn: [] }
+  ];
+  const MORE_ACTIVE = [{ v: 'yes', t: 'Yes' }, { v: 'maybe', t: 'Maybe' }, { v: 'no', t: 'I’m happy' }];
+  const CYCLE_TYPES = [
+    { v: 'regular', t: 'Regular' }, { v: 'irregular', t: 'Irregular' }, { v: 'pcos', t: 'PCOS / PCOD' },
+    { v: 'thyroid', t: 'Thyroid' }, { v: 'unsure', t: 'Not sure' }
   ];
   const TRACKERS = [
     { v: 'apple', t: 'Apple Watch / Health', syn: ['apple', 'watch', 'iphone', 'health app'] },
@@ -99,6 +105,11 @@
     { v: 'asian', t: 'Asian', syn: ['asian', 'chinese', 'thai', 'japanese', 'noodle'] },
     { v: 'mediterranean', t: 'Mediterranean', syn: ['mediterranean', 'hummus', 'greek'] },
     { v: 'prep', t: 'Meal prep', syn: ['meal prep', 'prep', 'batch'] }
+  ];
+  const TRACK_MODES = [
+    { v: 'plan', t: 'Follow a meal plan', d: 'A week of meals built for you. Tick each one as you eat it.' },
+    { v: 'log', t: 'Log what I eat', d: 'Search any food or scan a pack, and add it.' },
+    { v: 'guide', t: 'Just give me targets', d: 'Calories and protein for each meal. Nothing to log.' }
   ];
   const YESNO = [
     { v: 'yes', t: 'Yes', syn: ['yes', 'yeah', 'yep', 'i do', 'sure'] },
@@ -288,7 +299,7 @@
   // BMR, maintenance and the deficit are calculated, with the deficit
   // adjustable in 50 cal steps and a nudge back if it gets too steep.
   let numbersSeen = false;
-  const BMI_WORDS = { underweight: 'Below range', healthy: 'Healthy', overweight: 'Above range', obese: 'Well above range' };
+  const BMI_WORDS = { underweight: 'Underweight', healthy: 'Healthy', overweight: 'Overweight', obese: 'Obese' };
   const fmt = n => Math.round(n).toLocaleString();
   function numbersView(p) {
     const n = window.EBPlanner && EBPlanner.numbers(p);
@@ -298,7 +309,7 @@
       return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); })() : '';
     const rows = [
       n.bmi != null && { k: 'BMI', v: `${n.bmi}`, tag: n.bmiCat,
-        d: `Weight ÷ height². ${w(n.kg)} ÷ (${(n.cm / 100).toFixed(2)} m)². For South Asians, healthy is 18.5–22.9 (lower than the usual 24.9, because risk starts at a lower weight).` },
+        d: `${({ underweight: 'Under 18.5 is underweight.', healthy: 'Between 18.5 and 22.9 is healthy.', overweight: '23 to 27.4 is overweight.', obese: '27.5 and above is obese.' })[n.bmiCat] || ''} For your height, a healthy weight is about ${w(18.5 * (n.cm / 100) ** 2)} to ${w(22.9 * (n.cm / 100) ** 2)}. These are the ranges for South Asian women, lower than the usual ones because health risks start at a lower weight.` },
       n.bmr && { k: 'Calories at rest (BMR)', v: fmt(n.bmr),
         d: `What your body burns doing nothing. 10 × weight + 6.25 × height − 5 × age − 161 (the Mifflin-St Jeor formula for women).` },
       { k: 'Maintenance', v: fmt(n.tdee), maint: true,
@@ -370,6 +381,81 @@
     egg: 'eggs, paneer and dal', pescatarian: 'fish, eggs and paneer', nonveg: 'chicken, eggs and paneer'
   })[p.food.diet] || 'paneer, eggs and dal';
 
+  // Height is asked in feet and inches and kept in cm (for BMI and calories).
+  function toFtIn(cm) {
+    const t = Math.round((+cm || 0) / 2.54); if (!t) return { ft: '', inch: '' };
+    return { ft: Math.floor(t / 12), inch: t % 12 };
+  }
+
+  // Under "How do you want to track food?": what that choice needs.
+  function trackSection(p) {
+    if (p.trackMode === 'plan') return `
+      ${field('How do you eat?', chips('food.diet', DIETS, p.food.diet))}
+      ${field('Food you enjoy', chips('food.cuisines', CUISINES, p.food.cuisines, { multi: true }), 'eb-field-gap')}
+      ${field('What do you eat on a usual day?', `<p class="eb-field-note">Your meal plan is built around these.</p><div class="eb-textarea-wrap">
+        <textarea class="eb-input eb-textarea ob-usual" data-path="food.usual" rows="5" placeholder="e.g. poha and chai for breakfast, dal rice and sabzi for lunch, makhana in the evening, paneer and roti at night">${esc(p.food.usual)}</textarea>
+        <button type="button" class="eb-mic" data-dictate aria-label="Dictate" aria-pressed="false">${ICONS.mic}</button></div>`)}`;
+    if (p.trackMode === 'log') return `<ul class="ob-how">
+      <li><span class="ob-how-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span><span><b>Search any food</b>Type what you ate, like “2 roti” or “1 katori dal”, and add it.</span></li>
+      <li><span class="ob-how-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/></svg></span><span><b>Scan a pack</b>Point the camera at the barcode and the nutrition comes up.</span></li>
+      <li><span class="ob-how-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><span><b>Read a label</b>No barcode? Photograph the nutrition label instead.</span></li></ul>`;
+    const t = window.EBPlanner && EBPlanner.targetsFor ? EBPlanner.targetsFor(p) : null, n = window.EBPlanner && EBPlanner.numbers(p);
+    if (!t || !n) return '<p class="eb-hint">Add your weight and height first to see your targets.</p>';
+    const step = n.losing ? 50 : n.gaining ? -50 : 0;
+    return `<div class="ob-targets"><p class="ob-targets-big"><b>${fmt(t.normal.cal)}</b> cal a day</p>
+      <p class="ob-targets-sub">${t.normal.p} g protein · ${t.normal.c} g carbs · ${t.normal.f} g fat. PMS days get about ${fmt(t.pms.cal - t.normal.cal)} more.</p>
+      ${step ? `<div class="ob-targets-adj"><span>${n.losing ? 'Daily deficit' : 'Daily surplus'}</span><div class="eb-stepper">
+        <button type="button" class="eb-step-btn" data-step="plan.deficit" data-delta="${-step}" data-min="${n.losing ? 0 : -500}" data-max="${n.losing ? Math.max(0, n.tdee - 1200) : 0}" data-from="${n.deficit}" aria-label="Less">−</button>
+        <span class="eb-step-val"><b>${fmt(Math.abs(n.deficit))}</b> cal</span>
+        <button type="button" class="eb-step-btn" data-step="plan.deficit" data-delta="${step}" data-min="${n.losing ? 0 : -500}" data-max="${n.losing ? Math.max(0, n.tdee - 1200) : 0}" data-from="${n.deficit}" aria-label="More">+</button></div></div>` : ''}
+      <p class="eb-field-note">You’ll see a target for each meal. Tick a meal when you’ve had it.</p></div>`;
+  }
+
+  // "Why Menu-fi": three steps, each with a small animated icon.
+  function whyCarousel() {
+    const steps = [
+      { ico: `<svg viewBox="0 0 48 48" width="44" height="44"><g class="why-ring"><circle cx="24" cy="24" r="17" fill="none" stroke="#ef5350" stroke-width="5" stroke-dasharray="19 88" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#42a5f5" stroke-width="5" stroke-dasharray="25 82" stroke-dashoffset="-24" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#43a047" stroke-width="5" stroke-dasharray="10 97" stroke-dashoffset="-53" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#ffd600" stroke-width="5" stroke-dasharray="36 71" stroke-dashoffset="-67" stroke-linecap="round"/></g></svg>`,
+        t: 'Your body changes every month', d: 'Energy, hunger, mood and cravings shift through your cycle, sometimes within days.' },
+      { ico: `<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="12" width="30" height="27" rx="4"/><path d="M9 20h30M17 8v7M31 8v7"/><path class="why-tick" d="M18 29l4 4 8-8"/></svg>`,
+        t: 'Life doesn’t pause for it', d: 'Work, stress and busy days keep going. Month after month, it helps to have someone guiding you.' },
+      { ico: `<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="why-spark" d="M24 6v6M24 36v6M6 24h6M36 24h6M11.5 11.5l4 4M32.5 32.5l4 4M36.5 11.5l-4 4M15.5 32.5l-4 4"/><circle cx="24" cy="24" r="6"/></svg>`,
+        t: 'Menu-fi plans around your phase', d: 'We track your cycle and suggest meals and workouts that suit the phase you’re in. That’s why we ask about your cycle next.' }
+    ];
+    return `<ol class="ob-why">${steps.map((x, i) => `<li style="--i:${i}"><span class="ob-why-ico">${x.ico}</span><span><b>${x.t}</b><span>${x.d}</span></span></li>`).join('')}</ol>`;
+  }
+
+  // Cycle: every period date entered (newest = last period), length worked out from the gaps.
+  function cycleDates(p) {
+    return [...new Set([...(p.cycle._extra || []), p.cycle.lastStart].filter(Boolean))].sort();
+  }
+  function cycleGaps(all) {
+    return all.slice(1).map((d, i) => Math.round((new Date(d) - new Date(all[i])) / 86400000)).filter(g => g >= 15 && g <= 60).slice(-6);
+  }
+  function syncCycle(p) {
+    const all = cycleDates(p);
+    p.cycle.lastStart = all[all.length - 1] || '';
+    p.cycle._extra = all.slice(0, -1);
+    p.cycle.history = all;
+    const gaps = cycleGaps(all);
+    if (gaps.length && !p.cycle.lengthSet) p.cycle.cycleLength = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length);
+    p.cycle.claimedLength = +p.cycle.cycleLength || 28;
+  }
+  function cycleView(p) {
+    const all = cycleDates(p), gaps = cycleGaps(all), extra = all.slice(0, -1).reverse();
+    const varies = ['irregular', 'pcos', 'thyroid', 'unsure'].includes(p.cycle.condition);
+    const short = d => EB.fmtDate(d, { day: 'numeric', month: 'short', year: 'numeric' });
+    return `
+      ${field('Is your cycle regular?', chips('cycle.condition', CYCLE_TYPES, p.cycle.condition))}
+      ${varies ? `<p class="ob-note">Cycles like yours vary, so dates start as estimates and get more accurate with every period you log.</p>` : ''}
+      ${field('First day of your last period', datePicker('cycle.lastStart', p.cycle.lastStart), 'eb-field-gap')}
+      ${extra.length ? `<ul class="ob-dates">${extra.map(d => `<li><span>${short(d)}</span><button type="button" class="eb-icon-btn" data-action="removePeriod" data-d="${d}" aria-label="Remove ${short(d)}">✕</button></li>`).join('')}</ul>` : ''}
+      ${p.cycle.lastStart ? `<button type="button" class="eb-link ob-add-date" data-action="addPeriod">+ Add an earlier period</button>` : ''}
+      ${field('How many days does your period last?', stepper('cycle.periodLength', p.cycle.periodLength, 1, 12, 'days'), 'eb-field-gap')}
+      ${gaps.length
+        ? field('Your cycle length', `${stepper('cycle.cycleLength', p.cycle.cycleLength, 15, 60, 'days')}<p class="ob-note">${p.cycle.lengthSet ? 'Set by you.' : `Worked out from your ${all.length} dates.`} Change it if you know it’s different.</p>`, 'eb-field-gap')
+        : field('How long is your cycle?', `${stepper('cycle.cycleLength', p.cycle.cycleLength, 15, 60, 'days')}<p class="ob-note">Not sure? Leave it at 28. Add earlier periods above, or log 3 periods in the app, and we’ll work out your real length.</p>`, 'eb-field-gap')}`;
+  }
+
   const STEPS = [
     {
       id: 'name', short: 'Name', title: 'First, what should we call you?', optional: true, profile: false,
@@ -379,49 +465,127 @@
       summary: p => p.name
     },
     {
+      // Everyone (test and public): what's recorded, why, and what never is.
+      id: 'tester', info: true, profile: false, cta: 'Got it',
+      footLink: { label: 'Not now', action: 'declineStats' },
+      eyebrow: 'Before you start',
+      title: p => firstName(p) ? `Thanks for trying Menu-fi, ${esc(firstName(p))}` : 'Thanks for trying Menu-fi',
+      render: () => `
+        <p class="ob-lead">Menu-fi is new and still growing. While you use it, the app records <b>which features you use</b>, like opening Nutrition, logging a meal or scanning a barcode, and links that to the email you sign in with. It also records <b>screen replays with every word hidden</b>, so I can see where you tap and scroll, not what’s on the screen.</p>
+        <p class="ob-tester-sub">Why I’m asking, and how it helps</p>
+        <ul class="ob-how">
+          <li><span class="ob-how-ico">1</span><span><b>See what really gets used</b>The feedback form tells me what you think. This shows what you actually did. Together they show where Menu-fi helps and where it gets in the way.</span></li>
+          <li><span class="ob-how-ico">2</span><span><b>Follow up with you</b>If something looks confusing, say you never opened Guide or stopped logging after day two, I can ask you about it directly.</span></li>
+          <li><span class="ob-how-ico">3</span><span><b>Fix the right things first</b>I’m building Menu-fi myself, so this tells me what to fix before more women use it.</span></li>
+        </ul>
+        <div class="ob-never"><b>Never recorded</b><span>Your period dates, symptoms, weight, what you eat, or anything from Apple Health. Replays blank out all text, numbers and photos, and anything you type.</span></div>
+        <p class="eb-privacy">It’s your choice. You can turn this on or off any time in Account, and ask me to delete what was recorded.</p>`,
+      onNext: () => { try { window.EBAnalytics && EBAnalytics.acceptTesterNotice && EBAnalytics.acceptTesterNotice(); } catch {} }
+    },
+    {
+      // Pick a goal → the other options fold away and the weights appear here.
       id: 'goal', short: 'Main Goal', title: p => firstName(p) ? `What’s your main goal, ${esc(firstName(p))}?` : 'What’s your main goal?',
-      render: p => rows('goal', GOALS, p.goal),
-      valid: p => !!p.goal,
-      summary: p => label(GOALS, p.goal)
-    },
-    {
-      id: 'goals', short: 'Other Goals', title: 'Anything else you’d like help with?', optional: true, skipLabel: 'No other goals',
-      render: p => checkRows('goals', EXTRA_GOALS, p.goals),
-      valid: () => true,
-      touched: p => p.goals.length > 0,
-      summary: p => labels(EXTRA_GOALS, p.goals)
-    },
-    {
-      id: 'how', info: true, eyebrow: 'How Menu-fi works', title: 'Plan once. Then just follow your meals.',
-      render: () => infoList([
-        { n: 1, t: 'Tell me what you love to eat', d: 'Share what you eat regularly and I’ll build a meal plan around it that matches your goal.' },
-        { n: 2, t: 'It changes with your cycle', d: 'Your mood, cravings and what your body needs shift through the month. Add your period date and I’ll adjust for that too.' },
-        { n: 3, t: 'Ate something else? Just say it', d: 'One tap, say what you had, and the day’s totals update.' },
-        { n: 4, t: 'Workouts that match your energy', d: 'Log how you feel and I’ll suggest a workout for your energy and cycle, gentler on PMS days.' }
-      ])
+      render: p => {
+        if (!p.goal) return rows('goal', GOALS, p.goal);
+        const maintain = p.goal === 'maintain';
+        return `<div class="ob-picked"><span>${esc(label(GOALS, p.goal))}</span><button type="button" class="eb-link" data-action="goalChange">Change</button></div>
+          ${segmented('weight.unit', [{ v: 'kg', t: 'kg' }, { v: 'lb', t: 'lb' }], p.weight.unit)}
+          <div class="eb-pair">
+            ${field('Current weight', `<div class="eb-num"><input class="eb-input" data-path="weight.current" inputmode="decimal" placeholder="0" value="${esc(p.weight.current)}" aria-label="Current weight"><span>${p.weight.unit}</span></div>`)}
+            ${maintain ? '' : field('Goal weight', `<div class="eb-num"><input class="eb-input" data-path="weight.goal" inputmode="decimal" placeholder="0" value="${esc(p.weight.goal)}" aria-label="Goal weight"><span>${p.weight.unit}</span></div>`)}
+          </div>
+          ${maintain ? '' : `<p class="eb-hint" data-live="weightHint">${weightHint(p)}</p>`}
+          ${maintain ? field('Anything else you’d like help with?', checkRows('goals', EXTRA_GOALS, p.goals), 'eb-field-gap') : ''}`;
+      },
+      live: { weightHint },
+      onChange: p => { if (p.goal === 'maintain') p.weight.goal = p.weight.current; },
+      valid: p => !!p.goal && weightValid(p),
+      summary: p => [label(GOALS, p.goal), p.weight.current && `${p.weight.current}${p.goal === 'maintain' ? '' : ` → ${p.weight.goal || '—'}`} ${p.weight.unit}`].filter(Boolean).join(' · ')
     },
     {
       id: 'weight', short: 'Body', title: 'About you',
-      render: p => `
+      render: p => { const h = toFtIn(p.body.height); return `
         <p class="eb-field-note">Used to work out your BMI and how many calories your body needs.</p>
-        <div class="eb-pair">
-          ${field('Height', `<div class="eb-num"><input class="eb-input" data-path="body.height" inputmode="numeric" placeholder="0" value="${esc(p.body.height)}" aria-label="Height in centimetres"><span>cm</span></div>`)}
-          ${field('Age', `<div class="eb-num"><input class="eb-input" data-path="body.age" inputmode="numeric" placeholder="0" value="${esc(p.body.age)}" aria-label="Age in years"><span>yrs</span></div>`)}
-        </div>
-        ${segmented('weight.unit', [{ v: 'kg', t: 'kg' }, { v: 'lb', t: 'lb' }], p.weight.unit)}
-        <div class="eb-pair">
-          ${field('Current', `<div class="eb-num"><input class="eb-input" data-path="weight.current" inputmode="decimal" placeholder="0" value="${esc(p.weight.current)}" aria-label="Current weight"><span>${p.weight.unit}</span></div>`)}
-          ${field('Goal', `<div class="eb-num"><input class="eb-input" data-path="weight.goal" inputmode="decimal" placeholder="0" value="${esc(p.weight.goal)}" aria-label="Goal weight"><span>${p.weight.unit}</span></div>`)}
-        </div>
-        <p class="eb-hint" data-live="weightHint">${weightHint(p)}</p>`,
-      live: { weightHint },
-      valid: p => weightValid(p) && bodyValid(p),
-      summary: p => [p.body.height && `${p.body.height} cm`, p.body.age && `${p.body.age} yrs`,
-        p.weight.current && `${p.weight.current} → ${p.weight.goal || '—'} ${p.weight.unit}`].filter(Boolean).join(' · ')
+        ${field('Height', `<div class="eb-pair">
+          <div class="eb-num"><input class="eb-input" data-ftin="ft" inputmode="numeric" placeholder="5" value="${h.ft}" aria-label="Height, feet"><span>ft</span></div>
+          <div class="eb-num"><input class="eb-input" data-ftin="in" inputmode="numeric" placeholder="4" value="${h.inch}" aria-label="Height, inches"><span>in</span></div></div>`)}
+        ${field('Age', `<div class="eb-num"><input class="eb-input" data-path="body.age" inputmode="numeric" placeholder="0" value="${esc(p.body.age)}" aria-label="Age in years"><span>yrs</span></div>`)}`; },
+      valid: p => bodyValid(p),
+      summary: p => [p.body.height && (() => { const h = toFtIn(p.body.height); return `${h.ft}′${h.inch}″`; })(), p.body.age && `${p.body.age} yrs`].filter(Boolean).join(' · ')
     },
     {
-      id: 'food', short: 'Food', title: 'How do you eat?',
+      // Options as rows; the section under them changes with the choice.
+      id: 'track', short: 'Tracking', profile: false, title: 'How do you want to track food?',
+      render: p => `${rows('trackMode', TRACK_MODES, p.trackMode)}
+        ${p.trackMode ? `<div class="ob-section">${trackSection(p)}</div>` : ''}
+        ${p.trackMode ? `<div class="ob-section">${field('Have a diet plan? <span class="eb-label-note">PDF, Excel or photo</span>', fileBlock(p))}</div>` : ''}`,
+      valid: p => !!p.trackMode && (p.trackMode !== 'plan' || !!p.food.diet),
+      summary: p => [label(TRACK_MODES, p.trackMode), p.food.diet && label(DIETS, p.food.diet)].filter(Boolean).join(' · ')
+    },
+    {
+      id: 'why', info: true, eyebrow: 'Why Menu-fi', title: 'Made for a body that changes every month',
+      render: () => whyCarousel()
+    },
+    {
+      id: 'cycle', short: 'Cycle', title: 'Tell us a little about your cycle',
+      render: p => cycleView(p),
+      onChange: p => { p.cycle.tracks = true; p.cycle.regular = p.cycle.condition === 'regular' ? 'yes' : p.cycle.condition ? 'no' : ''; syncCycle(p); },
+      valid: p => !!p.cycle.condition && !!p.cycle.lastStart,
+      summary: p => p.cycle.lastStart ? [label(CYCLE_TYPES, p.cycle.condition), `${p.cycle.cycleLength}-day cycle`, `${p.cycle.periodLength}-day period`].filter(Boolean).join(' · ') : ''
+    },
+    {
+      id: 'symptoms', short: 'Symptoms', title: 'What do you usually feel around your period?', optional: true,
       render: p => `
+        ${chips('cycle.symptoms', SYMPTOMS, p.cycle.symptoms, { multi: true })}
+        ${field('When does PMS usually start?', chips('cycle.pmsStart', PMS_START, p.cycle.pmsStart), 'eb-field-gap')}`,
+      valid: () => true,
+      touched: p => !!(p.cycle.pmsStart || p.cycle.symptoms.length),
+      summary: p => [labels(SYMPTOMS, p.cycle.symptoms), p.cycle.pmsStart && `PMS ${label(PMS_START, p.cycle.pmsStart).toLowerCase()}`].filter(Boolean).join(' · ')
+    },
+    {
+      // Required: tracking lives in the account, not on the phone.
+      id: 'account', short: 'Account', profile: false,
+      when: () => !!(window.EBSync && EBSync.enabled()),
+      title: 'Save everything to your email',
+      render: () => `<p class="ob-lead">Your plan, meals and cycle are saved to your account, so nothing is lost if you change phones. Menu-fi needs an account to track.</p>
+        ${EBSync.signedIn() ? `<p class="ob-done-line">${ICONS.check}<span>Saved to ${esc(EBSync.email())}</span></p>`
+          : `<button type="button" class="eb-btn secondary" data-action="signIn">Continue with email</button>`}
+        <p class="eb-privacy">Private to you. We never share it.</p>`,
+      valid: () => !!(window.EBSync && EBSync.signedIn()),
+      summary: () => window.EBSync && EBSync.signedIn() ? EBSync.email() : ''
+    },
+    {
+      id: 'activity', short: 'Activity', eyebrow: 'Fitness', title: 'How active are you?',
+      render: p => `
+        ${rows('activity.level', LEVELS, p.activity.level)}
+        ${field('What do you do?', chips('activity.types', ACT_TYPES, p.activity.types, { multi: true }), 'eb-field-gap')}
+        ${(p.activity.types || []).includes('other') ? `<input class="eb-input" data-path="activity.other" value="${esc(p.activity.other)}" placeholder="What else do you do?" aria-label="Other activity">` : ''}
+        ${field('Would you like to be more active?', segmented('activity.wantMore', MORE_ACTIVE, p.activity.wantMore), 'eb-field-gap')}`,
+      valid: p => !!p.activity.level,
+      summary: p => [label(LEVELS, p.activity.level), labels(ACT_TYPES.filter(a => a.v !== 'other'), p.activity.types), p.activity.other].filter(Boolean).join(' · ')
+    },
+    {
+      id: 'appleHealth', short: 'Apple Health', profile: false, optional: true, skipLabel: 'Not now',
+      when: () => !!(window.EBHealth && EBHealth.native),
+      title: 'Connect Apple Health',
+      render: p => `<p class="ob-lead">Your weight, periods, workouts and daily steps come in by themselves, so there’s less to type. Meals you log go back to Health.</p>
+        ${EBHealth.isConnected() ? `<p class="eb-hint">${ICONS.check} Connected</p>`
+          : `<button type="button" class="eb-btn secondary" data-action="connectHealth">Connect Apple Health</button>`}`,
+      valid: () => true,
+      touched: () => !!(window.EBHealth && EBHealth.isConnected()),
+      summary: () => window.EBHealth && EBHealth.isConnected() ? 'Connected' : ''
+    },
+    {
+      id: 'numbers', short: 'Calories', title: 'Your numbers, explained',
+      render: p => numbersView(p),
+      onShow: () => { if (!numbersSeen) setTimeout(() => { numbersSeen = true; }, 2600); },
+      valid: () => true,
+      summary: p => { const n = window.EBPlanner && EBPlanner.numbers(p);
+        return n ? `${fmt(n.target)} cal a day${n.deficit > 0 ? ` · ${fmt(n.deficit)} deficit` : n.deficit < 0 ? ` · ${fmt(-n.deficit)} surplus` : ''}` : ''; }
+    },
+    {
+      id: 'food', short: 'Food', title: 'How do you eat?', ob: false,
+      render: p => p.trackMode === 'guide' ? chips('food.diet', DIETS, p.food.diet) : `
         ${chips('food.diet', DIETS, p.food.diet)}
         ${field('What do you usually eat?', chips('food.cuisines', CUISINES, p.food.cuisines, { multi: true }), 'eb-field-gap')}
         ${field('What do you eat on a usual day?', `<p class="eb-field-note">This lets me build your meal plan around food you already like.</p>${textarea('food.usual', p.food.usual, 'e.g. poha and chai, dal-roti-sabzi, fruit, paneer and rice')}`)}
@@ -432,72 +596,14 @@
         .filter(Boolean).join(' · ')
     },
     {
-      id: 'cycleIntro', info: true, eyebrow: 'Your cycle', title: 'Next, a few questions about your cycle',
-      footLink: { action: 'noPeriods', label: 'I don’t get periods' },
-      render: () => `
-        <p class="ob-lead">A woman’s body changes through her cycle, and what it needs to eat changes with it. I’ll adjust your meals to match.</p>
-        <p class="ob-lead">Everything you share is private. Skip anything you’d rather not answer. It stays on this device unless you turn on backup.</p>`
-    },
-    {
-      id: 'cycle', short: 'Cycle', title: 'Your cycle', optional: true,
-      when: p => p.cycle.tracks !== false,
-      render: p => `
-        ${field('First day of your last period', datePicker('cycle.lastStart', p.cycle.lastStart))}
-        ${field('Cycle length', stepper('cycle.cycleLength', p.cycle.cycleLength, 15, 60, 'days'))}
-        ${field('Period lasts', stepper('cycle.periodLength', p.cycle.periodLength, 1, 12, 'days'))}`,
-      valid: p => !!p.cycle.lastStart,
-      touched: p => !!p.cycle.lastStart,
-      onChange: p => { p.cycle.tracks = true; },
-      summary: p => p.cycle.tracks === false ? 'Not tracking'
-        : p.cycle.lastStart ? `${p.cycle.cycleLength}-day cycle · ${p.cycle.periodLength}-day period` : ''
-    },
-    {
-      id: 'symptoms', short: 'Period & PMS', title: 'Your period & PMS', optional: true,
-      when: p => p.cycle.tracks !== false,
-      render: p => `
-        ${field('Is it similar every month?', segmented('cycle.regular', REGULAR, p.cycle.regular))}
-        ${p.cycle.regular === 'yes' ? field('What do you usually get?', chips('cycle.symptoms', SYMPTOMS, p.cycle.symptoms, { multi: true })) : ''}
-        ${field('When does PMS start?', chips('cycle.pmsStart', PMS_START, p.cycle.pmsStart))}`,
+      id: 'goals', short: 'Other Goals', later: true, title: 'Anything else you’d like help with?', optional: true, skipLabel: 'No other goals',
+      render: p => checkRows('goals', EXTRA_GOALS, p.goals),
       valid: () => true,
-      touched: p => !!(p.cycle.regular || p.cycle.pmsStart || p.cycle.symptoms.length),
-      summary: p => [({ yes: 'Regular', no: 'Irregular' })[p.cycle.regular],
-        labels(SYMPTOMS, p.cycle.symptoms), p.cycle.pmsStart && `PMS ${label(PMS_START, p.cycle.pmsStart).toLowerCase()}`]
-        .filter(Boolean).join(' · ')
+      touched: p => p.goals.length > 0,
+      summary: p => labels(EXTRA_GOALS, p.goals)
     },
     {
-      id: 'why', info: true, eyebrow: 'Why it works', title: 'What changes through your cycle',
-      when: p => p.cycle.tracks !== false,
-      render: p => `${infoList([
-        { color: phaseColor('menstrual'), t: 'Period · days 1–5', d: `Iron-rich food like ${ironFoods(p)} helps replace what you lose.` },
-        { color: phaseColor('follicular'), t: 'Follicular · days 6–13', d: `Energy usually rises. A good time for more protein, like ${proteinFoods(p)}, and harder training.` },
-        { color: phaseColor('ovulation'), t: 'Ovulation · days 14–16', d: 'Often your strongest days. Fuel harder workouts well.' },
-        { color: phaseColor('luteal'), t: 'Luteal · day 17 to your period', d: `Your body may burn a little more and cravings are common. PMS mode switches on and adds ${pmsExtra()} calories.` }
-      ])}
-        <p class="eb-privacy">General guidance, not medical advice.</p>`
-    },
-    {
-      id: 'activity', short: 'Activity', title: 'How active are you?',
-      render: p => `
-        ${rows('activity.level', LEVELS, p.activity.level)}
-        ${field('What do you do?', chips('activity.types', ACT_TYPES, p.activity.types, { multi: true }), 'eb-field-gap')}
-        ${field('Do you use a fitness tracker?', chips('trackers', TRACKERS, p.trackers, { multi: true }))}
-        ${window.EBHealth && EBHealth.native ? (EBHealth.isConnected()
-          ? `<p class="eb-hint">${ICONS.check} Apple Health connected</p>`
-          : `<button type="button" class="eb-btn secondary" data-action="connectHealth">Connect Apple Health</button>`) : ''}`,
-      valid: p => !!p.activity.level,
-      summary: p => [label(LEVELS, p.activity.level), labels(ACT_TYPES, p.activity.types), labels(TRACKERS, p.trackers)]
-        .filter(Boolean).join(' · ')
-    },
-    {
-      id: 'numbers', short: 'Your Numbers', title: 'Your numbers, explained',
-      render: p => numbersView(p),
-      onShow: () => { if (!numbersSeen) setTimeout(() => { numbersSeen = true; }, 2600); },
-      valid: () => true,
-      summary: p => { const n = window.EBPlanner && EBPlanner.numbers(p);
-        return n ? `${fmt(n.target)} cal a day${n.deficit > 0 ? ` · ${fmt(n.deficit)} deficit` : n.deficit < 0 ? ` · ${fmt(-n.deficit)} surplus` : ''}` : ''; }
-    },
-    {
-      id: 'nutritionist', short: 'Nutritionist', title: 'Do you see a nutritionist?', optional: true,
+      id: 'nutritionist', later: true, short: 'Nutritionist', title: 'Do you see a nutritionist?', optional: true,
       render: p => `
         ${segmented('nutritionist.has', YESNO, p.nutritionist.has)}
         ${p.nutritionist.has === 'yes' ? `
@@ -508,7 +614,7 @@
       summary: p => p.nutritionist.has === 'yes' ? (p.nutritionist.name || 'Yes') : p.nutritionist.has === 'no' ? 'No' : ''
     },
     {
-      id: 'sleep', short: 'Sleep', title: 'How do you sleep?', optional: true,
+      id: 'sleep', later: true, short: 'Sleep', title: 'How do you sleep?', optional: true,
       render: p => `
         ${field('Hours a night', chips('sleep.hours', SLEEP_HOURS, p.sleep.hours))}
         ${field('Same bedtime most nights?', segmented('sleep.regular', SLEEP_REG, p.sleep.regular))}`,
@@ -518,7 +624,7 @@
         .filter(Boolean).join(' · ')
     },
     {
-      id: 'health', short: 'Health', title: 'Any health conditions?', optional: true,
+      id: 'health', later: true, short: 'Health', title: 'Any health conditions?', optional: true,
       render: p => `
         ${chips('health.conditions', CONDITIONS, p.health.conditions, { multi: true })}
         ${field('Medicines or supplements', textarea('health.meds', p.health.meds, 'e.g. thyroxine 50mcg, vitamin D, iron'), 'eb-field-gap')}
@@ -528,14 +634,14 @@
       summary: p => [labels(CONDITIONS, p.health.conditions), p.health.meds.trim()].filter(Boolean).join(' · ')
     },
     {
-      id: 'coach', short: 'Coach Style', title: 'How should I talk to you?', optional: true,
+      id: 'coach', later: true, short: 'Coach Style', title: 'How should I talk to you?', optional: true,
       render: p => cards('coach', COACHES, p.coach),
       valid: () => true,
       touched: p => !!p.coach,
       summary: p => label(COACHES, p.coach)
     },
     {
-      id: 'reminders', short: 'Reminders', title: 'When should we remind you?', optional: true, skipLabel: 'Set up later',
+      id: 'reminders', later: true, short: 'Reminders', title: 'When should we remind you?', optional: true, skipLabel: 'Set up later',
       render: p => `
         ${checkRows('reminders', REMINDERS.filter(r => r.v !== 'pms' || p.cycle.tracks !== false), p.reminders)}
         ${window.EBHealth && EBHealth.native ? '' : '<p class="eb-privacy">Reminders arrive through the iPhone app.</p>'}`,
@@ -603,6 +709,7 @@
         const cur = st.dataset.from != null ? +st.dataset.from : (+getAt(p, path) || 0);
         const n = Math.min(+st.dataset.max, Math.max(+st.dataset.min, cur + +st.dataset.delta));
         setAt(p, path, n);
+        if (path === 'cycle.cycleLength') p.cycle.lengthSet = true;
         return changed(true);
       }
       const act = e.target.closest('[data-action]');
@@ -621,6 +728,14 @@
           })
           .catch(e => EB.toast(e && e.message === 'unavailable' ? 'Apple Health isn’t available on this device' : 'Apple Health: ' + ((e && e.message) || e)));
       }
+      if (act && act.dataset.action === 'signIn' && window.EBSync) {
+        // Keep her answers if signing in reloads the app.
+        try { const keep = JSON.parse(JSON.stringify(p)); delete keep.weight._unit; delete keep.cycle._extra; EB.saveProfile(keep, { sync: false }); } catch {}
+        EBSync.openSignIn(() => changed(true));
+      }
+      if (act && act.dataset.action === 'goalChange') { p.goal = ''; return changed(true); }
+      if (act && act.dataset.action === 'addPeriod') return openCalendar(null, v => { p.cycle._extra = (p.cycle._extra || []).concat(v); changed(true); });
+      if (act && act.dataset.action === 'removePeriod') { p.cycle._extra = (p.cycle._extra || []).filter(d => d !== act.dataset.d); return changed(true); }
       if (act && act.dataset.action === 'removeFile') {
         const id = act.dataset.id;
         p.food.files = p.food.files.filter(f => f.id !== id);
@@ -630,6 +745,11 @@
     });
     root.addEventListener('input', (e) => {
       const el = e.target;
+      if (el.dataset.ftin) {
+        const box = el.closest('.eb-pair'), ft = +(box.querySelector('[data-ftin="ft"]').value) || 0, inch = +(box.querySelector('[data-ftin="in"]').value) || 0;
+        p.body.height = ft || inch ? String(Math.round((ft * 12 + inch) * 2.54)) : '';
+        return changed(false);
+      }
       if (!el.dataset.path) return;
       setAt(p, el.dataset.path, el.value);
       if (step.live) Object.entries(step.live).forEach(([k, fn]) => {
@@ -661,12 +781,15 @@
 
   // ── Onboarding flow ──
   let draft, idx, el, reviewReturn;
-  const visible = () => STEPS.filter(s => !s.when || s.when(draft));
+  const visible = () => STEPS.filter(s => !s.later && s.ob !== false && (!s.when || s.when(draft)));
 
   function open() {
     if (!EB.getProfile().completedAt) window.EBAnalytics && EBAnalytics.track('onboarding_started');
     draft = EB.getProfile();
     draft.weight._unit = draft.weight.unit;
+    draft.cycle._extra = (draft.cycle.history || []).filter(d => d && d !== draft.cycle.lastStart);
+    // Redoing onboarding starts from how she tracks today; a first run asks.
+    if (!draft.trackMode && draft.completedAt && window.EBDayMode) draft.trackMode = EBDayMode.currentMode();
     idx = -1; reviewReturn = false;
     el = document.createElement('div');
     el.className = 'ob';
@@ -699,17 +822,13 @@
       <div class="ob-splash-mark">
         ${LOGO}
         <p class="ob-splash-name">Menu-fi</p>
-        <p class="ob-splash-meaning"><b>Me</b>nstruation · <b>Nu</b>trition · <b>Fi</b>tness</p>
+        <p class="ob-splash-meaning"><span style="--i:0"><b>Me</b>nstruation</span><span style="--i:1"><b>Nu</b>trition</span><span style="--i:2"><b>Fi</b>tness</span></p>
       </div>
       <div class="ob-body ob-welcome">
-        <h1 class="ob-title ob-splash-tag" id="obTitle">Your Menstruation, Nutrition and Fitness Tracking All in 1 Place</h1>
-        <p class="ob-sub ob-splash-tag">Built for the busy ladies trying to stay fit through it all.</p>
+        <h1 class="ob-title ob-splash-tag" id="obTitle">Built for the busy ladies trying to stay fit through it all.</h1>
       </div>
       <div class="ob-foot ob-splash-cta">
         <button type="button" class="eb-btn primary" data-ob="start">Get started</button>
-        ${EB.voice.canListen ? `<button type="button" class="eb-btn ghost" data-ob="voice">${ICONS.mic}<span>Answer by voice</span></button>` : ''}
-        <p class="eb-privacy center">About 3 minutes · answers stay private</p>
-        <button type="button" class="eb-link center ob-dev" data-ob="dummy">Add dummy data</button>
       </div>`;
     el.onclick = (e) => {
       const a = e.target.closest('[data-ob]'); if (!a) return;
@@ -731,7 +850,7 @@
       <div class="ob-top">
         <button type="button" class="eb-icon-btn" data-ob="back" aria-label="Back">${ICONS.back}</button>
         <div class="ob-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${idx}" aria-label="Step ${idx + 1} of ${steps.length}"><span style="width:${Math.max(pct, 4)}%"></span></div>
-        ${themeBtn()}
+        ${EB.getProfile().completedAt ? themeBtn() : '<button type="button" class="ob-skip" data-ob="skip">Skip</button>'}
       </div>
       <div class="ob-body${step.info ? ' ob-content' : ''}">
         ${step.eyebrow ? `<p class="ob-eyebrow">${step.eyebrow}</p>` : ''}
@@ -739,8 +858,8 @@
         <div class="ob-fields">${step.render(draft)}</div>
       </div>
       <div class="ob-foot">
-        ${step.footLink ? `<button type="button" class="eb-link center" data-ob="footLink">${step.footLink.label}</button>` : ''}
         <button type="button" class="eb-btn" data-ob="next"></button>
+        ${step.footLink ? `<button type="button" class="eb-link center" data-ob="footLink">${step.footLink.label}</button>` : ''}
       </div>`;
     const fields = el.querySelector('.ob-fields');
     const refresh = () => updateNext(step);
@@ -754,6 +873,8 @@
     }
     refresh();
     step.onShow && step.onShow(draft);
+    // Where people drop off in setup (step id only, never answers).
+    if (!EB.getProfile().completedAt) { try { window.EBAnalytics && EBAnalytics.track('onboarding_step', { step: step.id }); } catch {} }
     const next = () => {
       const btn = el.querySelector('[data-ob="next"]');
       if (btn.disabled) return;
@@ -766,6 +887,11 @@
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
       if (a.dataset.ob === 'back') { if (reviewReturn) return renderReview(); idx--; idx < 0 ? renderWelcome() : renderStep(); }
       if (a.dataset.ob === 'next') next();
+      if (a.dataset.ob === 'skip') { window.EBExplore && EBExplore.start(); close(); location.reload(); return; }
+      if (a.dataset.ob === 'footLink' && step.footLink.action === 'declineStats') {
+        try { window.EBAnalytics && EBAnalytics.setConsent(false); } catch {}
+        idx++; return renderStep();
+      }
       if (a.dataset.ob === 'footLink' && step.footLink.action === 'noPeriods') {
         draft.cycle.tracks = false;
         idx = visible().indexOf(step) + 1; renderStep();
@@ -783,7 +909,7 @@
   // wording, like "No other goals") instead of a separate skip link.
   function updateNext(step) {
     const btn = el.querySelector('[data-ob="next"]');
-    if (step.info) { btn.textContent = 'Continue'; btn.className = 'eb-btn primary'; btn.disabled = false; return; }
+    if (step.info) { btn.textContent = step.cta || 'Continue'; btn.className = 'eb-btn primary'; btn.disabled = false; return; }
     const untouched = step.optional && !(step.touched ? step.touched(draft) : step.valid(draft));
     const ok = step.valid(draft);
     btn.textContent = reviewReturn ? 'Done' : untouched ? (step.skipLabel || 'Skip') : 'Continue';
@@ -839,12 +965,15 @@
     let target = '1,550', protein = 120;
     try { target = TARGETS.cal.toLocaleString(); protein = TARGETS.p; } catch {}
     const np = nextPeriod(draft);
+    const how = { plan: 'A week of meals built for you. Tick each one as you eat it.',
+      log: 'Search any food or scan a pack to log it.', guide: 'Targets for each meal. Nothing to log.' }[draft.trackMode];
     const items = [
       { icon: ICONS.check, t: `${target} calories and ${protein} g protein a day` },
+      how && { icon: ICONS.check, t: how },
       np && { icon: ICONS.check, t: `Next period around ${np.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}. PMS meals switch on before it.` },
       draft.reminders.length
         ? { icon: ICONS.check, t: `Reminders: ${labels(REMINDERS, draft.reminders).replace(/(^|, )\w/g, m => m.toLowerCase()).replace(/\bpMS\b/g, 'PMS')}` }
-        : { icon: ICONS.check, t: 'Log anything by typing or speaking it' },
+        : null,
       draft.coach && { icon: ICONS.check, t: `Your coach: ${label(COACHES, draft.coach).toLowerCase()}` }
     ].filter(Boolean).slice(0, 3);
     el.innerHTML = `
@@ -853,11 +982,11 @@
         <span></span>${themeBtn()}
       </div>
       <div class="ob-body ob-final">
-        <p class="ob-eyebrow">Last step</p>
+        <div class="ob-final-art" aria-hidden="true"><svg viewBox="0 0 80 80" width="88" height="88"><circle class="ob-final-ring" cx="40" cy="40" r="34" fill="none" stroke-width="6"/><path class="ob-final-tick" d="M26 41l9 9 19-20" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1 class="ob-title" id="obTitle" tabindex="-1">${name ? `Your Plan Is Ready, ${esc(name)}` : 'Your Plan Is Ready'}</h1>
-        <ul class="ob-benefits">${items.map(i => `<li>${i.icon}<span>${esc(i.t)}</span></li>`).join('')}</ul>
+        <ul class="ob-benefits">${items.map((i, k) => `<li style="--i:${k}">${i.icon}<span>${esc(i.t)}</span></li>`).join('')}</ul>
       </div>
-      <div class="ob-foot"><button type="button" class="eb-btn primary" data-ob="finish">Start my plan</button></div>`;
+      <div class="ob-foot"><button type="button" class="eb-btn primary" data-ob="finish">${draft.trackMode === 'plan' || !draft.trackMode ? 'Start my plan' : 'Start'}</button></div>`;
     el.onclick = (e) => {
       const a = e.target.closest('[data-ob]'); if (!a) return;
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
@@ -868,10 +997,20 @@
   }
 
   function finish() {
-    delete draft.weight._unit;
+    if (draft.cycle.lastStart || (draft.cycle._extra || []).length) syncCycle(draft);
+    delete draft.weight._unit; delete draft.cycle._extra;
     draft.completedAt = draft.completedAt || new Date().toISOString();
+    window.EBExplore && EBExplore.end();
     if (!EB.getProfile().completedAt) window.EBAnalytics && EBAnalytics.track('onboarding_completed', { plan_source: draft.planSource });
     EB.saveProfile(draft);                      // builds the plan (planner listens for eb:profile)
+    // How she tracks food: from today, unless today already has food logged
+    // (then from tomorrow, so nothing she logged is cleared).
+    if (draft.trackMode && window.EBDayMode) {
+      const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+      put('eb_lastDayMode', draft.trackMode);
+      if (!EBDayMode.hasFood(todayStr())) put('dayMode_' + todayStr(), draft.trackMode);
+      try { EBDayMode.refresh(); } catch {}
+    }
     if (window.EBReminders) EBReminders.apply(draft);
     renderPreparing();
   }
@@ -900,6 +1039,10 @@
   // then what the plan is built on, before landing on Home.
   function renderPreparing() {
     const p = draft;
+    if (p.trackMode && p.trackMode !== 'plan') {
+      el.classList.add('ob-leaving');
+      return setTimeout(() => { close(); EB.toast('You’re all set'); }, 220);
+    }
     const n = window.EBPlanner && EBPlanner.numbers(p);
     const plan = window.EBPlanner && EBPlanner.current();
     el.classList.remove('ob-splash');
@@ -1139,8 +1282,8 @@
   function nextQ(prefix) { vIdx++; askCurrent(prefix); }
 
   // ── Public ──
-  window.EBOnboarding = { open, STEPS, titleOf, bindStep, openCalendar, isDone: () => !!EB.getProfile().completedAt };
+  window.EBOnboarding = { open, STEPS, titleOf, bindStep, openCalendar, DIETS, CUISINES, isDone: () => !!EB.getProfile().completedAt };
 
-  function boot() { if (!EBOnboarding.isDone()) open(); }
+  function boot() { if (!EBOnboarding.isDone() && !(window.EBExplore && EBExplore.isOn())) open(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

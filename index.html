@@ -2283,6 +2283,7 @@
 
 </style>
 <link rel="stylesheet" href="shell.css">
+<script src="explore.js"></script>
 <script src="store.js"></script>
 </head>
 <body>
@@ -4195,19 +4196,27 @@ function renderActivity() {
 
   const presetsEl = document.getElementById('activityPresets');
   if (!presetsEl) return;
-  presetsEl.innerHTML = ACTIVITY_PRESETS.map((p, i) =>
-    `<button type="button" class="activity-preset" data-preset-idx="${i}">${escapeHtml(p.name)}<span class="preset-cal">−${p.cal} cal</span></button>`
-  ).join('');
-  presetsEl.querySelectorAll('[data-preset-idx]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const p = ACTIVITY_PRESETS[parseInt(btn.dataset.presetIdx)];
-      addActivity(p.name, p.cal);
+  // Common workouts as a tick list: ticking logs it, unticking removes it.
+  presetsEl.innerHTML = ACTIVITY_PRESETS.map((p, i) => {
+    const on = list.some(a => a.name === p.name);
+    return `<label class="activity-check${on ? ' on' : ''}"><input type="checkbox" data-preset-idx="${i}"${on ? ' checked' : ''}>
+      <span class="activity-check-name">${escapeHtml(p.name)}</span><span class="preset-cal">${p.cal} cal</span></label>`;
+  }).join('');
+  presetsEl.querySelectorAll('[data-preset-idx]').forEach(box => {
+    box.addEventListener('change', () => {
+      const p = ACTIVITY_PRESETS[parseInt(box.dataset.presetIdx)];
+      if (box.checked) { window.EBAnalytics && EBAnalytics.track('workout_logged', { source: 'preset', kind: p.name }); return addActivity(p.name, p.cal, true); }
+      window.EBAnalytics && EBAnalytics.track('workout_removed', { source: 'preset' });
+      const current = getActivities(currentDay), i = current.findIndex(a => a.name === p.name);
+      if (i >= 0) { current.splice(i, 1); setActivities(currentDay, current); }
+      renderActivity(); renderTracker(); try { renderWeeklyTracker(); } catch {}
     });
   });
 
   const listEl = document.getElementById('activityList');
   if (!listEl) return;
-  listEl.innerHTML = list.map((a, i) =>
+  const presetNames = new Set(ACTIVITY_PRESETS.map(p => p.name));
+  listEl.innerHTML = list.map((a, i) => presetNames.has(a.name) ? '' :
     `<li class="activity-item">
       <span class="activity-item-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 01-10 0c0-2.5 1.5-3.8 2.5-5 .3 1.6 1.1 2.6 2 3 0-3-.2-5.2.5-8z"/></svg></span>
       <span class="activity-item-name">${escapeHtml(a.name)}</span>
@@ -4220,6 +4229,7 @@ function renderActivity() {
       const idx = parseInt(btn.dataset.removeIdx);
       const current = getActivities(currentDay);
       const removed = current[idx];
+      window.EBAnalytics && EBAnalytics.track('workout_removed', { source: 'manual' });
       current.splice(idx, 1);
       setActivities(currentDay, current);
       const rk = removed ? fitnessKeyForActivity(removed.name) : null;
@@ -4252,11 +4262,11 @@ function fitnessKeyForActivity(name) {
   return null;
 }
 
-function addActivity(name, cal) {
+function addActivity(name, cal, quiet) {
   const trimmed = String(name || '').trim();
   const c = parseInt(cal);
   if (!trimmed || !c || c <= 0) return;
-  window.EBAnalytics && EBAnalytics.track('workout_logged', { source: 'manual' });
+  if (!quiet) window.EBAnalytics && EBAnalytics.track('workout_logged', { source: 'manual' });
   const current = getActivities(currentDay);
   current.push({ name: trimmed, cal: c, ts: Date.now() });
   setActivities(currentDay, current);
@@ -4412,6 +4422,7 @@ function renderWeight() {
 }
 
 function saveWeightFromInputs() {
+  window.EBAnalytics && EBAnalytics.track('weight_logged');
   const unit = getWeight().unit || 'kg';
   const current = parseFloat(document.getElementById('weightCurrent').value);
   const goal = parseFloat(document.getElementById('weightGoal').value);
@@ -5435,6 +5446,7 @@ function toggleWakeupItem(ds, itemId) {
   const cur = getWakeupItems(ds);
   const i = cur.indexOf(itemId);
   if (i === -1) cur.push(itemId); else cur.splice(i, 1);
+  if (i === -1) window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'wakeup', slot: 'wakeup' });
   setWakeupItems(ds, cur);
   renderSlotSection(); renderTracker(); renderWeeklyTracker(); renderTabs();
 }
@@ -5638,7 +5650,7 @@ function getSlotEaten(dateStr, slotId) {
   try { return localStorage.getItem('slotEaten_' + dateStr + '_' + slotId) === 'true'; } catch { return false; }
 }
 function setSlotEaten(dateStr, slotId, val) {
-  if (val) window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'plan' });
+  if (val) window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'plan', slot: slotId });
   try {
     if (val) localStorage.setItem('slotEaten_' + dateStr + '_' + slotId, 'true');
     else localStorage.removeItem('slotEaten_' + dateStr + '_' + slotId);
@@ -5680,6 +5692,7 @@ function partialKept(slot, pms) {
   return d.items.filter((_, i) => !skipped.includes(i));
 }
 function logPartial(slotId, dateStr) {
+  window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'partial', slot: slotId });
   const pms = isPMSMode();
   const slot = (pms ? PMS_MEAL_SLOTS : MEAL_SLOTS).find(s => s.id === slotId);
   if (!slot) return;
@@ -5709,6 +5722,7 @@ function enterReplaceMode(slotId) {
 }
 
 function restoreDefault(slotId, dateStr) {
+  window.EBAnalytics && EBAnalytics.track('meal_unticked', { slot: slotId });
   replaceModeSlots.delete(slotId);
   const log = getSlotLog(dateStr);
   delete log[slotId];
@@ -5788,10 +5802,21 @@ function renderSlotSection() {
 
     const inReplaceMode = replaceModeSlots.has(slot.id);
 
-    if (!hasLog && slot.defaultMeal && !inReplaceMode) {
+    // The planned meal keeps the same card whether or not it's ticked, so
+    // ticking only fills the check (the card never jumps or grows).
+    const plannedOnly = hasLog && slot.defaultMeal && isPlannedOnly(slot, ds);
+    if ((!hasLog || plannedOnly) && slot.defaultMeal && !inReplaceMode) {
       const d = getEffectiveDefaultMeal(slot, currentDay, pms);
+      const eaten = !!plannedOnly;
+      const more = eaten ? '' : `<details class="slot-more">
+              <summary aria-label="More options for ${slot.name}"><span aria-hidden="true">⋯</span></summary>
+              <div class="slot-more-menu">
+                ${d.items ? `<button type="button" onclick="togglePartialMode('${slot.id}')">${partialMode.has(slot.id) ? 'Cancel partial' : 'Ate part of this'}</button>` : ''}
+                <button type="button" onclick="enterReplaceMode('${slot.id}')">Replace / Add</button>
+              </div>
+            </details>`;
       return `
-        <div class="slot-card" data-slot="${slot.id}">
+        <div class="slot-card${eaten ? ' is-eaten' : ''}" data-slot="${slot.id}">
           <div class="slot-header">
             <div class="slot-left">
               
@@ -5799,13 +5824,14 @@ function renderSlotSection() {
                 <div class="slot-name">${slot.name}<span class="slot-time">${slot.time}</span></div>
               </div>
             </div>
-            <input type="checkbox" class="slot-check" title="Mark as eaten"
-              onchange="acceptDefault('${slot.id}', '${ds}')">
+            ${more}
+            <input type="checkbox" class="slot-check" aria-label="${slot.name} eaten" ${eaten ? 'checked' : ''}
+              onchange="this.checked ? acceptDefault('${slot.id}', '${ds}') : restoreDefault('${slot.id}', '${ds}')">
           </div>
           <div class="slot-macros-row">
             <span class="slot-macro highlight">${r2(d.cal)} cal</span>
             <span class="slot-macro highlight">${r2(d.p)}g P</span>
-            <span class="slot-macro" style="color:var(--text-tertiary);font-size:10px">planned</span>
+            <span class="slot-macro" style="color:var(--text-tertiary);font-size:10px">${eaten ? 'eaten' : 'planned'}</span>
           </div>
           <div style="padding:2px 14px 8px">
             <div class="slot-food">${d.name}</div>
@@ -5828,14 +5854,6 @@ function renderSlotSection() {
               </button>
             </div>`;
           })() : ''}
-          <div style="padding:0 14px 12px;display:flex;gap:4px">
-            ${d.items ? `<button onclick="togglePartialMode('${slot.id}')" class="replace-btn" style="flex:1">
-              ${partialMode.has(slot.id) ? 'Cancel' : 'Ate part of this'}
-            </button>` : ''}
-            <button onclick="enterReplaceMode('${slot.id}')" class="replace-btn" style="flex:1">
-              Replace / Add
-            </button>
-          </div>
         </div>`;
     }
 
@@ -6055,6 +6073,7 @@ function setLastBuild(slotId, ids) {
 function repeatLastBuild(slotId, dateStr) {
   const ids = getLastBuild(slotId);
   if (!ids || !ids.length) return;
+  window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'repeat', slot: slotId });
   builderPicks[slotId] = {};
   ids.forEach(id => { builderPicks[slotId][id] = true; });
   confirmBuilder(slotId, dateStr);
@@ -6063,6 +6082,7 @@ function repeatLastBuild(slotId, dateStr) {
 function confirmBuilder(slotId, dateStr) {
   const t = builderTotals(slotId);
   if (t.cal === 0) return;
+  window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'builder', slot: slotId });
   setLastBuild(slotId, Object.keys(builderPicks[slotId] || {}));
   const r1 = r2;
   const cfg = BUILDERS[slotId];
@@ -6161,6 +6181,7 @@ function confirmIngredientAdd(slotId, val, dateStr) {
 function removeSlotMeal(slotId, idx, dateStr) {
   const log = getSlotLog(dateStr);
   if (!Array.isArray(log[slotId])) return;
+  window.EBAnalytics && EBAnalytics.track('meal_removed', { slot: slotId });
   log[slotId].splice(idx, 1);
   if (log[slotId].length === 0) delete log[slotId];
   setSlotLog(dateStr, log);
