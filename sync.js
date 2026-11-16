@@ -124,12 +124,23 @@
     session = data.session;
     const fresh = data.user && Date.now() - Date.parse(data.user.created_at) < 5 * 60 * 1000;
     if (fresh && window.EBAnalytics) EBAnalytics.track('account_created');
+    if (window.EBAnalytics && EBAnalytics.identifyTester) EBAnalytics.identifyTester();
     await syncAndRepaint();
   }
   async function signOut() {
     if (sb) await sb.auth.signOut();
     session = null;
     setMeta({ lastSyncedAt: 0 });
+  }
+  // Make sure the account has the latest copy, then remove it from this phone.
+  async function signOutAndClear() {
+    if (!sb || !session) return false;
+    try { await syncNow(); } catch { return false; }
+    if (!(await push())) return false;
+    await signOut();
+    try { localStorage.clear(); } catch {}
+    location.reload();
+    return true;
   }
   async function deleteAccount() {
     if (!sb || !session) return;
@@ -223,7 +234,7 @@
     email: () => session?.user?.email || '',
     signedIn: () => !!session,
     lastSyncedAt: () => meta().lastSyncedAt || 0,
-    openSignIn, signOut, deleteAccount,
+    openSignIn, signOut, signOutAndClear, deleteAccount,
     syncNow: syncAndRepaint,
   };
 })();

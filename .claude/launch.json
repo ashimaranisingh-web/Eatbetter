@@ -6,6 +6,11 @@
       "runtimeExecutable": "/bin/sh",
       "runtimeArgs": ["-c", "cd /Users/Macquemus/Desktop/Eatbetter && exec python3 -m http.server 8765 --bind 127.0.0.1"],
       "port": 8765
+    },
+    {
+      "name": "eatbetter-attach",
+      "url": "http://localhost:8765",
+      "port": 8765
     }
   ]
 }

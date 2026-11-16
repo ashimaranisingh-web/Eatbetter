@@ -20,42 +20,83 @@
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'pfTitle');
     document.body.appendChild(el);
     document.documentElement.classList.add('eb-locked');
-    render();
+    render(); checkOwner();
     el.addEventListener('click', onClick);
     el.addEventListener('change', onChange);
     el.addEventListener('input', onInput);
   }
   function close() {
+    detailsOpen = false;
     el.remove(); el = null;
     document.documentElement.classList.remove('eb-locked');
     renderHeaderAvatar();
   }
 
+  // Tester feedback form (feedback.html on the project's GitHub Pages site).
+  const FEEDBACK_URL = 'https://tally.so/r/Z9Epva';
+  // Owner-only rows (Redo onboarding, the Claude API key). The repo is public,
+  // so the owner's email is stored only as a SHA-256 hash.
+  const OWNER = 'a1cda088f7635b9837e955ed3838d5d56733095ff0279ee845abd4a2dd402c5c';
+  let isOwner = false;
+  async function checkOwner() {
+    const email = window.EBSync && EBSync.signedIn() && EBSync.email();
+    if (!email || !(window.crypto && crypto.subtle)) return (isOwner = false);
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(email).trim().toLowerCase()));
+    const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    const was = isOwner; isOwner = hex === OWNER;
+    if (was !== isOwner && el) render();
+    return isOwner;
+  }
+
+  const PRIVACY_URL = 'https://ashimaranisingh-web.github.io/Eatbetter/privacy.html';
   function accountHTML() {
     if (!EBSync.signedIn()) return `
         <p class="eb-group-label">Account</p>
         <div class="eb-list">
           <button type="button" class="eb-list-row" data-pf="signIn"><span class="eb-row-text"><span class="eb-list-label">Sign In or Create Account</span>
-            <span class="eb-list-value">Back up and sync across phones</span></span>${ICONS.chevron}</button>
-        </div>
-        <p class="eb-group-note">Without an account, everything stays on this phone.</p>`;
-    const at = EBSync.lastSyncedAt();
+            <span class="eb-list-value">Saves everything to your email</span></span>${ICONS.chevron}</button>
+        </div>`;
     return `
         <p class="eb-group-label">Account</p>
         <div class="eb-list">
-          <div class="eb-list-row"><span class="eb-row-text"><span class="eb-list-label">Backup</span>
-            <span class="eb-list-value">${at ? 'Backed up ' + new Date(at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'Not backed up yet'}</span></span></div>
-          <button type="button" class="eb-list-row" data-pf="syncNow"><span class="eb-list-label">Sync Now</span></button>
+          ${isOwner ? `<button type="button" class="eb-list-row" data-pf="redo"><span class="eb-row-text"><span class="eb-list-label">See Onboarding</span>
+            <span class="eb-list-value">Only you see this</span></span>${ICONS.chevron}</button>` : ''}
           <button type="button" class="eb-list-row" data-pf="signOut"><span class="eb-list-label">Sign Out</span></button>
-          <button type="button" class="eb-list-row danger" data-pf="deleteAcct"><span class="eb-list-label">Delete Account</span></button>
         </div>
-        <p class="eb-group-note">Your Claude API key and Apple Health connection stay on this phone.</p>`;
+        <p class="eb-group-note">Everything saves to your account by itself.</p>`;
+  }
+
+  // "My details" is one row on Account that opens its own page.
+  let detailsOpen = false;
+  function detailsRow(s, p) {
+    const sum = s.summary(p);
+    return `<button type="button" class="eb-list-row" data-step-edit="${s.id}">
+            <span class="eb-row-text"><span class="eb-list-label">${s.short}</span>
+            <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Not set')}</span></span>${ICONS.chevron}</button>`;
+  }
+  function renderDetails(p, steps) {
+    el.innerHTML = `
+      <div class="ob-top">
+        <button type="button" class="eb-icon-btn" data-pf="detailsBack" aria-label="Back">${ICONS.back}</button>
+        <h1 class="pf-title" id="pfTitle">My Details</h1>
+        <span class="eb-icon-btn" aria-hidden="true"></span>
+      </div>
+      <div class="ob-body pf-body">
+        <div class="eb-list">${steps.map(s => detailsRow(s, p)).join('')}</div>
+        ${window.EBDayMode && EBDayMode.openDishes && p.food.diet ? `<div class="eb-list">
+          <button type="button" class="eb-list-row" data-pf="dishes"><span class="eb-row-text"><span class="eb-list-label">Dishes in My Plan</span>
+            <span class="eb-list-value">${(p.food.skip || []).length ? `${p.food.skip.length} crossed out` : 'See and cross out dishes'}</span></span>${ICONS.chevron}</button>
+        </div>` : ''}
+        <p class="eb-group-note">Your plan updates when you change these.</p>
+      </div>`;
   }
 
   function render() {
     const p = EB.getProfile();
     const pref = EB.getThemePref();
     const steps = EBOnboarding.STEPS.filter(s => !s.info && s.profile !== false && (!s.when || s.when(p)));
+    if (detailsOpen) return renderDetails(p, steps);
+    const setCount = steps.filter(s => s.summary(p)).length;
     el.innerHTML = `
       <div class="ob-top">
         <button type="button" class="eb-icon-btn" data-pf="close" aria-label="Close">${ICONS.back}</button>
@@ -69,6 +110,12 @@
           <input type="file" accept="image/*" data-pf="photo" hidden>
         </label>
 
+        <a class="pf-test-card" href="${FEEDBACK_URL}" target="_blank" rel="noopener">
+          <span class="pf-test-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/></svg></span>
+          <span class="pf-test-text"><b>Test Menu-fi (10min)</b></span>
+          <span class="pf-test-go" aria-hidden="true">›</span>
+        </a>
+
         <div class="eb-list">
           <label class="eb-list-row is-input"><span class="eb-list-label">Name</span>
             <input class="pf-inline" data-pf="name" value="${esc(p.name)}" placeholder="Add" autocomplete="given-name"></label>
@@ -77,10 +124,8 @@
             : `<button type="button" class="eb-list-row is-input" data-pf="signIn"><span class="eb-list-label">Email</span><span class="pf-email muted">Sign in to add</span></button>`) : ''}
         </div>
 
-        ${window.EBSync && EBSync.enabled() ? accountHTML() : ''}
-
         ${window.EBDayMode && EBDayMode.MODES ? `
-        <p class="eb-group-label">How you track food</p>
+        <p class="eb-group-label">Nutrition plan</p>
         <div class="pf-track" role="radiogroup" aria-label="How you track food">${EBDayMode.MODES.map(m => {
           const on = EBDayMode.currentMode() === m.v;
           return `<button type="button" class="pf-track-opt${on ? ' on' : ''}" data-track-mode="${m.v}" role="radio" aria-checked="${on}">
@@ -88,13 +133,11 @@
         }).join('')}</div>
         <p class="eb-group-note">Applies from today. Best kept the same for a while, so your weeks compare fairly.</p>` : ''}
 
-        <p class="eb-group-label">Your Plan</p>
-        <div class="eb-list">${steps.map(s => {
-          const sum = s.summary(p);
-          return `<button type="button" class="eb-list-row" data-step-edit="${s.id}">
-            <span class="eb-row-text"><span class="eb-list-label">${s.short}</span>
-            <span class="eb-list-value${sum ? '' : ' muted'}">${esc(sum || 'Not set')}</span></span>${ICONS.chevron}</button>`;
-        }).join('')}</div>
+        <p class="eb-group-label">About you</p>
+        <div class="eb-list">
+          <button type="button" class="eb-list-row" data-pf="details"><span class="eb-row-text"><span class="eb-list-label">My Details</span>
+            <span class="eb-list-value">Goal, body, cycle, food and more · ${setCount} of ${steps.length} set</span></span>${ICONS.chevron}</button>
+        </div>
 
         ${window.EBHealth && EBHealth.native ? `
         <p class="eb-group-label">Apple Health</p>
@@ -107,24 +150,28 @@
                  <span class="eb-list-value">Weight, periods and workouts in · meals out</span></span>${ICONS.chevron}</button>`}
         </div>` : ''}
 
-        <p class="eb-group-label">Meal Assistant</p>
+        ${isOwner ? `
+        <p class="eb-group-label">Meal Assistant · only you see this</p>
         <div class="eb-list">
           <label class="eb-list-row is-input"><span class="eb-list-label">Claude API Key</span>
             <input type="password" class="pf-inline" data-pf="apiKey" value="${esc(p.apiKey)}" placeholder="Optional" autocomplete="off" spellcheck="false"></label>
         </div>
-        <p class="eb-group-note">Adds AI estimates for foods the built-in list doesn’t know. Meal text is sent to Anthropic when set.</p>
+        <p class="eb-group-note">Lets the app ask Claude for calories of foods it doesn’t know. Stays on this phone.</p>` : ''}
 
-        <p class="eb-group-label">Food data and privacy</p>
-        <div class="pf-sources">
-          <p><b>Where the numbers come from.</b> Home recipes are Menu-fi estimates. Ingredients come from USDA FoodData Central (public domain) and IFCT 2017 by the National Institute of Nutrition, India. Packaged foods come from <b>Open Food Facts</b>, made by volunteers and shared under the Open Database License, and from labels read by Menu-fi users. All numbers are estimates.</p>
-          <p><b>Camera and photos.</b> Used only to scan barcodes and read nutrition labels. Photos are read on your phone and aren’t uploaded or kept.</p>
-          <p><b>Shared packs.</b> When you save a pack from its label while signed in, its barcode, name and nutrition are shared so other people’s scans find it. Your account is linked to that entry privately, only so each person counts once. Nobody can see who added it, and it’s deleted with your account.</p>
-          <p><b>Lookups.</b> When a pack isn’t on your phone, its barcode or name is sent to Open Food Facts or UPCitemdb to find it. Nothing about you is sent.</p>
-        </div>
+        ${window.EBAnalytics && EBAnalytics.enabled() ? `<p class="eb-group-label">Privacy</p>
+        <div class="eb-list">
+          <button type="button" class="eb-list-row" data-pf="stats" role="switch" aria-checked="${EBAnalytics.statsOn()}"><span class="eb-row-text"><span class="eb-list-label">Usage Stats and Screen Replays</span>
+            <span class="eb-list-value">Never health, cycle, weight or food details</span></span><span class="pf-switch${EBAnalytics.statsOn() ? ' on' : ''}" aria-hidden="true"></span></button>
+        </div>` : ''}
+
+        ${window.EBSync && EBSync.enabled() ? accountHTML() : ''}
 
         <div class="eb-list pf-actions">
-          <button type="button" class="eb-list-row" data-pf="redo"><span class="eb-list-label">Redo Onboarding</span>${ICONS.chevron}</button>
-          <button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase Profile</span></button>
+          <a class="eb-list-row" href="${PRIVACY_URL}" target="_blank" rel="noopener"><span class="eb-row-text"><span class="eb-list-label">Privacy and food data</span>
+            <span class="eb-list-value">What’s saved, and where the numbers come from</span></span>${ICONS.chevron}</a>
+          ${window.EBSync && EBSync.signedIn()
+            ? `<button type="button" class="eb-list-row danger" data-pf="deleteAcct"><span class="eb-list-label">Delete Account</span></button>`
+            : `<button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase Everything</span></button>`}
         </div>
         <p class="eb-group-note center">Not medical advice. Check with your doctor before big diet changes.</p>
       </div>`;
@@ -155,6 +202,12 @@
   }
   function onClick(e) {
     const t = e.target;
+    if (t.closest('[data-pf="stats"]')) {
+      const on = !EBAnalytics.statsOn(); EBAnalytics.setStats(on);
+      EB.toast(on ? 'Usage stats and replays on. Thank you!' : 'Usage stats and replays off');
+      return render();
+    }
+    if (t.closest('.pf-test-card')) { try { window.EBAnalytics && EBAnalytics.track('feedback_opened'); } catch {} }
     const ps = t.closest('[data-plan-src]');
     if (ps) { patch(p => { p.planSource = ps.dataset.planSrc; }); if (window.EBPlanner) EBPlanner.refresh(); return render(); }
     const tm = t.closest('[data-track-mode]');
@@ -164,6 +217,7 @@
       const name = (EBDayMode.MODES.find(m => m.v === v) || {}).t || v;
       if (EBDayMode.hasFood(todayStr()) && !confirm(`Switch to ${name}? Everything you’ve logged for food today will be cleared. Other days stay as they are.`)) return;
       EBDayMode.changeMode(v);
+      patch(p => { p.trackMode = v; });
       EB.toast(`Tracking with ${name} from today`);
       return render();
     }
@@ -172,16 +226,19 @@
     const se = t.closest('[data-step-edit]');
     if (se) return openEditor(se.dataset.stepEdit);
     const a = t.closest('[data-pf]'); if (!a) return;
+    if (a.dataset.pf === 'details') { detailsOpen = true; render(); el.querySelector('.ob-body').scrollTop = 0; return; }
+    if (a.dataset.pf === 'dishes') { EBDayMode.openDishes(); return; }
+    if (a.dataset.pf === 'detailsBack') { detailsOpen = false; return render(); }
     if (a.dataset.pf === 'close') close();
-    if (a.dataset.pf === 'signIn') EBSync.openSignIn(() => el && render());
+    if (a.dataset.pf === 'signIn') EBSync.openSignIn(() => el && (render(), checkOwner()));
     if (a.dataset.pf === 'syncNow') EBSync.syncNow().then(() => { EB.toast('Synced'); el && render(); });
     if (a.dataset.pf === 'signOut') {
-      if (!confirm('Sign out? Your data stays on this phone.')) return;
-      EBSync.signOut().then(() => { EB.toast('Signed out'); el && render(); });
+      if (!confirm('Sign out? Your data stays in your account and is removed from this phone. Sign in again to get it back.')) return;
+      EBSync.signOutAndClear().then(ok => { if (!ok) EB.toast('Couldn’t save to your account. Check your connection and try again.'); });
     }
     if (a.dataset.pf === 'deleteAcct') {
-      if (!confirm('Delete your account and its backup? This can’t be undone. Data on this phone is kept.')) return;
-      EBSync.deleteAccount().then(() => { EB.toast('Account deleted'); el && render(); })
+      if (!confirm('Delete your account and everything in it? This removes your data from this phone too, and can’t be undone.')) return;
+      EBSync.deleteAccount().then(() => { try { localStorage.clear(); } catch {} location.reload(); })
         .catch(() => EB.toast('Couldn’t delete the account. Check your connection and try again.'));
     }
     if (a.dataset.pf === 'healthOn') connectHealth();
@@ -189,11 +246,11 @@
     if (a.dataset.pf === 'healthOff') { EBHealth.disconnect(); render(); }
     if (a.dataset.pf === 'redo') { close(); EBOnboarding.open(); }
     if (a.dataset.pf === 'erase') {
-      if (!confirm('Erase your profile and onboarding answers? Logged meals are kept.')) return;
+      if (!confirm('Erase everything on this phone, including your meals and periods? This can’t be undone.')) return;
       const p = EB.getProfile();
-      p.food.files.forEach(f => EB.deleteFile(f.id));
-      try { localStorage.removeItem('eb_profile'); } catch {}
-      close(); EBOnboarding.open();
+      ((p.food && p.food.files) || []).forEach(f => EB.deleteFile(f.id));
+      try { localStorage.clear(); } catch {}
+      location.reload();
     }
   }
 
@@ -240,6 +297,7 @@
       EB.saveProfile(draft);
       if (window.EBReminders && (step.id === 'reminders' || step.id === 'cycle')) EBReminders.apply(draft);
       ed.remove(); render();
+      if (step.id === 'food' && draft.trackMode !== 'guide' && window.EBDayMode && EBDayMode.openDishes) EBDayMode.openDishes();
     }
     ed.addEventListener('click', (e) => {
       const a = e.target.closest('[data-ed]'); if (!a) return;

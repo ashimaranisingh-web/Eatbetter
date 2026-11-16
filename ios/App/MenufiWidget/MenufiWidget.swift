@@ -32,12 +32,17 @@ struct WidgetWorkout: Codable {
     let done: Bool
     let guess: Bool?       // suggested before she set her energy
 }
+struct WidgetChallenge: Codable {
+    let name: String       // "15 squats, 20 seconds plank"
+    let done: Bool
+}
 struct WidgetData: Codable {
     let name: String?
     let days: [WidgetDay]
     let mealsDate: String?
     let meals: [WidgetMeal]
     let workout: WidgetWorkout?
+    let challenge: WidgetChallenge?
 }
 
 private func loadData() -> WidgetData? {
@@ -61,6 +66,7 @@ struct MenufiEntry: TimelineEntry {
     let next: WidgetMeal?
     let allLogged: Bool
     let workout: WidgetWorkout?
+    var challenge: WidgetChallenge? = nil
 }
 
 private func entry(at date: Date, data: WidgetData?) -> MenufiEntry {
@@ -76,7 +82,8 @@ private func entry(at date: Date, data: WidgetData?) -> MenufiEntry {
         allLogged = !data.meals.isEmpty && open.isEmpty
     }
     let workout = data?.mealsDate == key ? data?.workout : nil
-    return MenufiEntry(date: date, day: day, next: next, allLogged: allLogged, workout: workout)
+    let challenge = data?.mealsDate == key ? data?.challenge : nil
+    return MenufiEntry(date: date, day: day, next: next, allLogged: allLogged, workout: workout, challenge: challenge)
 }
 
 struct Provider: TimelineProvider {
@@ -196,6 +203,42 @@ struct WorkoutBlock: View {
     }
 }
 
+// Today's challenge if she has one, otherwise today's workout.
+struct MoveBlock: View {
+    let entry: MenufiEntry
+    var compact = false
+    var body: some View {
+        if let c = entry.challenge {
+            if compact {
+                HStack(spacing: 5) {
+                    Image(systemName: c.done ? "checkmark.circle.fill" : "flame").font(.system(size: 11, weight: .semibold))
+                    Text(c.done ? "Done · \(c.name)" : c.name).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Kicker(text: c.done ? "Challenge · done" : "Today’s challenge")
+                    HStack(spacing: 5) {
+                        Image(systemName: c.done ? "checkmark.circle.fill" : "flame").font(.system(size: 13, weight: .semibold))
+                        Text(c.name).font(.system(size: 15, weight: .semibold)).lineLimit(2).minimumScaleFactor(0.85)
+                    }
+                }
+            }
+        } else {
+            WorkoutBlock(workout: entry.workout, compact: compact)
+        }
+    }
+}
+
+struct PeriodLine: View {
+    let day: WidgetDay?
+    var body: some View {
+        if let p = day?.periodIn, p > 0 {
+            Text(p == 1 ? "Period due tomorrow" : "Period in \(p) days")
+                .font(.system(size: 11, weight: .medium)).opacity(0.8).lineLimit(1)
+        }
+    }
+}
+
 struct MenufiWidgetView: View {
     @Environment(\.widgetFamily) var family
     let entry: MenufiEntry
@@ -235,33 +278,30 @@ struct MenufiWidgetView: View {
                 } else {
                     Text("Menu-fi").font(.system(size: 13, weight: .bold))
                 }
-                WorkoutBlock(workout: entry.workout, compact: true)
+                MoveBlock(entry: entry, compact: true)
             }
         case .systemMedium:
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     DayLine(day: entry.day)
                     Spacer(minLength: 8)
-                    if let p = entry.day?.periodIn, p > 0 {
-                        Text(p == 1 ? "Period due tomorrow" : "Period in \(p) days")
-                            .font(.system(size: 11, weight: .medium)).opacity(0.8).lineLimit(1)
-                    }
+                    PeriodLine(day: entry.day)
                 }
                 Spacer(minLength: 0)
-                HStack(alignment: .top, spacing: 12) {
-                    MealBlock(entry: entry).frame(maxWidth: .infinity, alignment: .leading)
-                    Rectangle().fill(Color.white.opacity(0.25)).frame(width: 1)
-                    WorkoutBlock(workout: entry.workout).frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .fixedSize(horizontal: false, vertical: true)
+                MoveBlock(entry: entry, compact: true)
+                Rectangle().fill(Color.white.opacity(0.25)).frame(height: 1)
+                MealBlock(entry: entry, nameSize: 14)
             }
         default:
             VStack(alignment: .leading, spacing: 6) {
-                DayLine(day: entry.day)
+                VStack(alignment: .leading, spacing: 1) {
+                    DayLine(day: entry.day)
+                    PeriodLine(day: entry.day)
+                }
                 Spacer(minLength: 0)
-                MealBlock(entry: entry, nameSize: 14)
+                MoveBlock(entry: entry, compact: true)
                 Rectangle().fill(Color.white.opacity(0.25)).frame(height: 1)
-                WorkoutBlock(workout: entry.workout, compact: true)
+                MealBlock(entry: entry, nameSize: 14)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -280,7 +320,7 @@ struct MenufiWidget: Widget {
             MenufiWidgetView(entry: entry)
         }
         .configurationDisplayName("Your day")
-        .description("What to eat next and today’s workout, with your cycle day.")
+        .description("Your cycle day, today’s challenge or workout, and what to eat next.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular, .accessoryInline])
     }
 }

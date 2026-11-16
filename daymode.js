@@ -29,9 +29,10 @@
 
   // ── Guide data: number of meals, split (% of the day), ticked meals ──
   const SPLITS = {
-    3: [['Breakfast', 30], ['Lunch', 40], ['Dinner', 30]],
-    4: [['Breakfast', 25], ['Lunch', 35], ['Snack', 10], ['Dinner', 30]],
-    5: [['Breakfast', 25], ['Mid-morning', 10], ['Lunch', 30], ['Snack', 10], ['Dinner', 25]]
+    // Lunch heaviest, breakfast second, a small snack, a lighter dinner.
+    3: [['Breakfast', 35], ['Lunch', 40], ['Dinner', 25]],
+    4: [['Breakfast', 30], ['Lunch', 35], ['Snack', 10], ['Dinner', 25]],
+    5: [['Breakfast', 25], ['Mid-morning', 10], ['Lunch', 35], ['Snack', 10], ['Dinner', 20]]
   };
   function guideFor(d) {
     const g = get('guide_' + d, null);
@@ -101,31 +102,25 @@
 
   function guideHTML(d) {
     const g = guideFor(d), meals = guideMeals(d), T = dayTargets();
-    let why = '';
-    try {
-      const n = window.EBPlanner && EBPlanner.numbers(EB.getProfile());
-      if (n) why = n.deficit > 0 ? `${n.tdee.toLocaleString()} to maintain your weight, minus ${n.deficit.toLocaleString()} to lose gently`
-        : n.deficit < 0 ? `${n.tdee.toLocaleString()} to maintain your weight, plus ${(-n.deficit).toLocaleString()} to gain`
-        : `what your body uses in a day, so your weight stays steady`;
-    } catch {}
+    let deficit = 0;
+    try { const n = window.EBPlanner && EBPlanner.numbers(EB.getProfile()); if (n) deficit = n.deficit; } catch {}
+    // Plain words instead of percentages: which meal is big and which is light.
+    const order = meals.map((m, i) => [m.pct, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+    const size = (m, i) => /snack|mid-morning/i.test(m.name) ? 'A small snack'
+      : i === order[0] ? 'Your heaviest meal' : i === order[1] ? 'Second heaviest' : 'Keep it light';
     const pms = typeof isPMSMode === 'function' && isPMSMode();
     return `<div class="app-card app-guide">
       <div class="app-row"><p class="app-card-label">Meals today</p>
         <div class="eb-seg app-guide-n" role="radiogroup" aria-label="Meals today">${[3, 4, 5].map(n =>
           `<button type="button" class="eb-seg-btn${g.n === n ? ' on' : ''}" data-guide-n="${n}" role="radio" aria-checked="${g.n === n}"${g.done.length && g.n !== n ? ' disabled' : ''}>${n}</button>`).join('')}</div></div>
-      <p class="app-guide-why">Your target is <b>${T.cal.toLocaleString()} cal</b> a day${why ? `: ${why}` : ''}${pms ? ', plus about 150 for PMS days' : ''}. Aim for ${T.p} g protein, ${T.c} g carbs, ${T.f} g fat and ${T.fib} g fibre across the day.</p>
+      <p class="app-guide-why">You have <b>${T.cal.toLocaleString()} cal</b> a day${deficit > 0 ? `, with a ${deficit.toLocaleString()} cal deficit included` : ''}${pms ? ' (plus about 150 for PMS days)' : ''}. Aim for <b>${T.p} g protein</b>, ${T.c} g carbs and ${T.f} g fat.</p>
       <ul class="app-guide-list">${meals.map((m, i) => `<li class="${m.done ? 'done' : ''}">
           <button type="button" class="app-guide-tick" data-guide-done="${i}" aria-pressed="${m.done}" aria-label="${esc(m.name)} done"></button>
           <div class="app-guide-text">
             <div class="app-guide-head"><b>${esc(m.name)}</b><span>${m.lo}–${m.hi} cal</span></div>
-            <p>About ${m.p} g protein · ${m.c} g carbs · ${m.f} g fat · ${m.fib} g fibre</p>
-          </div>
-          <div class="eb-stepper app-guide-step">
-            <button type="button" class="eb-step-btn" data-guide-split="${i}" data-delta="-5" aria-label="Smaller ${esc(m.name)}">−</button>
-            <span class="eb-step-val">${m.pct}%</span>
-            <button type="button" class="eb-step-btn" data-guide-split="${i}" data-delta="5" aria-label="Bigger ${esc(m.name)}">+</button>
+            <p><span class="app-guide-size">${size(m, i)}</span> · about ${m.p} g protein</p>
           </div></li>`).join('')}</ul>
-      <p class="app-muted small">The split is a suggestion. Make any meal bigger or smaller and the others adjust. Ticked meals count at the middle of their range, as an estimate. General guidance, not medical advice.</p>
+      <p class="app-muted small">Tick a meal when you’ve had it; it counts at the middle of its range. General guidance, not medical advice.</p>
     </div>`;
   }
 
@@ -145,9 +140,156 @@
         : '<p class="app-log-empty">Nothing logged yet. Search a food above, for example “2 roti” or “100g rice”.</p>'}`;
   }
 
+  // ── Pages inside the app (back button, tab bar stays) ──
+  function subpage(title, onClose) {
+    closeSubpages();
+    const el = document.createElement('div');
+    el.className = 'ob pf app-subpage';
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', title);
+    el.innerHTML = `<div class="ob-top"><button type="button" class="eb-icon-btn" data-sub-close aria-label="Back"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><h1 class="pf-title">${esc(title)}</h1><span class="eb-icon-btn" aria-hidden="true"></span></div><div class="ob-body app-subpage-body"></div>`;
+    el._close = () => { onClose && onClose(); el.remove(); document.documentElement.classList.remove('eb-locked'); };
+    el.addEventListener('click', e => { if (e.target.closest('[data-sub-close]')) el._close(); });
+    document.body.appendChild(el);
+    document.documentElement.classList.add('eb-locked');
+    return el.querySelector('.app-subpage-body');
+  }
+  function closeSubpages() { document.querySelectorAll('.app-subpage').forEach(p => p._close ? p._close() : p.remove()); }
+
+  // ── Craving something? (its own page) ──
+  function openCraving() {
+    window.EBAnalytics && EBAnalytics.track('craving_opened');
+    const crave = $('cravingWrap'); if (!crave) return;
+    const home = crave.parentElement, next = crave.nextSibling;
+    const body = subpage('Craving something?', () => { home.insertBefore(crave, next); crave.classList.remove('in-page'); });
+    crave.classList.add('in-page');
+    body.appendChild(crave);
+    setTimeout(() => { const i = $('cravingInput'); if (i) i.focus(); }, 80);
+  }
+
+  // ── Your meal plan: diet, cuisines and usual foods → a week of meals ──
+  const profile = () => { try { return EB.getProfile(); } catch { return null; } };
+  function foodsHTML() {
+    const p = profile(); if (!p || !p.food) return '';
+    if (String(p.food.usual || '').trim()) return '';
+    return `<div class="app-card app-foods">
+      <p class="app-foods-t">Build your plan around food you like</p>
+      <p class="app-foods-d">Tell us what you usually eat and we’ll plan a week around it, at your calories, with PMS days included.</p>
+      <button type="button" class="eb-btn primary" data-foods-open>Prepare my meal plan</button>
+    </div>`;
+  }
+  const chipRow = (name, list, sel, multi) => `<div class="eb-chips" role="group">${list.map(o => {
+    const on = multi ? (sel || []).includes(o.v) : sel === o.v;
+    return `<button type="button" class="eb-chip${on ? ' on' : ''}" data-mp="${name}" data-v="${o.v}" ${multi ? 'data-multi' : ''} aria-pressed="${on}">${esc(o.t)}</button>`; }).join('')}</div>`;
+  function openMealPlan() {
+    const p = profile(); if (!p) return;
+    const draft = { diet: p.food.diet || '', cuisines: (p.food.cuisines || []).slice(), usual: p.food.usual || '' };
+    const O = window.EBOnboarding || {};
+    const body = subpage('Your meal plan');
+    const paintForm = () => {
+      body.innerHTML = `
+        <p class="app-mp-lead">We plan 7 days of meals at your daily calories, built around food you like, with warmer, comforting meals on PMS days.</p>
+        <p class="eb-label">How do you eat?</p>${chipRow('diet', O.DIETS || [], draft.diet, false)}
+        <p class="eb-label">Food you enjoy</p>${chipRow('cuisines', O.CUISINES || [], draft.cuisines, true)}
+        <p class="eb-label">What do you eat on a usual day?</p>
+        <textarea class="eb-input app-mp-usual" id="mpUsual" rows="6" placeholder="e.g. poha and chai for breakfast, dal rice and sabzi for lunch, makhana in the evening, paneer and roti at night">${esc(draft.usual)}</textarea>
+        <p class="app-mp-err" id="mpErr" role="alert"></p>
+        <button type="button" class="eb-btn primary app-mp-go" data-mp-go>Prepare my meal plan</button>`;
+    };
+    paintForm();
+    body.addEventListener('input', e => { if (e.target.id === 'mpUsual') draft.usual = e.target.value; });
+    body.addEventListener('click', e => {
+      const c = e.target.closest('[data-mp]');
+      if (c) {
+        const k = c.dataset.mp, v = c.dataset.v;
+        if (k === 'diet') draft.diet = draft.diet === v ? '' : v;
+        else draft.cuisines = draft.cuisines.includes(v) ? draft.cuisines.filter(x => x !== v) : draft.cuisines.concat(v);
+        draft.usual = ($('mpUsual') || {}).value || draft.usual;
+        return paintForm();
+      }
+      if (e.target.closest('[data-mp-go]')) {
+        if (!draft.diet) { $('mpErr').textContent = 'Pick how you eat first.'; return; }
+        const fresh = profile();
+        Object.assign(fresh.food, { diet: draft.diet, cuisines: draft.cuisines, usual: draft.usual.trim() });
+        EB.saveProfile(fresh);
+        return dishList(body, 'Build my plan', prepare);
+      }
+    });
+    function prepare() {
+        window.EBAnalytics && EBAnalytics.track('meal_plan_prepared', { diet: draft.diet, cuisines: (draft.cuisines || []).length });
+        if (window.EBPlanner) EBPlanner.rebuild ? EBPlanner.rebuild() : EBPlanner.refresh();
+        body.innerHTML = `<div class="ob-calc"><div class="ob-calc-load"><div class="ob-calc-spin"></div><p>Preparing your meal plan</p>
+          <ul><li>Reading the foods you usually eat</li><li>Fitting them to your daily calories</li><li>Balancing protein, carbs and fibre</li><li>Adding comforting meals for PMS days</li></ul></div></div>`;
+        setTimeout(() => {
+          const plan = window.EBPlanner && EBPlanner.current(), t = plan && plan.targets;
+          body.innerHTML = `<div class="app-mp-done">
+            <p class="app-mp-tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></p>
+            <h2>Your meal plan is ready</h2>
+            <ul class="app-mp-sum">
+              ${t ? `<li><b>${t.normal.cal.toLocaleString()} cal</b> and <b>${t.normal.p} g protein</b> a day</li>` : ''}
+              ${t ? `<li>PMS days: <b>${t.pms.cal.toLocaleString()} cal</b>, warmer and more comforting</li>` : ''}
+              <li>7 days, 4 meals a day, built around what you eat</li>
+            </ul>
+            <button type="button" class="eb-btn primary" data-sub-close>See my plan</button></div>`;
+          refresh();
+        }, 1800);
+    }
+  }
+
+  // ── Dishes in your plan: everything her diet allows, ones that match her
+  // usual foods first. Tap to cross out; crossed-out dishes never get planned.
+  const MEAL_NAMES = { breakfast: 'Breakfast', lunch: 'Lunch', snack: 'Snack', dinner: 'Dinner' };
+  const MIN_LEFT = 3;   // keep enough per meal for a varied week
+  function dishList(body, cta, onDone) {
+    const paint = () => {
+      const p = profile(); if (!p || !window.EBPlanner || !EBPlanner.suggest) return onDone();
+      const groups = EBPlanner.suggest(p);
+      const matched = groups.reduce((n, g) => n + g.dishes.filter(d => d.hits.length).length, 0);
+      body.innerHTML = `
+        <p class="app-mp-lead">${matched ? `<b>${matched} dishes</b> use foods you mentioned, so they come up most. ` : ''}Cross out anything that doesn’t work for you and it won’t be planned.</p>
+        ${groups.map(g => `
+          <p class="eb-group-label">${MEAL_NAMES[g.slot]}</p>
+          <div class="eb-list dish-list">${g.dishes.map(d => `
+            <button type="button" class="eb-list-row dish-row${d.out ? ' out' : ''}" data-dish="${esc(d.name)}" data-slot="${g.slot}" aria-pressed="${d.out}">
+              <span class="eb-row-text"><span class="eb-list-label dish-name">${esc(d.name)}</span>
+                <span class="eb-list-value">${d.hits.length ? `<span class="dish-tag">You eat ${esc(d.hits[0])}</span> ` : ''}${esc(d.what)}</span></span>
+              <span class="dish-x" aria-hidden="true">${d.out ? '↺' : '✕'}</span>
+            </button>`).join('')}</div>`).join('')}
+        <button type="button" class="eb-btn primary app-mp-go" data-dish-done>${esc(cta)}</button>`;
+    };
+    paint();
+    body.onclick = e => {
+      const row = e.target.closest('[data-dish]');
+      if (row) {
+        const p = profile(), name = row.dataset.dish;
+        const skip = (p.food.skip || []).slice(), i = skip.indexOf(name);
+        if (i >= 0) skip.splice(i, 1);
+        else {
+          const g = EBPlanner.suggest(p).find(x => x.slot === row.dataset.slot);
+          const left = g ? g.dishes.filter(d => !d.out).length : 99;
+          if (left <= MIN_LEFT) return EB.toast(`Keep at least ${MIN_LEFT} for ${MEAL_NAMES[row.dataset.slot].toLowerCase()}`);
+          skip.push(name);
+          window.EBAnalytics && EBAnalytics.track('dish_crossed_out', { slot: row.dataset.slot });
+        }
+        p.food.skip = skip; EB.saveProfile(p);
+        const y = body.closest('.ob-body') ? body.closest('.ob-body').scrollTop : 0;
+        paint(); if (body.closest('.ob-body')) body.closest('.ob-body').scrollTop = y;
+        return;
+      }
+      if (e.target.closest('[data-dish-done]')) { body.onclick = null; onDone(); }
+    };
+  }
+  function openDishes() {
+    const body = subpage('Dishes in your plan');
+    dishList(body, 'Done', () => { if (window.EBPlanner) EBPlanner.refresh(); closeSubpages(); });
+  }
+  document.addEventListener('click', e => {
+    const t = e.target; if (!t.closest) return;
+    if (t.closest('[data-foods-open]')) return openMealPlan();
+    if (t.closest('[data-crave-open]')) return openCraving();
+  });
+
   function paint() {
     const page = $('pageFood'); if (!page) return;
-    // How you track food is a Profile setting now (rarely changed), so the page has no picker.
     if (!$('dayModeSearch')) {
       const body = document.createElement('div'); body.id = 'dayModeBody';
       const search = document.createElement('div'); search.id = 'dayModeSearch';
@@ -155,21 +297,31 @@
     }
     const d = ds(), mode = modeFor(d), locked = hasFood(d);
     page.dataset.dayview = mode;   // not "daymode": that name belongs to the picker buttons
-    // Order under the day card: search → Guide / Log → craving → meals.
-    const tracker = $('tracker'), search = $('dayModeSearch'), body = $('dayModeBody'), crave = $('cravingWrap');
-    if (tracker && tracker.nextElementSibling !== search) tracker.after(search);
-    if (search.nextElementSibling !== body) search.after(body);
-    if (crave && body.nextElementSibling !== crave) body.after(crave);
-    // The craving finder reads as its own thing, not a second search bar.
-    if (crave && !crave.querySelector('.craving-label')) {
-      const lb = document.createElement('p'); lb.className = 'craving-label'; lb.textContent = 'Craving something?';
-      crave.prepend(lb);
-    }
+    // Order: day card → Normal / PMS → search → "Craving something?" → Guide / Log → meals → "Change the foods your plan uses"
+    const tracker = $('tracker'), toggle = $('modeToggleBar'), search = $('dayModeSearch'), body = $('dayModeBody'), crave = $('cravingWrap');
+    let anchor = tracker;
+    if (toggle && anchor && anchor.nextElementSibling !== toggle) anchor.after(toggle);
+    if (toggle) anchor = toggle;
+    if (anchor && anchor.nextElementSibling !== search) anchor.after(search);
+    let link = $('craveLink');
+    if (!link) { link = document.createElement('button'); link.type = 'button'; link.id = 'craveLink'; link.className = 'eb-link app-crave-link'; link.setAttribute('data-crave-open', ''); link.textContent = 'Craving something?'; }
+    if (search.nextElementSibling !== link) search.after(link);
+    if (link.nextElementSibling !== body) link.after(body);
+    // The finder itself waits, hidden, until the link opens it on its own page.
+    if (crave && !crave.classList.contains('in-page') && crave.parentElement !== page) page.appendChild(crave);
     const ci = $('cravingInput');
     if (ci && ci.placeholder !== 'Sweet, salty, spicy, crunchy…') { ci.placeholder = 'Sweet, salty, spicy, crunchy…'; ci.setAttribute('aria-label', 'What are you craving?'); }
+    // Plan days: the meal-plan editor sits at the bottom of the page.
+    let foot = $('mealPlanFoot');
+    if (!foot) { foot = document.createElement('div'); foot.id = 'mealPlanFoot'; }
+    const slots = $('slotSection');
+    if (slots && slots.nextElementSibling !== foot) slots.after(foot);
+    const p = profile();
+    foot.innerHTML = mode === 'plan' && p && String(p.food && p.food.usual || '').trim()
+      ? `<button type="button" class="app-card app-mp-link" data-foods-open><span><b>Change the foods your plan uses</b><small>Rebuild your week of meals</small></span><i aria-hidden="true">›</i></button>` : '';
     // Log mode's body has its own full search (with the logged list).
     search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true }) : '';
-    body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : '';
+    body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : foodsHTML();
     if (window.EBFoodLog) EBFoodLog.mounted();
   }
 
@@ -255,5 +407,5 @@
   }
   const currentMode = () => modeFor(todayStr());
 
-  window.EBDayMode = { paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
+  window.EBDayMode = { subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
 })();

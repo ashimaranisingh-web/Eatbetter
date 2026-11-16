@@ -15,6 +15,7 @@ public class HealthPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "latestWeight", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "periodStarts", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "workouts", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "dailyActivity", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "saveDailyNutrition", returnType: CAPPluginReturnPromise)
     ]
 
@@ -50,7 +51,8 @@ public class HealthPlugin: CAPPlugin, CAPBridgedPlugin {
         let write = Set(HealthPlugin.nutrition.compactMap { HKQuantityType.quantityType(forIdentifier: $0.id) as HKSampleType? })
         var read: Set<HKObjectType> = [HKObjectType.workoutType()]
         [HKQuantityType.quantityType(forIdentifier: .bodyMass),
-         HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)].compactMap { $0 }.forEach { read.insert($0) }
+         HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned),
+         HKQuantityType.quantityType(forIdentifier: .stepCount)].compactMap { $0 }.forEach { read.insert($0) }
         if let flow = HKCategoryType.categoryType(forIdentifier: .menstrualFlow) { read.insert(flow) }
         write.forEach { read.insert($0) }
 
@@ -125,6 +127,40 @@ public class HealthPlugin: CAPPlugin, CAPBridgedPlugin {
             call.resolve(["workouts": list])
         }
         store.execute(query)
+    }
+
+    /// Steps and active calories per day for the last `days` days (today included),
+    /// summed by Health across iPhone and Watch without double counting.
+    @objc func dailyActivity(_ call: CAPPluginCall) {
+        let days = max(1, min(31, call.getInt("days") ?? 7))
+        let cal = Calendar.current
+        let end = Date()
+        guard let start = cal.date(byAdding: .day, value: -(days - 1), to: cal.startOfDay(for: end)),
+              let stepsType = HKQuantityType.quantityType(forIdentifier: .stepCount),
+              let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else {
+            call.resolve(["days": []]); return
+        }
+        var steps: [String: Double] = [:], kcal: [String: Double] = [:]
+        let group = DispatchGroup()
+        func sum(_ type: HKQuantityType, _ unit: HKUnit, into apply: @escaping (String, Double) -> Void) {
+            group.enter()
+            let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: HKQuery.predicateForSamples(withStart: start, end: end, options: []),
+                                                options: .cumulativeSum, anchorDate: start, intervalComponents: DateComponents(day: 1))
+            q.initialResultsHandler = { _, results, _ in
+                results?.enumerateStatistics(from: start, to: end) { stat, _ in
+                    if let v = stat.sumQuantity()?.doubleValue(for: unit) { apply(HealthPlugin.isoDay(stat.startDate), v) }
+                }
+                group.leave()
+            }
+            store.execute(q)
+        }
+        let lock = NSLock()
+        sum(stepsType, .count()) { d, v in lock.lock(); steps[d] = v; lock.unlock() }
+        sum(energyType, .kilocalorie()) { d, v in lock.lock(); kcal[d] = v; lock.unlock() }
+        group.notify(queue: .main) {
+            let dates = Set(steps.keys).union(kcal.keys).sorted()
+            call.resolve(["days": dates.map { ["date": $0, "steps": Int(steps[$0] ?? 0), "kcal": Int((kcal[$0] ?? 0).rounded())] }])
+        }
     }
 
     /// Replaces the day's nutrition totals: earlier samples written for the

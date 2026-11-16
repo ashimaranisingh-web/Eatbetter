@@ -213,15 +213,47 @@
   function rowHTML(f, sub) {
     const fav = get(FAV, []).includes(f.id), open = st.open === f.id;
     const u = defaultUnit(f), t = totals(f, defaultAmt(u), u);
-    return `<li class="fl-item${open ? ' open' : ''}">
+    return `<li class="fl-item${open ? ' on' : ''}">
       <div class="fl-line">
-        <button type="button" class="fl-row" data-fl-open="${esc(f.id)}" aria-expanded="${open}">
+        <button type="button" class="fl-row" data-fl-open="${esc(f.id)}" aria-haspopup="dialog">
           <span><b>${esc(f.n)}</b><small>${esc(sub || `${qtyLabel(f, defaultAmt(u), u)} · ${t.cal} cal`)}</small></span>
         </button>
         <button type="button" class="fl-star${fav ? ' on' : ''}" data-fl-fav="${esc(f.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Save to'} favourites">${STAR(fav)}</button>
       </div>
-      ${open ? detailHTML(f) : ''}
     </li>`;
+  }
+
+  // The chosen food opens in a bottom drawer (amount, meal, add), so the
+  // results list never jumps around under her thumb.
+  // A scan opens the drawer straight away: "Looking it up…", then the pack
+  // itself (or the closest matches / read-the-label steps).
+  function sheetHTML() {
+    const f = st.open && byId(st.open);
+    if (!f) {
+      const inner = st.label ? labelHTML() : st.scan ? scanHTML() : '';
+      return inner ? `<div class="fl-sheet-bg" data-fl-close></div>
+        <div class="fl-sheet" role="dialog" aria-modal="true" aria-label="${st.label ? 'Nutrition label' : 'Barcode'}">${inner}</div>` : '';
+    }
+    const fav = get(FAV, []).includes(f.id), scanned = st.scan && st.scan.status === 'found';
+    return `<div class="fl-sheet-bg" data-fl-close></div>
+      <div class="fl-sheet" role="dialog" aria-modal="true" aria-label="${esc(f.n)}">
+        <div class="fl-sheet-head fl-head2">
+          <button type="button" class="fl-star${fav ? ' on' : ''}" data-fl-fav="${esc(f.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Save to'} favourites">${STAR(fav)}</button>
+          <span class="fl-head-t"><b>${esc(f.n)}</b>${(() => { const sub = [f.brand, f.units.serving && f.units.serving !== 1 ? `${Math.round(f.units.serving * 10) / 10} ${f.units.ml ? 'ml' : 'g'} per serving` : ''].filter(Boolean).join(' · '); return sub ? `<small>${esc(sub)}</small>` : ''; })()}</span>
+          <button type="button" class="fl-sheet-x fl-x-round" data-fl-close aria-label="Close"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        ${detailHTML(f)}
+      </div>`;
+  }
+  function paintSheet() {
+    let el = $('flSheet');
+    const body = sheetHTML();
+    if (!body) { if (el) el.remove(); document.body.classList.remove('fl-sheet-open'); return; }
+    const fresh = !el;
+    if (fresh) { el = document.createElement('div'); el.id = 'flSheet'; document.body.appendChild(el); }
+    el.innerHTML = body;
+    document.body.classList.add('fl-sheet-open');
+    if (fresh) { const s = $('flSearch'); if (s) s.blur(); el.classList.add('fl-enter'); setTimeout(() => el.classList.remove('fl-enter'), 300); }
   }
 
   function amountHTML(f, amt, unit) {
@@ -242,9 +274,16 @@
     const off = f.src === 'off' && !st.fix ? (f.id && f.id.slice(0, 2) === 'o:' && st.scan && st.scan.status === 'similar' ? 'Closest match, not your exact pack, so check it against the label. ' : 'Shared by volunteers, so check it against the pack. ') : '';
     const extra = [t.sug != null ? `${t.sug} g sugar` : '', t.na != null ? `${t.na} mg sodium` : ''].filter(Boolean).join(' · ');
     const disputed = f.src === 'shared' && f.flags && !st.fix ? 'Some people said these numbers don’t match their pack. ' : '';
-    return `<p class="fl-total"><b>About ${t.cal} cal</b><span>${macro(t)}</span>${extra ? `<span class="fl-extra">${extra}</span>` : ''}</p>
-      ${phaseNote(t)}
-      <p class="fl-src">Estimate. ${st.fix ? 'Your numbers.' : `Source: ${SRC[f.src]}.`} ${disputed}${shared}${off}${f.per === 100 ? per : ''}</p>`;
+    // One line: calories on the left, macros on the right. Where the numbers come from sits at the bottom.
+    return `<p class="fl-total"><b>${t.cal} cal <small>(approx)</small></b></p>
+      <div class="fl-macrow"><span class="fl-macros">${t.p} g P · ${t.c} g C · ${t.f} g F</span>${st.fix || st.edit ? '' : `<button type="button" class="eb-link fl-fixlink" data-fl-fix>Numbers look off?</button>`}</div>
+      ${phaseNote(t)}`;
+  }
+  function srcHTML(f) {
+    const per = f.units[st.unit] && st.unit !== 'g' && st.unit !== 'ml' && st.unit !== 'pack' && !(st.unit === 'serving' && /^(off|shared|label)$/.test(f.src)) ? `1 ${unitText(f, st.unit)} ≈ ${Math.round(f.units[st.unit])} ${f.units.ml ? 'ml' : 'g'}. ` : '';
+    const shared = f.src === 'shared' && !st.fix ? (f.confirmed ? `Confirmed by ${f.votes} people’s labels. ` : 'From one person’s label, so check it against your pack. ') : '';
+    const off = f.src === 'off' && !st.fix ? 'Shared by volunteers, so check it against the pack. ' : '';
+    return `<p class="fl-src">Estimate. ${st.fix ? 'Your numbers.' : `Source: ${SRC[f.src]}.`} ${shared}${off}${f.per === 100 ? per : ''}</p>`;
   }
   // Gentle, phase-aware notes (luteal / PMS days only). Never "bad food".
   function phaseNote(t) {
@@ -261,15 +300,38 @@
     return `<div class="fl-fix">${[['cal', 'Calories'], ['p', 'Protein g'], ['c', 'Carbs g'], ['f', 'Fat g']].map(([k, l]) =>
       `<label><span>${l}</span><input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${v[k]}" data-fl-fixin="${k}"></label>`).join('')}</div>`;
   }
+  // The drawer, Apple-style: one big number, a grouped list of controls, one button.
+  function heroHTML(t) {
+    const kp = (+t.p || 0) * 4, kc = (+t.c || 0) * 4, kf = (+t.f || 0) * 9, sum = kp + kc + kf || 1;
+    const pct = v => Math.round(v / sum * 1000) / 10;
+    return `<div class="fl-hero"><b class="fl-hero-n">${t.cal}</b><span class="fl-hero-u">cal</span></div>
+      <p class="fl-mac"><span><i class="m-p"></i>Protein ${t.p} g</span><span><i class="m-c"></i>Carbs ${t.c} g</span><span><i class="m-f"></i>Fat ${t.f} g</span></p>
+      <div class="fl-macbar" aria-hidden="true"><i class="m-p" style="width:${pct(kp)}%"></i><i class="m-c" style="width:${pct(kc)}%"></i><i class="m-f" style="width:${pct(kf)}%"></i></div>
+      ${phaseNote(t)}`;
+  }
   function detailHTML(f) {
-    const t = totals(f, st.amt, st.unit);
-    return `<div class="fl-detail">
-      ${amountHTML(f, st.amt, st.unit)}
-      <div class="fl-live">${totalHTML(f, st.fix ? { ...t, ...st.fix } : t)}</div>
-      ${st.fix ? fixHTML(t) : `<button type="button" class="eb-link fl-fixlink" data-fl-fix>Numbers look off? Correct them</button>`}
-      ${f.src === 'shared' && f.code && !st.fix ? `<button type="button" class="eb-link fl-fixlink" data-fl-flag="${esc(f.code)}">Different on your pack? Report it and read the label</button>` : ''}
-      ${slotRadio(st.slot, 'data-fl-slot')}
+    const t = totals(f, st.amt, st.unit), units = Object.keys(f.units);
+    return `<div class="fl-detail fl-sheet-detail">
+      <div class="fl-live">${heroHTML(st.fix ? { ...t, ...st.fix } : t)}</div>
+      ${st.fix ? fixHTML(t) : ''}
+      <div class="fl-group">
+        <div class="fl-grow fl-grow-meal">
+          <div class="fl-seg" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, l]) =>
+            `<button type="button" class="${st.slot === v ? 'on' : ''}" data-fl-slot="${v}" role="radio" aria-checked="${st.slot === v}">${l}</button>`).join('')}</div>
+        </div>
+        <div class="fl-grow"><span>Amount</span>
+          <div class="fl-step">
+            <button type="button" data-fl-step="-1" aria-label="Less">−</button>
+            <input class="fl-amt-in" type="number" inputmode="decimal" min="0" step="any" value="${st.amt}" data-fl-amt aria-label="Amount">
+            <button type="button" data-fl-step="1" aria-label="More">+</button>
+          </div></div>
+        <label class="fl-grow"><span>Unit</span>
+          ${units.length > 1 ? `<span class="fl-menu"><select data-fl-unit aria-label="Unit">${units.map(u => `<option value="${u}"${u === st.unit ? ' selected' : ''}>${esc(unitText(f, u))}</option>`).join('')}</select></span>`
+            : `<span class="fl-menu-one">${esc(unitText(f, st.unit))}</span>`}</label>
+      </div>
       <button type="button" class="eb-btn primary fl-add" data-fl-add>Add to ${SLOT_NAME[st.slot]}</button>
+      ${st.fix ? '' : `<button type="button" class="eb-link fl-editnut" data-fl-fix>Edit nutrition</button>`}
+      ${f.src === 'shared' && f.code && !st.fix ? `<button type="button" class="eb-link fl-editnut" data-fl-flag="${esc(f.code)}">Different on your pack? Report it</button>` : ''}
     </div>`;
   }
 
@@ -298,7 +360,7 @@
   let compact = false;   // Plan / Guide days: just the bar until she types or scans
   function resultsHTML() {
     if (compact) {
-      if (!st.raw.trim() && !st.scan && !st.create && !st.label) return '';
+      if (!st.raw.trim() && !st.create && !st.focused) return '';
       return resultsBody();
     }
     return resultsBody();
@@ -312,9 +374,8 @@
       rowHTML(f, `${f.brand ? esc(f.brand) + ' · ' : ''}${f.nut.cal} cal per 100 ${f.units.ml ? 'ml' : 'g'}`)).join('')}</ul>`;
   }
   function resultsBody() {
-    if (st.label) return labelHTML();
+    // Scanning and label reading happen in the bottom drawer, not under the bar.
     if (st.create) return createHTML();
-    if (st.scan) return scanHTML();
     const { q } = parse(st.raw);
     if (!q) {
       const favs = get(FAV, []).map(byId).filter(Boolean);
@@ -797,8 +858,9 @@
     focusAfter = !!keepFocus;
     if (window.EBDayMode && EBDayMode.refresh) EBDayMode.refresh(); else if (window.EBDayMode) EBDayMode.paint();
   }
-  function paintResults() { const r = $('flResults'); if (r) r.innerHTML = resultsHTML(); }
+  function paintResults() { const r = $('flResults'); if (r) r.innerHTML = resultsHTML(); paintSheet(); }
   function mounted() {
+    paintSheet();
     if (!focusAfter) return; focusAfter = false;
     const s = $('flSearch'); if (s) { s.focus(); try { s.setSelectionRange(s.value.length, s.value.length); } catch {} }
   }
@@ -816,7 +878,14 @@
   }
   function liveUpdate(box, f, amt, unit, fix) {
     const t = totals(f, amt, unit), live = box && box.querySelector('.fl-live');
-    if (live) live.innerHTML = totalHTML(f, fix ? { ...t, ...fix } : t);
+    if (!live) return;
+    if (box.classList.contains('fl-sheet-detail')) {
+      const old = live.querySelector('.fl-hero-n'), before = old ? +old.textContent : null;
+      live.innerHTML = heroHTML(fix ? { ...t, ...fix } : t);
+      const n = live.querySelector('.fl-hero-n');
+      if (n && before != null && before !== +n.textContent) { n.classList.add(+n.textContent > before ? 'up' : 'down'); }
+      try { window.EBNative && EBNative.haptic && EBNative.haptic('light'); } catch {}
+    } else live.innerHTML = totalHTML(f, fix ? { ...t, ...fix } : t);
   }
   const stepOf = (unit, amt, dir) => {
     const s = unit === 'g' || unit === 'ml' ? (amt >= 100 ? 25 : 10) : 0.5;
@@ -824,9 +893,10 @@
   };
 
   document.addEventListener('click', e => {
-    const t = e.target, root = t.closest('#foodLog'); if (!root) return;
+    const t = e.target, root = t.closest('#foodLog, #flSheet'); if (!root) return;
     const at = sel => t.closest(sel);
     let n;
+    if (at('[data-fl-close]')) { Object.assign(st, { open: null, fix: null, scan: null, label: null }); return paintResults(); }
     if ((n = at('[data-fl-slot]'))) { st.slot = n.dataset.flSlot; return paintResults(); }
     if (at('[data-fl-scan]')) return startScan();
     if ((n = at('[data-fl-label]'))) return readLabel(n.dataset.flLabel);
@@ -866,18 +936,16 @@
       let id = n.dataset.flFav;
       if (id.slice(0, 2) === 'o:') { const kept = persistTemp(byId(id)); if (st.open === id) st.open = kept.id; id = kept.id; }
       const favs = get(FAV, []);
+      window.EBAnalytics && EBAnalytics.track(favs.includes(id) ? 'favourite_removed' : 'favourite_added');
       put(FAV, favs.includes(id) ? favs.filter(x => x !== id) : [id].concat(favs).slice(0, 40));
       return paintResults();
     }
     if ((n = at('[data-fl-open]'))) {
       const f = byId(n.dataset.flOpen); if (!f) return;
-      if (st.open === f.id) { st.open = null; return paintResults(); }
       const p = parse(st.raw), rec = get(RECENT, []).find(r => r.id === f.id);
       openFood(f, p.amt != null ? { amt: p.amt, unit: p.unit || defaultUnit(f) } : rec);
       if (p.amt != null && !p.unit) st.amt = p.amt;
-      st.edit = null; paintResults();
-      const li = $('flResults').querySelector('.fl-item.open'); if (li) li.scrollIntoView({ block: 'nearest' });
-      return;
+      st.edit = null; return paintResults();
     }
     if ((n = at('[data-fl-step]'))) {
       const box = n.closest('.fl-detail'), inp = box.querySelector('[data-fl-amt]');
@@ -968,7 +1036,7 @@
   });
 
   document.addEventListener('input', e => {
-    const t = e.target; if (!t.closest || !t.closest('#foodLog')) return;
+    const t = e.target; if (!t.closest || !t.closest('#foodLog, #flSheet')) return;
     if (t.id === 'flSearch') {
       // Only the results change while typing, so the keyboard never closes.
       st.raw = t.value; st.open = null; st.create = null; st.scan = null; st.label = null;
@@ -990,7 +1058,7 @@
     if (t.matches('[data-fl-lb]')) { st.label[t.dataset.flLb] = t.value; return; }
   });
   document.addEventListener('change', e => {
-    const t = e.target; if (!t.matches || !t.matches('#foodLog [data-fl-unit]')) return;
+    const t = e.target; if (!t.matches || !t.matches('#foodLog [data-fl-unit], #flSheet [data-fl-unit]')) return;
     const ed = t.closest('.fl-entry'), cur = ed ? st.edit : st, f = ed ? st.edit.food : byId(st.open);
     // Keep roughly the same portion when switching units (200 g → 1.5 katori).
     const grams = cur.amt * (f.units[cur.unit] || 1);
@@ -1002,6 +1070,7 @@
     liveUpdate(box, f, cur.amt, cur.unit, null);
   });
   document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('flSheet')) { Object.assign(st, { open: null, fix: null, scan: null, label: null }); return paintResults(); }
     if (e.key === 'Enter' && e.target.id === 'flCode') { e.preventDefault(); return lookup(e.target.value); }
     if (e.key !== 'Enter' || e.target.id !== 'flSearch') return;
     e.preventDefault();
@@ -1009,6 +1078,12 @@
     if (first && !st.open) { e.target.blur(); first.click(); }
   });
   // Keep the search box in view above the keyboard.
+  // Plan / Guide days: tapping the search bar shows Favourites and Recent.
+  document.addEventListener('focusin', e => { if (e.target.id === 'flSearch' && compact && !st.focused) { st.focused = true; paintResults(); } });
+  document.addEventListener('focusout', e => {
+    if (e.target.id !== 'flSearch' || !compact) return;
+    setTimeout(() => { const a = document.activeElement; if (a && a.closest && a.closest('#foodLog, #flSheet')) return; if (st.focused && !st.raw.trim()) { st.focused = false; paintResults(); } }, 200);
+  });
   document.addEventListener('focusin', e => {
     if (e.target.id !== 'flSearch') return;
     setTimeout(() => { const y = e.target.getBoundingClientRect().top + window.scrollY - 96; if (Math.abs(window.scrollY - y) > 40) window.scrollTo(0, y); }, 250);

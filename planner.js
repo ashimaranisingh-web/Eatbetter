@@ -123,8 +123,58 @@
     R('dinner', 'Bean and cheese quesadilla', 'veg', ['mexican'], ['quesadilla', 'mexican'],
       [['Whole-wheat tortilla', '2', 300, 10, 50, 8, 8], ['Rajma + veg filling', '1 cup', 150, 8, 22, 3, 7], ['Cheese', '20 g', 80, 5, 0, 7, 0]], { comfort: true }),
     R('dinner', 'Pesarattu + chutney', 'vegan', ['south'], ['pesarattu', 'dosa', 'moong'],
-      [['Pesarattu (moong dosa)', '2', 260, 14, 34, 7, 6], ['Ginger chutney', '2 tbsp', 60, 1, 3, 5, 1]])
+      [['Pesarattu (moong dosa)', '2', 260, 14, 34, 7, 6], ['Ginger chutney', '2 tbsp', 60, 1, 3, 5, 1]]),
+
+    // Everyday-ingredient dishes, so common answers like "bread, milk,
+    // veggies, rice, dal, tofu" always have something to match.
+    R('breakfast', 'Veg sandwich on brown bread + milk', 'veg', ['continental', 'home'], ['bread', 'toast', 'sandwich', 'milk', 'vegetable'],
+      [['Brown bread veg sandwich', '2 slices', 260, 9, 40, 7, 6], ['Milk', '200 ml', 120, 6, 10, 6, 0]]),
+    R('breakfast', 'Peanut butter banana toast', 'vegan', ['continental'], ['bread', 'toast', 'peanut', 'banana'],
+      [['Whole-wheat toast + peanut butter', '2 slices', 300, 11, 32, 14, 5], ['Banana', '1', 105, 1, 27, 0, 3]]),
+    R('breakfast', 'Oats porridge with milk + banana', 'veg', ['continental', 'home'], ['oats', 'porridge', 'milk', 'banana'],
+      [['Oats cooked in milk', '40 g oats', 250, 10, 36, 7, 5], ['Banana', '½', 55, 1, 14, 0, 2]], { comfort: true }),
+    R('breakfast', 'Veggie omelette + toast', 'egg', ['continental', 'home'], ['omelette', 'egg', 'vegetable', 'bread', 'toast'],
+      [['Veggie omelette', '2 eggs', 200, 14, 4, 14, 1], ['Whole-wheat toast', '1 slice', 80, 3, 14, 1, 2]]),
+    R('breakfast', 'Besan veggie toast + curd', 'veg', ['north', 'home'], ['besan', 'bread', 'toast', 'vegetable'],
+      [['Besan veggie toast', '2 slices', 280, 12, 36, 9, 6], ['Curd', '100 g', 60, 4, 5, 3, 0]]),
+    R('lunch', 'Mixed veg sabzi + dal + 2 rotis', 'vegan', ['north', 'home'], ['sabzi', 'vegetable', 'dal', 'roti'],
+      [['Mixed veg sabzi', '1 bowl', 150, 4, 16, 8, 5], ['Dal', '1 bowl', 150, 9, 20, 4, 5], ['Roti', '2', 180, 6, 36, 2, 6]], { comfort: true }),
+    R('lunch', 'Chole + rice + salad', 'vegan', ['north'], ['chole', 'chickpea', 'chana', 'rice'],
+      [['Chole', '1 bowl', 220, 10, 30, 7, 8], ['Rice', '1 cup', 200, 4, 44, 0, 1], ['Salad', '1 bowl', 40, 1, 8, 0, 3]], { comfort: true }),
+    R('lunch', 'Tofu veg stir-fry + rice', 'vegan', ['asian'], ['tofu', 'vegetable', 'rice', 'stir'],
+      [['Tofu veg stir-fry', '1 bowl', 260, 18, 14, 15, 5], ['Rice', '¾ cup', 150, 3, 33, 0, 1]], { jain: false }),
+    R('snack', 'Banana milkshake', 'veg', ['home'], ['milk', 'banana', 'shake', 'smoothie'],
+      [['Banana milkshake (no sugar)', '1 glass', 200, 8, 32, 5, 2]]),
+    R('snack', 'Roasted chana + buttermilk', 'veg', ['north', 'home'], ['chana', 'chickpea', 'buttermilk', 'chaas'],
+      [['Roasted chana', '30 g', 110, 6, 17, 2, 5], ['Buttermilk', '1 glass', 40, 3, 4, 1, 0]]),
+    R('snack', 'Fruit bowl + curd', 'veg', ['home', 'salads'], ['fruit', 'curd', 'yogurt'],
+      [['Seasonal fruit', '1 bowl', 90, 1, 22, 0, 3], ['Curd', '100 g', 60, 4, 5, 3, 0]]),
+    R('dinner', 'Veg pulao + raita', 'veg', ['north', 'home'], ['pulao', 'rice', 'vegetable', 'curd'],
+      [['Veg pulao', '1 plate', 320, 7, 52, 9, 4], ['Raita', '1 bowl', 80, 4, 6, 4, 1]], { comfort: true }),
+    R('dinner', 'Dal + rice + veg sabzi', 'vegan', ['north', 'home', 'south'], ['dal', 'rice', 'sabzi', 'vegetable'],
+      [['Dal', '1 bowl', 150, 9, 20, 4, 5], ['Rice', '¾ cup', 150, 3, 33, 0, 1], ['Veg sabzi', '1 bowl', 120, 3, 14, 6, 4]], { comfort: true }),
+    R('dinner', 'Grilled fish + veggies + rice', 'fish', ['continental', 'home'], ['fish', 'vegetable', 'rice'],
+      [['Grilled fish', '150 g', 220, 32, 0, 9, 0], ['Sautéed veggies', '1 bowl', 80, 2, 10, 4, 4], ['Rice', '½ cup', 100, 2, 22, 0, 1]])
   ];
+
+  // Other names people type for the same food → the keywords dishes use.
+  const SYNONYMS = [
+    [/chickpea flour|gram flour/g, 'besan'], [/\bchickpeas?\b|kabuli/g, 'chole chana'],
+    [/yog(h)?urt|\bdahi\b/g, 'curd yogurt'], [/\bcurd\b/g, 'curd yogurt'],
+    [/wheat|atta|chapati|phulka|flour/g, 'roti'], [/\bbread\b|\bbun\b/g, 'bread toast'],
+    [/veg(gie|etable)s?|sabji|sabzi/g, 'vegetable sabzi'], [/lentils?|\bdaal\b/g, 'dal'],
+    [/cottage cheese/g, 'paneer'], [/fruits?|apple|papaya|berries/g, 'fruit'],
+    [/\bmilk\b|doodh/g, 'milk'], [/chicken|poultry/g, 'chicken'], [/fish|salmon|tuna|prawn/g, 'fish'],
+    [/eggs?\b|anda/g, 'egg'], [/oat(s|meal)/g, 'oats'], [/peanuts?/g, 'peanut'],
+  ];
+  function usualText(p) {
+    let t = String(p.food.usual || '').toLowerCase();
+    let extra = '';
+    SYNONYMS.forEach(([re, words]) => { if (t.match(re)) extra += ' ' + words; });
+    return t + extra;
+  }
+  const skipped = p => (p.food && p.food.skip) || [];
+  const keywordHits = (dish, p) => { const u = usualText(p); return dish.k.filter(k => new RegExp(`\\b${k}`, 'i').test(u)); };
 
   const ALLOWED = {
     vegan: ['vegan'], jain: ['vegan', 'veg'], veg: ['vegan', 'veg'], egg: ['vegan', 'veg', 'egg'],
@@ -189,9 +239,7 @@
 
   // ── Building the week ──
   function score(dish, p) {
-    const usual = (p.food.usual || '').toLowerCase();
-    let s = 0;
-    dish.k.forEach(k => { if (new RegExp(`\\b${k}`, 'i').test(usual)) s += 4; });
+    let s = keywordHits(dish, p).length ? 4 * keywordHits(dish, p).length : 0;
     dish.cuisines.forEach(c => { if ((p.food.cuisines || []).includes(c)) s += 2; });
     return s;
   }
@@ -216,7 +264,8 @@
     const plan = {};
     DAYS.forEach(d => (plan[d] = {}));
     SLOTS.forEach(slot => {
-      let pool = DISHES.filter(x => x.slot === slot && ok.includes(x.d) && (diet !== 'jain' || x.jain));
+      const skip = skipped(p);
+      let pool = DISHES.filter(x => x.slot === slot && ok.includes(x.d) && (diet !== 'jain' || x.jain) && !skip.includes(x.name));
       if (!pool.length) return;
       const target = mealCal * SPLIT[slot];
       // Favourites first, then comfort food on PMS days, then closest calories.
@@ -246,7 +295,7 @@
   }
 
   function signature(p) {
-    return JSON.stringify([p.food.diet, p.food.cuisines, p.food.usual, p.weight, p.activity.level, p.goal, p.body, p.plan]);
+    return JSON.stringify([p.food.diet, p.food.cuisines, p.food.usual, skipped(p), p.weight, p.activity.level, p.goal, p.body, p.plan]);
   }
   function build(p) {
     const t = targetsFor(p);
@@ -320,5 +369,14 @@
   document.addEventListener('eb:profile', refresh);
   refresh();
 
-  window.EBPlanner = { refresh, rebuild, targetsFor, numbers, build, current: () => current, DISHES };
+  // Every dish her diet allows, per meal: ones matching her usual foods first.
+  function suggest(p) {
+    const diet = p.food.diet || 'veg', ok = ALLOWED[diet] || ALLOWED.veg, skip = skipped(p);
+    return SLOTS.map(slot => ({ slot, dishes: DISHES
+      .filter(x => x.slot === slot && ok.includes(x.d) && (diet !== 'jain' || x.jain))
+      .map(x => ({ name: x.name, hits: keywordHits(x, p), what: x.items.map(i => i[0]).join(' · '), out: skip.includes(x.name) }))
+      .sort((a, b) => b.hits.length - a.hits.length || a.name.localeCompare(b.name)) }));
+  }
+
+  window.EBPlanner = { refresh, rebuild, targetsFor, numbers, build, suggest, current: () => current, DISHES };
 })();
