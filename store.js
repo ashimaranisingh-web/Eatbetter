@@ -13,6 +13,7 @@
       version: 1,
       completedAt: null,
       name: '', birthday: '', photo: '',
+      showWeight: false,   // "Current weight" under the dates on every page; off unless switched on in Profile
       goal: '', goals: [], trackMode: '',
       weight: { unit: 'kg', current: '', goal: '' },
       body: { height: '', age: '' },
@@ -298,7 +299,29 @@
     person: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'
   };
 
+  // A styled confirm for actions that can't be undone. Resolves true on the
+  // main button, false on Cancel, a tap outside, or Escape.
+  function ask({ title, body = '', ok = 'Confirm', cancel = 'Cancel', danger = false }) {
+    return new Promise(resolve => {
+      const ov = document.createElement('div');
+      ov.className = 'eb-ask-overlay';
+      ov.innerHTML = `<div class="eb-ask" role="alertdialog" aria-modal="true" aria-labelledby="ebAskT" aria-describedby="ebAskB">
+          <h2 id="ebAskT">${esc(title)}</h2>${body ? `<p id="ebAskB">${body}</p>` : ''}
+          <div class="eb-cta-row">
+            <button type="button" class="eb-btn secondary" data-ask="no">${esc(cancel)}</button>
+            <button type="button" class="eb-btn primary${danger ? ' danger' : ''}" data-ask="yes">${esc(ok)}</button>
+          </div></div>`;
+      const done = v => { ov.remove(); document.removeEventListener('keydown', key); resolve(v); };
+      const key = e => { if (e.key === 'Escape') done(false); };
+      ov.addEventListener('click', e => { const b = e.target.closest('[data-ask]'); if (b) done(b.dataset.ask === 'yes'); else if (e.target === ov) done(false); });
+      document.addEventListener('keydown', key);
+      document.body.appendChild(ov);
+      ov.querySelector('[data-ask="no"]').focus();   // the safe choice has focus
+    });
+  }
+
   window.EB = {
+    ask,
     getProfile, saveProfile, emptyProfile,
     getThemePref, setThemePref, applyTheme, toggleTheme,
     putFile, getFile, deleteFile,

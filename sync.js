@@ -13,7 +13,7 @@
   // Saved data that follows the person between devices. Left out on purpose:
   // eb_health (each phone connects to Health itself), eb_theme, eb_consent,
   // eb_sync, weekExpanded and Supabase's own session keys.
-  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_symptoms|eb_cycle_daily|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
+  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_symptoms|eb_cycle_daily|eb_moodfaces|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
 
   let session = null, applying = false, pushTimer = null;
 
@@ -183,8 +183,10 @@
         ${review ? `<label class="ch-field"><span>Password</span><input class="eb-input" id="acctCode" type="password" autocomplete="current-password"></label>`
           : `<label class="ch-field"><span>Code</span><input class="eb-input" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>`}
         ${err ? `<p class="acct-err" role="alert">${esc(err)}</p>` : ''}
-        <button type="button" class="eb-btn primary" data-acct="verify" ${busy ? 'disabled' : ''}>${busy ? 'Checking…' : 'Sign in'}</button>
-        <button type="button" class="eb-btn ghost" data-acct="back">Use a different email</button>`;
+        <div class="eb-cta-row">
+          <button type="button" class="eb-btn secondary" data-acct="back">Change email</button>
+          <button type="button" class="eb-btn primary" data-acct="verify" ${busy ? 'disabled' : ''}>${busy ? 'Checking…' : 'Sign in'}</button>
+        </div>`;
     const paint = () => { ov.querySelector('.ch-sheet-body').innerHTML = body(); (ov.querySelector('#acctEmail') || ov.querySelector('#acctCode')).focus(); };
     ov.innerHTML = `<div class="eb-cal app-lsheet ch-sheet" role="dialog" aria-modal="true" aria-label="Sign in">
       <div class="ch-sheet-head"><b>Sign in</b><button type="button" class="eb-icon-btn" data-acct="close" aria-label="Close">${X}</button></div>

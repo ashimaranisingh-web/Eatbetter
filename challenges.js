@@ -220,21 +220,20 @@
         : `<span class="ch-tag">${st.status === 'rest' ? 'Rest day' : st.status === 'paused' ? 'Paused' : 'Starts ' + new Date(ch.start + 'T00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>`;
       return `<li class="ch-row ${st.status}">
         <div class="ch-main">
-          <div class="ch-top"><b>${esc(ch.name)}</b><span>Day ${st.day} of ${st.total}${st.streak > 1 ? ` · ${st.streak}-day streak` : ''}</span></div>
+          <div class="ch-top"><b>${esc(ch.name)}</b></div>
           <div class="ch-target">${st.status === 'rest' ? 'Rest and recover' : st.status === 'paused' ? 'On pause' : `<b>${amount(ch, st.target)}</b> ${ch.unit === 'reps' ? 'reps' : ''}`}</div>
           <div class="ch-bar"><i style="width:${pct}%"></i></div>
           ${light}${repeat}
         </div>
-        ${right}
+        <div class="ch-side"><span class="ch-day">Day ${st.day} of ${st.total}${st.streak > 1 ? ` · ${st.streak}-day streak` : ''}</span>${right}</div>
       </li>`;
     }).join('');
-    const left = live.filter(ch => state(ch, ds, ctx).status === 'active').length;
+    // Card: the challenges, with Manage at the bottom. "+ New challenge" sits outside, under the card.
     return `<div class="app-card ch-card">
-        <div class="app-row"><p class="app-card-label">Today’s challenges</p><button type="button" class="app-link" data-ch-manage>Manage</button></div>
+        <div class="ch-head"><p class="app-card-label">Today’s challenges</p><button type="button" class="ch-manage" data-ch-manage>Manage</button></div>
         <ul class="ch-list">${rows}</ul>
-        <div class="ch-foot"><span class="app-muted small">${left ? `${left} to go today` : 'All done today. Lovely work.'}</span>
-          <button type="button" class="app-link" data-ch-new>+ New challenge</button></div>
-      </div>`;
+      </div>
+      <button type="button" class="ch-new-out" data-ch-new>+ New challenge</button>`;
   }
   // One line for Home: "Today: 20 push-ups, 15 crunches".
   function homeLine() {
@@ -306,8 +305,10 @@
         <small>${ch.missed === 'skip' ? 'The plan follows the calendar. Day 5 is day 5, done or not.' : 'The missed target comes back the next day, so nothing is skipped.'}</small></div>
       <button type="button" class="ch-toggle${ch.cycle ? ' on' : ''}" data-ch-cycle role="switch" aria-checked="${ch.cycle}">
         <span><b>Lighter on period and PMS days</b><small>60% of the target on period days, 80% on PMS days. Still counts as a full day.</small></span><i></i></button>
-      <button type="button" class="eb-btn primary" data-ch-save ${ch.name.trim() && list.length ? '' : 'disabled'}>${old ? 'Save changes' : 'Start challenge'}</button>
-      ${old ? '<button type="button" class="eb-btn secondary ch-del" data-ch-delete>Delete challenge</button>' : ''}`;
+      <div class="${old ? 'eb-cta-row' : ''}">
+        ${old ? '<button type="button" class="eb-btn secondary ch-del" data-ch-delete>Delete</button>' : ''}
+        <button type="button" class="eb-btn primary" data-ch-save ${ch.name.trim() && list.length ? '' : 'disabled'}>${old ? 'Save changes' : 'Start challenge'}</button>
+      </div>`;
     };
     const { ov, close } = sheet(old ? 'Edit challenge' : 'New challenge', body(), async (e, ov, close) => {
       const t = e.target;
@@ -354,8 +355,8 @@
       const s = load(), ds = today(s.settings.tz);
       return `${s.list.map(ch => { const st = state(ch, ds, ctx); return `<div class="ch-mrow">
           <span><b>${esc(ch.name)}</b><small>${ch.archived ? 'Finished' : st.status === 'paused' ? `Paused · day ${st.day} of ${st.total}` : `Day ${st.day} of ${st.total} · ${ch.missed === 'skip' ? 'moves on' : 'repeats'} missed days`}</small></span>
-          ${ch.archived ? '' : `<button type="button" class="app-opt-btn ghost" data-ch-pause="${ch.id}">${st.status === 'paused' ? 'Resume' : 'Pause'}</button>`}
-          <button type="button" class="app-opt-btn ghost" data-ch-edit="${ch.id}">Edit</button></div>`; }).join('') || '<p class="app-muted">No challenges yet.</p>'}
+          ${ch.archived ? '' : `<button type="button" class="ch-text-btn" data-ch-pause="${ch.id}">${st.status === 'paused' ? 'Resume' : 'Pause'}</button>`}
+          <button type="button" class="ch-text-btn" data-ch-edit="${ch.id}">Edit</button></div>`; }).join('') || '<p class="app-muted">No challenges yet.</p>'}
         <p class="ch-sec">Reminders</p>
         <button type="button" class="ch-toggle${s.settings.combined ? ' on' : ''}" data-ch-opt="combined" role="switch" aria-checked="${s.settings.combined}">
           <span><b>One reminder for everything</b><small>${s.settings.combined ? '“Today: 20 push-ups, 15 crunches” at your earliest time' : 'A separate reminder for each challenge'}</small></span><i></i></button>

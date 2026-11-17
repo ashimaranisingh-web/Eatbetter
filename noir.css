@@ -106,7 +106,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="lunch"]     { --slo
 html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="dinner"]    { --slot-accent: #8f6fc4; --slot-chip: #1b1622; --slot-chip-tx: #bba3e3; }
 html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot] .ml-head > span {
   display: inline-block; padding: 4px 9px; border-radius: 6px; background: var(--slot-chip, var(--n-card2));
-  color: var(--slot-chip-tx, var(--n-ink2)) !important; font-size: 10px !important; font-weight: 700 !important; letter-spacing: .09em;
+  color: var(--slot-chip-tx, var(--n-ink2)) !important; font-size: 11px !important; font-weight: 700 !important; letter-spacing: .09em;
 }
 html.noir body:not(#_a):not(#_b):not(#_c) .ml-row .ml-cal, html.noir body:not(#_a):not(#_b):not(#_c) .ml-cal { color: var(--n-ink2) !important; }
 
@@ -223,7 +223,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .app-crave-link + .ml-sec
 /* Planned meal actions along the bottom of the card, like the original */
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts { display: flex; border-top: .5px solid var(--n-hair); }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button {
-  flex: 1; min-height: 44px; border: 0; background: none; font: inherit; font-size: 13px; color: var(--n-ink2);
+  flex: 1; min-height: 44px; border: 0; background: none; font: inherit; font-size: 12px; color: var(--n-ink2);
   text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer;
 }
 /* Replacing a meal: target banner above the search */
@@ -231,8 +231,8 @@ html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 8px; padding: 12px 14px;
   background: var(--n-counter); border-radius: 12px; box-shadow: 0 0 0 .5px var(--n-stroke); border-left: 3px solid var(--n-accent);
 }
-html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace b { display: block; font-size: 15px; margin-bottom: 2px; }
-html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace span { font-size: 13px; color: var(--n-ink2); line-height: 1.45; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace b { display: block; font-size: 14px; margin-bottom: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace span { font-size: 12px; color: var(--n-ink2); line-height: 1.45; }
 html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace strong { color: var(--n-ink); }
 html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace .eb-link { flex: none; font-size: 14px; }
 
@@ -246,7 +246,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts { justify-conten
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button { flex: 0 1 auto !important; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
 
 /* Food names like the original cards: 15px medium */
-html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-name { font-size: 15px !important; font-weight: 500 !important; line-height: 1.35 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-name { font-size: 14px !important; font-weight: 500 !important; line-height: 1.35 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sub { font-size: 12px !important; }
 /* CTA colours like the original: secondary grey, the main action green + semibold */
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection :is([data-ml-add], .ml-add[onclick^="openBuilder"]) { color: var(--n-accent-l) !important; font-weight: 600 !important; }
@@ -258,7 +258,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button,
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:first-child,
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:last-child:not(:first-child),
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts.ml-acts-one button {
-  flex: 1 1 0 !important; text-align: center !important; padding: 0 8px !important; min-height: 48px; white-space: nowrap; font-size: 15px !important;
+  flex: 1 1 0 !important; text-align: center !important; padding: 0 8px !important; min-height: 48px; white-space: nowrap; font-size: 14px !important;
 }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-build { color: var(--n-accent-l) !important; font-weight: 600 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-repeat { color: var(--n-ink2) !important; font-weight: 500 !important; }
@@ -322,3 +322,318 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-rail-tile span { color: var(--n-i
 
 /* ── Today's challenge on Home: no inner outline box ── */
 html.noir body:not(#_a):not(#_b):not(#_c) .ch-home { box-shadow: none !important; background: transparent !important; border: 0 !important; outline: 0 !important; }
+
+/* ── Paired actions: one row, secondary on the left, the main action on the right ── */
+.eb-cta-row { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch; }
+.eb-cta-row > .eb-btn { width: 100%; margin: 0 !important; min-width: 0; padding-left: 12px; padding-right: 12px; white-space: nowrap; }
+.eb-cta-row > .eb-btn.primary { order: 2; }
+
+/* ── Setup sections: no box around them, just spacing ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-section { background: transparent !important; box-shadow: none !important; border: 0 !important; padding-top: 4px !important; }
+
+/* ── Energy card: workout and food rails slide inside the card, not past its edge ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-energy-card { overflow: hidden !important; }
+
+/* ── Week card: "by now" label sits under the bar ── */
+#pageHome .app-weekcard .app-budget-line { margin: 0 0 8px !important; }
+#pageHome .app-weekcard .app-budget { margin-bottom: 18px !important; }
+#pageHome .app-budget-mark span { bottom: auto !important; top: calc(100% + 5px); }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-budget-mark span { color: var(--n-ink2) !important; }
+
+/* ── Contrast: grey body text on dark cards ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-week-insight { color: var(--n-ink2) !important; background: transparent !important; }
+
+/* ── Mood faces on the cycle strip ── */
+#cycleSection .cycle-day-cell { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.cycle-face { width: 32px; height: 32px; margin: -6px 0 -6px; display: block; }
+.cycle-mood-hint { margin: 2px 0 0; text-align: center; font-size: 12px; color: var(--text-secondary); }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-mood-hint { color: var(--n-ink2) !important; }
+.mood-sheet { gap: 0; }
+.mood-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 -6px 12px 4px; }
+.mood-head > div { display: grid; gap: 2px; text-align: left; }
+.mood-head b { font-size: 16px; }
+.mood-head span { font-size: 14px; color: var(--text-secondary); }
+html.noir body:not(#_a):not(#_b):not(#_c) .mood-head span { color: var(--n-ink2) !important; }
+.mood-pad {
+  width: min(100%, 300px); aspect-ratio: 1; margin: 0 auto; border-radius: 16px; touch-action: none; cursor: crosshair;
+  background-color: var(--bg-secondary);
+  background-image: radial-gradient(circle, rgba(255,255,255,.14) 1.2px, transparent 1.6px); background-size: 24px 24px; background-position: 12px 12px;
+}
+.mood-pad svg { width: 100%; height: 100%; display: block; }
+.mood-pad { position: relative; }
+.mood-empty { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; color: var(--text-secondary); pointer-events: none; transition: opacity .15s; }
+.mood-pad.has-face .mood-empty { opacity: 0; }
+.mood-tools { display: flex; justify-content: center; gap: 28px; margin: 4px 0 8px; }
+.mood-tools .eb-link { text-decoration: none; }
+.mood-tools .eb-link:disabled { opacity: .35; }
+
+/* ── Cycle page: today's log is one row that expands ── */
+#pageCycle .app-logrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 12px !important; border: 0; font: inherit; text-align: left; cursor: pointer; color: var(--n-ink, #fff); }
+/* Open: the card's own 12px padding replaces the row's, so the title and arrow stay put */
+#pageCycle .app-logrow-open { background: none !important; box-shadow: none !important; padding: 0 !important; min-height: 32px; margin: 0; }
+#pageCycle .app-logrow-text { display: grid; gap: 2px; min-width: 0; }
+#pageCycle .app-logrow-text b { font-size: 16px; font-weight: 600; }
+#pageCycle .app-logrow-text small { font-size: 12px; color: var(--n-ink2, #b3b3b3) !important; text-transform: none; letter-spacing: 0; }
+#pageCycle .app-logrow-chev { flex: none; color: var(--n-ink2, #b3b3b3); transition: transform .2s; }
+#pageCycle .app-logrow-chev.up { transform: rotate(180deg); }
+button.app-card.app-logrow { margin: 0 0 16px; }
+
+/* ── Cycle history: every bar spans the full width ── */
+.app-hist-bar { width: 100% !important; }
+
+/* ── Account: destructive action as a small link at the very bottom ── */
+.pf-danger-link { display: block; margin: 4px auto 24px; padding: 12px 16px; min-height: 44px; background: none; border: 0; font: 500 14px var(--eb-font, inherit); font-family: inherit; color: var(--danger, #d92d20); cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-danger-link { color: var(--n-danger) !important; }
+
+/* ── Confirm popup (EB.ask) ── */
+.eb-ask-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgba(0,0,0,.6); animation: ebAskIn .15s ease-out; }
+.eb-ask { width: min(100%, 340px); padding: 20px; border-radius: 16px; background: var(--bg-primary, #fff); color: var(--text-primary); box-shadow: 0 0 0 .5px var(--card-stroke, rgba(0,0,0,.1)), 0 20px 48px rgba(0,0,0,.5); }
+.eb-ask h2 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.eb-ask p { margin: 0 0 20px; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-ask { background: var(--n-card) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-ask p { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-btn.primary.danger { background: #d93636 !important; color: #fff !important; }
+.eb-btn.primary.danger { background: var(--danger); }
+@keyframes ebAskIn { from { opacity: 0; } }
+
+/* ── Mood sheet: date beside the title ── */
+.mood-head > div { display: flex !important; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mood-empty { grid-auto-flow: row; align-content: center; gap: 4px; text-align: center; }
+.mood-empty small { font-size: 12px; opacity: .8; }
+
+/* ── Account: delete link in quiet grey ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-danger-link { color: var(--n-ink3) !important; }
+/* ── Nutrition: 20px from the last meal card to "Change the foods your plan uses" ── */
+html body #pageFood .app-mp-link { margin-top: 20px !important; }
+
+/* ── Type scale ──────────────────────────────────────────────────────────
+   11 labels · 12 secondary · 14 body · 16 / 18 titles · 20 headline numbers.
+   Nothing in the app goes above 20. Every font-size in the CSS is on this scale. */
+html.noir body:not(#_a):not(#_b):not(#_c) { font-size: 14px; }
+/* Typing fields stay at 16: on iPhone, anything smaller zooms the page when tapped. */
+html body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select) { font-size: 16px !important; }
+
+
+
+/* ── Nutrition: Normal / PMS is the star ────────────────────────────────────
+   The whole page follows the mode, so its switch is the first control under
+   the dates: full width, 48px, filled in the mode's own colour (green / pink),
+   with a dot on each side so the two colours are always visible. The day's
+   numbers below lose their box and sit on the black page, so the switch is
+   the only strong shape at the top. */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar {
+  display: grid !important; grid-template-columns: 1fr 1fr; gap: 4px; margin: 4px 0 16px !important; padding: 4px !important;
+  border-radius: 8px !important; background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar .mode-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px !important;
+  border-radius: 4px !important; font-size: 16px !important; font-weight: 600 !important; color: var(--n-ink2) !important;
+  background: transparent !important; box-shadow: none !important; transition: background .2s, color .2s;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar .mode-btn::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; flex: none; background: #00a857;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar #btnPMS::before { background: #f13294; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar #btnNormal.active { background: #007F44 !important; color: #fff !important; box-shadow: 0 4px 16px rgba(0,127,68,.35) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar #btnPMS.active { background: #f13294 !important; color: #fff !important; box-shadow: 0 4px 16px rgba(241,50,148,.35) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar .mode-btn.active::before { background: #fff; }
+/* No explanation line under the switch: the switch speaks for itself */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood #modeNote { display: none !important; }
+
+/* Day numbers: no box, straight on the black page */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood #tracker:not(.is-stuck) {
+  background: transparent !important; box-shadow: none !important; border: 0 !important; border-left: 0 !important;
+  padding: 4px 0 12px !important; margin-bottom: 8px !important;
+}
+/* The day's target takes the mode's colour, so it reads as set by the switch above */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood #tracker .cal-term-sub { color: var(--n-accent-l) !important; font-weight: 600; }
+
+/* ── Plan days: one quiet row under the numbers ──────────────────────────────
+   "Craving some junk? Find alternatives" on the left, search + scan on the right.
+   Tapping search turns the row into the search bar, with an × to fold it back. */
+.app-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; min-height: 44px; }
+.app-tools-crave { padding: 12px 0; border: 0; background: none; font: inherit; font-size: 14px; color: var(--n-ink2, #b3b3b3); text-align: left; cursor: pointer; }
+.app-tools-crave b { font-weight: 600; color: var(--n-accent-l, #00a857) !important; }
+.app-tools-icons { display: flex; gap: 4px; flex: none; }
+.app-tools-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; background: var(--n-card2, #232326); color: var(--n-ink, #fff); cursor: pointer; }
+#pageFood[data-dayview="plan"]:not(.tools-open) #dayModeSearch { display: none !important; }
+#pageFood[data-dayview="plan"].tools-open #dayModeTools { display: none !important; }
+.fl-bar-row { display: flex; align-items: center; gap: 8px; }
+.fl-bar-row .fl-search { flex: 1; min-width: 0; }
+.fl-close-search { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--n-ink2, #b3b3b3); cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-tools-crave b { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-tools-crave { color: var(--n-ink2) !important; }
+/* One × only: the close button beside the bar also clears the search */
+.fl-bar-row .fl-clear { display: none !important; }
+/* Search / scan icons: no grey box, just the icons on black */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-tools-btn { background: transparent !important; box-shadow: none !important; }
+
+/* ── Nutrition: switch + day numbers in one grey block ── */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard {
+  margin: 4px 0 16px; padding: 12px; border-radius: 8px;
+  background: var(--n-card); box-shadow: 0 0 0 .5px var(--n-stroke);
+}
+/* The switch sits on the block's grey, no second box around it */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard .mode-toggle-bar { margin: 0 0 12px !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #tracker:not(.is-stuck) { margin: 0 !important; padding: 0 !important; }
+/* Switch → numbers: 16px of air and a hairline between them */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard .mode-toggle-bar { margin-bottom: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #tracker:not(.is-stuck) { padding-top: 16px !important; border-top: .5px solid var(--n-hair2) !important; }
+/* Food sheet: no macro split bar, the protein / carbs / fat line says it */
+.fl-macbar { display: none !important; }
+
+/* ── Craving swaps: one card each, Log on the right ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option {
+  display: flex; align-items: center; gap: 12px; margin: 0 0 8px; padding: 12px !important;
+  border: 0 !important; border-radius: 12px; background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke);
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option.rec { box-shadow: 0 0 0 1px var(--n-accent) !important; }
+.craving-option-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option-name { font-size: 16px; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option-why { font-size: 14px; color: var(--n-ink2) !important; }
+.craving-option-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--n-ink3, #8e8e93); }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option-meta span { color: var(--n-ink3) !important; }
+.craving-rec { justify-self: start; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: var(--n-accent-dim, #0d2a1f); color: var(--n-accent-l, #00a857); }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-rec { color: var(--n-accent-l) !important; }
+.craving-log { flex: none; min-width: 64px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--n-card2, #232326); color: var(--n-accent-l, #00a857); }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-log { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option.rec .craving-log { background: var(--n-accent) !important; color: #fff !important; }
+/* Food search: meal-time choices were white with white text in the dark design */
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-radio-opt { background: var(--n-card2) !important; color: var(--n-ink) !important; border-color: var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-radio-opt[aria-checked="true"] { background: var(--n-accent-dim) !important; color: var(--n-ink) !important; border-color: var(--n-accent) !important; }
+/* The divider above the numbers is a straight line: no rounded corners on the numbers block */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #tracker { border-radius: 0 !important; }
+/* Inside the mode block: no lines around the numbers, and the Macros toggle sits under the macros */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard :is(.tracker-head, #calEquation) { border-bottom: 0 !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #tracker { display: flex !important; flex-direction: column; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #macrosToggle { order: 10; align-self: center; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #tracker.macros-open #trackerGrid { margin-bottom: 4px; }
+
+/* ── Nutrition: "Wrap up my day" at the bottom, and its summary sheet ── */
+.wrap { display: grid; gap: 12px; }
+.wrap-sec { padding: 12px; border-radius: 8px; background: var(--n-card2, #232326); }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-label { margin: 0 0 4px; font-size: 11px !important; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-big { margin: 0; font-size: 20px; font-weight: 600; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-big span { font-size: 14px; font-weight: 400; color: var(--n-ink2) !important; }
+.wrap-rows { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.wrap-rows li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-rows span { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-rows b { font-weight: 500; color: var(--n-ink) !important; text-align: right; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-hero { background: var(--n-accent-dim) !important; box-shadow: inset 0 0 0 1px var(--n-accent); }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-hero .wrap-big { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-note { margin: 4px 0 0; font-size: 12px; color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-fine { margin: 0; font-size: 12px; color: var(--n-ink3) !important; }
+.wrap-sheet .app-sheet-head { display: flex !important; justify-content: space-between !important; align-items: center; text-align: left; margin: 0 -6px 8px 4px; }
+.wrap-sheet .app-sheet-head { width: auto !important; align-self: stretch !important; justify-self: stretch !important; }
+.wrap-sheet .app-sheet-head b { flex: 1; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-sheet .app-sheet-head { padding: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-sheet .app-sheet-head b { text-align: left !important; }
+/* Normal / PMS: no dots, the fill colour carries the mode */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar .mode-btn::before { content: none !important; display: none !important; }
+
+/* ── Wrap up: a quiet text action at the bottom (tertiary) ── */
+#pageFood .app-wrapup { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 44px; margin: 16px 0 24px; padding: 8px 0;
+  background: none; border: 0; font: inherit; cursor: pointer; }
+#pageFood .app-wrapup small { display: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-wrapup b { font-size: 16px; font-weight: 600; color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-wrapup i { font-style: normal; font-size: 18px; color: var(--n-accent-l) !important; }
+
+/* ── "Want different meals? Change your plan's foods": same style as the craving line ── */
+#mealPlanFoot .app-mp-text { display: block; margin: 16px 0 0; min-height: 44px; }
+
+/* ── Fitness: weekly goal rows, no box around each one ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .fitness-row { background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fitness-row + .fitness-row { border-top: .5px solid var(--n-hair) !important; }
+
+/* ── Home: the cycle day number, 24px ── */
+html body #pageHome .app-hero-card .hero-num { font-size: 36px !important; line-height: 1 !important; }
+
+/* ── Fitness: Today's challenges ── */
+.ch-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; align-self: stretch; justify-content: space-between; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-day { font-size: 12px; color: var(--n-ink2) !important; white-space: nowrap; }
+/* Tick: a 28px circle inside the 44px tap area, never a filled square */
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-done.ch-tick, html.noir body:not(#_a):not(#_b):not(#_c) .ch-done.ch-tick.on {
+  width: 44px !important; height: 44px !important; min-width: 44px !important; margin: 0 -8px 0 0 !important; padding: 0 !important;
+  background: transparent !important; box-shadow: none !important; border: 0 !important; display: grid; place-items: center;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-done.ch-tick::before { width: 28px !important; height: 28px !important; border-radius: 50% !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-done.ch-tick.on::before { background: var(--n-accent) !important; border-color: var(--n-accent) !important; }
+/* Manage at the bottom of the card, + New challenge under the card: quiet text actions */
+.ch-manage, .ch-new-out, .ch-text-btn { background: none !important; border: 0 !important; box-shadow: none !important; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; padding: 0 4px; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ch-manage, .ch-new-out, .ch-text-btn) { color: var(--n-accent-l) !important; text-decoration: none !important; }
+.ch-new-out { display: block; margin: 4px auto 16px; }
+.ch-mrow .ch-text-btn { padding: 0 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-row { border-top-color: var(--n-hair) !important; }
+
+/* Challenges card: 12px padding, 8px gaps, sizes on the type scale */
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-card:not(.ch-empty) { display: grid !important; gap: 8px !important; padding: 12px !important; }
+.ch-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -12px 0 -8px; }
+.ch-head .app-card-label { margin: 0 !important; }
+.ch-head .ch-manage { min-height: 44px; margin-right: -4px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-row { padding: 8px 0 !important; gap: 8px !important; align-items: stretch !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-row:first-child { padding-top: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-row:last-child { padding-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-main { gap: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-top b { font-size: 16px !important; font-weight: 600 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-target { font-size: 14px !important; color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-target b { font-size: 18px !important; font-weight: 600 !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-bar { margin: 0 !important; }
+.ch-side { gap: 8px; }
+.ch-side .ch-done.ch-tick { margin: -8px -8px -8px 0 !important; }
+/* Header row is only as tall as its text; Manage keeps a 44px tap area through padding that overlaps */
+.ch-head { margin: 0 !important; min-height: 0; line-height: 16px; }
+.ch-head .app-card-label { line-height: 16px !important; }
+.ch-head .ch-manage { min-height: 0 !important; line-height: 16px; padding: 14px 8px !important; margin: -14px -8px !important; }
+/* Burned today: a 0.5px white line at 20% between items */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-burned-list li { border-top: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-burned-list li + li { border-top: .5px solid rgba(255,255,255,.2) !important; }
+/* Burned today: 16px above and below each line */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-burned-list li { padding: 16px 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-burned-list li:first-child { padding-top: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-burned-list li:last-child { padding-bottom: 0 !important; }
+
+/* ── Fitness: logged list labels, goals Manage sheet ── */
+.activity-item-name { display: grid; gap: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-item-src { font-size: 12px; color: var(--n-ink2) !important; text-transform: none; letter-spacing: 0; }
+.app-goals .ch-head { margin-bottom: 0 !important; }
+.goals-list { display: grid; gap: 8px; margin-bottom: 16px; }
+.goal-edit { padding: 12px; border-radius: 8px; background: var(--n-card2, #232326); display: grid; gap: 12px; }
+.goal-edit.off { opacity: .5; }
+.goal-edit-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .goal-edit-top b { font-size: 16px; font-weight: 600; }
+.goal-edit-range { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .goal-edit-range > span:not(.goal-step) { color: var(--n-ink2) !important; }
+.goal-step { display: inline-flex; align-items: center; border-radius: 8px; background: var(--n-card, #161618); }
+.goal-step button { width: 36px; height: 36px; border: 0; background: none; color: var(--n-ink, #fff); font-size: 18px; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .goal-step b { min-width: 20px; text-align: center; font-size: 16px; font-weight: 600; }
+.goal-edit .pf-switch { flex: none; }
+
+/* ── Mood faces: a sharp, light neon glow in the day's colour ── */
+.cycle-face { filter: drop-shadow(0 0 1.5px color-mix(in srgb, currentColor 55%, transparent)); overflow: visible; }   /* a sharp, light halo */
+.goals-sheet .app-sheet-head { display: flex !important; justify-content: space-between !important; align-items: center; padding: 0 !important; margin: 0 0 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .goals-sheet .app-sheet-head b { flex: 1; text-align: left !important; }
+
+/* ── No coloured left edge on cards (energy, this week, meals). The meal chips keep their colours. ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-energy-card, .app-weekcard, .app-week, #tracker:not(.is-stuck)),
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-card.app-energy-card,
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot],
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot] .ml-group { border-left: 0 !important; }
+/* …except the main meals: Breakfast, Lunch and Dinner keep their coloured edge */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec:is([data-slot="breakfast"], [data-slot="lunch"], [data-slot="dinner"]) { border-left: 3px solid var(--slot-accent) !important; }
+
+/* ── Current weight under the dates (Profile → Show Current Weight): a slim banner in the mode's colour ── */
+.cycle-weight { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 0; padding: 12px; border-radius: 8px; font-size: 14px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-weight { background: var(--n-accent-dim) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-weight span { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-weight b { font-size: 16px; font-weight: 600; color: var(--n-accent-l) !important; }
+
+/* ── Home: Today checklist (next meal, challenge, workout) and the folded Energy card ── */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist { display: grid !important; gap: 0 !important; padding: 12px !important; }
+#pageHome .app-todaylist > .app-card-label { margin: 0 0 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist > :is(.app-today-next, .ch-home-slot, .app-quick-row) { padding: 12px 0 !important; margin: 0 !important; border: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist > :is(.app-today-next, .ch-home-slot, .app-quick-row) + :is(.app-today-next, .ch-home-slot, .app-quick-row) { border-top: .5px solid rgba(255,255,255,.2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist > :last-child { padding-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist .ch-home { padding: 0 !important; margin: 0 !important; width: 100%; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-energy-card.compact { gap: 8px !important; }
+#pageHome .app-energy-card .ch-head { margin: 0 !important; }
+#pageHome .app-energy-card.compact .app-combo { margin: 0; }

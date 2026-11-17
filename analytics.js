@@ -18,6 +18,8 @@
     meal_removed:         ['slot'],
     meal_plan_prepared:   ['diet', 'cuisines'],
     craving_opened:       [],
+    craving_swap_logged:  [],
+    day_wrapped:          [],   // that a day was wrapped up, never the numbers   // that a swap was logged, never which food
     dish_crossed_out:     ['slot'],
     favourite_added:      [],
     favourite_removed:    [],
@@ -27,6 +29,7 @@
     energy_logged:        [],
     health_synced:        [],
     cycle_log_used:       ['section'],
+    mood_face_saved:      [],   // that a face was saved, never the drawing
     challenge_created:    ['preset', 'days'],
     challenge_edited:     ['preset'],
     challenge_deleted:    [],
