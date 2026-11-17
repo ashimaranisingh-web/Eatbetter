@@ -637,3 +637,72 @@ html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-todaylist .ch-home { pa
 html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-energy-card.compact { gap: 8px !important; }
 #pageHome .app-energy-card .ch-head { margin: 0 !important; }
 #pageHome .app-energy-card.compact .app-combo { margin: 0; }
+
+/* ── Coach card on Home: she stands on the left, her line in a bubble ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach {
+  display: grid !important; grid-template-columns: 108px 1fr; align-items: center; gap: 8px;
+  padding: 12px 12px 0 0 !important; overflow: hidden; cursor: pointer; min-height: 132px;
+  background: var(--n-counter) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; border: 0 !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-img { width: 118px; height: auto; align-self: end; margin-left: -6px; display: block; filter: drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble {
+  position: relative; align-self: center; margin-bottom: 12px; padding: 12px 14px; border-radius: 14px;
+  background: var(--n-card2); box-shadow: 0 0 0 .5px var(--n-hair2);
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble::before {
+  content: ''; position: absolute; left: -6px; top: 22px; width: 12px; height: 12px; transform: rotate(45deg);
+  background: var(--n-card2); box-shadow: -0.5px 0.5px 0 var(--n-hair2);
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble p { margin: 0; font-size: 15px; line-height: 1.4; font-weight: 500; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble small { display: block; margin-top: 6px; font-size: 11px; color: var(--n-ink3) !important; }
+/* Coach: no card behind her, she stands on the page itself */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach { background: transparent !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; overflow: visible !important; }
+
+/* Coach line: no bubble, just a thin line from her to the words */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble { background: transparent !important; box-shadow: none !important; padding: 0 0 0 20px !important; margin: 0 0 24px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble::before {
+  left: -8px !important; top: 50% !important; width: 22px !important; height: 1px !important; transform: none !important;
+  background: rgba(255,255,255,.35) !important; box-shadow: none !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-bubble small { display: none !important; }
+/* She stands behind the Today card: it overlaps her a little */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach { position: relative; z-index: 0; margin-bottom: -26px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach + .app-card { position: relative; z-index: 1; }
+
+/* ── Coach motion ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-fig {
+  position: relative; display: block; width: 118px; align-self: end; margin-left: -6px;
+  transform-origin: 50% 100%; animation: coachIdle 6s ease-in-out infinite;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-fig .coach-img { margin: 0 !important; width: 100% !important; }
+/* a soft light sweep, clipped to her outline */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-glint {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, transparent 42%, rgba(255,255,255,.38) 50%, transparent 58%) no-repeat;
+  background-size: 260% 100%; background-position: 160% 0;
+  -webkit-mask: url(img/coach-bust.png) center / 100% 100% no-repeat; mask: url(img/coach-bust.png) center / 100% 100% no-repeat;
+  mix-blend-mode: screen; animation: coachGlint 7s ease-in-out 2s infinite;
+}
+@keyframes coachIdle {
+  0%, 100% { transform: rotate(0deg) scale(1, 1); }
+  25%      { transform: rotate(-.8deg) scale(1.004, 1.012); }
+  50%      { transform: rotate(0deg) scale(1, 1); }
+  75%      { transform: rotate(.8deg) scale(1.004, 1.012); }
+}
+@keyframes coachGlint { 0%, 70% { background-position: 160% 0; } 90%, 100% { background-position: -60% 0; } }
+/* first appearance: rises from behind the Today card */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-enter .coach-fig { animation: coachRise .9s cubic-bezier(.2,.9,.25,1.15) both, coachIdle 6s ease-in-out .9s infinite; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-enter .coach-bubble { animation: coachFade .5s ease .6s both; }
+@keyframes coachRise { from { transform: translateY(46px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes coachFade { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+/* tap: a little hop, the line draws, the words come in one by one */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-fig { animation: coachHop .5s cubic-bezier(.3,1.6,.5,1), coachIdle 6s ease-in-out .5s infinite; }
+@keyframes coachHop { 0% { transform: translateY(0); } 40% { transform: translateY(-8px) rotate(-1.5deg); } 100% { transform: translateY(0); } }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble::before { animation: coachLine .3s ease both; }
+@keyframes coachLine { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble p span { opacity: 0; display: inline-block; animation: coachWord .32s ease forwards; animation-delay: calc(.12s + var(--i) * 45ms); }
+@keyframes coachWord { from { opacity: 0; transform: translateY(4px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach:active .coach-fig { transform: scale(.97); }
+@media (prefers-reduced-motion: reduce) {
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach :is(.coach-fig, .coach-glint, .coach-bubble, .coach-bubble::before, .coach-bubble p span) { animation: none !important; opacity: 1 !important; }
+}

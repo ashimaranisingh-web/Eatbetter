@@ -250,7 +250,20 @@ struct MenufiWidgetView: View {
             .foregroundStyle(family.isAccessory ? Color.primary : Color.white)
             .containerBackground(for: .widget) {
                 if family.isAccessory { Color.clear } else {
-                    LinearGradient(colors: [bg, bg.opacity(0.82)], startPoint: .top, endPoint: .bottom)
+                    // The background layer is the only one allowed to reach the
+                    // widget's edges, so the coach lives here, flush to the bottom.
+                    ZStack(alignment: family == .systemMedium ? .bottomTrailing : .topTrailing) {
+                        LinearGradient(colors: [bg, bg.opacity(0.82)], startPoint: .top, endPoint: .bottom)
+                        if family == .systemMedium {
+                            Image("Coach").resizable().scaledToFit()
+                                .frame(height: 150).offset(x: 6, y: 0)
+                                .accessibilityHidden(true)
+                        } else {
+                            Image("CoachFace").resizable().scaledToFit()
+                                .frame(height: 56).padding(.top, 6).padding(.trailing, 6)
+                                .accessibilityHidden(true)
+                        }
+                    }
                 }
             }
     }
@@ -282,9 +295,8 @@ struct MenufiWidgetView: View {
             }
         case .systemMedium:
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
+                VStack(alignment: .leading, spacing: 1) {
                     DayLine(day: entry.day)
-                    Spacer(minLength: 8)
                     PeriodLine(day: entry.day)
                 }
                 Spacer(minLength: 0)
@@ -292,12 +304,16 @@ struct MenufiWidgetView: View {
                 Rectangle().fill(Color.white.opacity(0.25)).frame(height: 1)
                 MealBlock(entry: entry, nameSize: 14)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 112)   // the coach stands on the right
         default:
             VStack(alignment: .leading, spacing: 6) {
                 VStack(alignment: .leading, spacing: 1) {
                     DayLine(day: entry.day)
                     PeriodLine(day: entry.day)
                 }
+                .padding(.trailing, 44)   // her face sits top right
+                .minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
                 MoveBlock(entry: entry, compact: true)
                 Rectangle().fill(Color.white.opacity(0.25)).frame(height: 1)

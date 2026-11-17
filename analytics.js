@@ -100,7 +100,10 @@
       session_recording: {
         maskAllInputs: true,
         maskTextSelector: '*',
-        blockSelector: 'img, video, canvas',
+        // Blocked outright (shown as empty boxes): photos, and anything that
+        // shows the cycle without words: phase dots, mood faces, the cycle
+        // bar and history, the cycle-day card and the Menstruation page.
+        blockSelector: 'img, video, canvas, #pageCycle, .cycle-dot, .cycle-face, .mood-pad, .app-hero-card, .app-cycle-bar, .app-hist-bar',
         recordCrossOriginIframes: false,
         recordHeaders: false,
         recordBody: false,

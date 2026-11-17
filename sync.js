@@ -82,20 +82,31 @@
   Storage.prototype.setItem = function (k, v) { origSet.call(this, k, v); if (this === localStorage) touched(k); };
   Storage.prototype.removeItem = function (k) { origRemove.call(this, k); if (this === localStorage) touched(k); };
 
-  async function push(keys = snapshot()) {
+  // `at` = when `keys` was read. Anything saved after that (e.g. Apple Health
+  // steps arriving while the upload is in flight) stays "newer than the last
+  // sync", so the next sync keeps it instead of overwriting it with the cloud.
+  async function push(keys, at) {
     if (!sb || !session) return;
-    const { error } = await sb.from('user_data').upsert({ user_id: session.user.id, data: { keys }, updated_at: new Date().toISOString() });
-    if (!error) setMeta({ lastSyncedAt: Date.now() });
+    if (!keys) { at = Date.now(); keys = snapshot(); }
+    const { error } = await sb.from('user_data').upsert({ user_id: session.user.id, data: { keys }, updated_at: new Date(at).toISOString() });
+    if (!error) setMeta({ lastSyncedAt: at });
     return !error;
   }
 
   // Pull, reconcile, push. Returns true when local data changed (caller repaints).
-  async function syncNow() {
+  // One sync at a time: opening the app fires several triggers at once.
+  let inFlight = null;
+  function syncNow() {
+    if (!inFlight) inFlight = syncOnce().finally(() => { inFlight = null; });
+    return inFlight;
+  }
+  async function syncOnce() {
     if (!sb || !session) return false;
     const { data: row, error } = await sb.from('user_data').select('data, updated_at').eq('user_id', session.user.id).maybeSingle();
     if (error) throw error;
+    const readAt = Date.now();
     const local = snapshot();
-    if (!row || !row.data || !row.data.keys) { await push(local); return false; }
+    if (!row || !row.data || !row.data.keys) { await push(local, readAt); return false; }
     const m = meta();
     const merged = mergeSnapshots(local, row.data.keys, {
       localChangedAt: m.localChangedAt || 0,
@@ -104,12 +115,21 @@
     }) || local;
     const changedHere = !same(merged, local);
     if (changedHere) apply(merged);
-    if (!same(merged, row.data.keys)) await push(merged); else setMeta({ lastSyncedAt: Date.now() });
+    if (!same(merged, row.data.keys)) await push(merged, readAt); else setMeta({ lastSyncedAt: readAt });
     return changedHere;
   }
 
+  // New data from the cloud: redraw in place. A full reload only when this
+  // phone had no profile yet (an account restored onto a fresh install);
+  // reloading on every app open is what made opening from the widget glitch.
   async function syncAndRepaint() {
-    try { if (await syncNow()) location.reload(); }
+    try {
+      const hadProfile = !!(window.EB && EB.getProfile && EB.getProfile().completedAt);
+      if (!(await syncNow())) return;
+      if (!hadProfile) return location.reload();
+      document.dispatchEvent(new CustomEvent('eb:profile'));
+      document.dispatchEvent(new CustomEvent('eb:synced'));
+    }
     catch { /* offline or not set up: try again next time the app opens */ }
   }
 
