@@ -8,15 +8,15 @@
 
 html.noir:not(#_a):not(#_b) {
   --n-page: #000000;
-  --n-card: #101010;
-  --n-card2: #191919;
-  --n-counter: #17191a;
+  --n-card: #161618;
+  --n-card2: #232326;
+  --n-counter: #1c1e20;
   --n-stroke: rgba(255,255,255,.18);
   --n-hair: rgba(255,255,255,.08);
   --n-hair2: rgba(255,255,255,.16);
   --n-ink: #ffffff;
   --n-ink2: #b3b3b3;
-  --n-ink3: #7a7a7a;
+  --n-ink3: #8e8e93;   /* small labels: ≥4.5:1 on every dark surface */
   --n-accent: #007F44;
   --n-accent-l: #00a857;
   --n-accent-dim: #0d2a1f;
@@ -25,11 +25,11 @@ html.noir:not(#_a):not(#_b) {
   --n-warn: #e0913f;
   --n-danger: #ff5c5c;
   /* shared tokens other files already read */
-  --sheet-bg: #000000; --sheet-group: #101010; --sheet-hair: rgba(255,255,255,.12); --sheet-muted: #7a7a7a;
+  --sheet-bg: #000000; --sheet-group: #161618; --sheet-hair: rgba(255,255,255,.12); --sheet-muted: #8e8e93;
   --card-edge: 0 0 0 .5px rgba(255,255,255,.18);
   --accent: #007F44; --accent-light: #00a857; --accent-dim: #0d2a1f;
-  --bg-page: #000; --bg-primary: #101010; --bg-secondary: #191919;
-  --text-primary: #fff; --text-secondary: #b3b3b3; --text-tertiary: #7a7a7a;
+  --bg-page: #000; --bg-primary: #161618; --bg-secondary: #232326;
+  --text-primary: #fff; --text-secondary: #b3b3b3; --text-tertiary: #8e8e93;
   --border-tertiary: rgba(255,255,255,.08); --border-secondary: rgba(255,255,255,.16);
   --card-stroke: rgba(255,255,255,.18); --counter-bg: #17191a;
   --ink: #fff;
@@ -263,3 +263,62 @@ html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts.ml-acts-one butt
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-build { color: var(--n-accent-l) !important; font-weight: 600 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-repeat { color: var(--n-ink2) !important; font-weight: 500 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:is(.ml-build, [data-ml-add]) { color: var(--n-accent-l) !important; font-weight: 600 !important; }
+
+/* ── Craving page ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-btn { background: var(--n-accent) !important; color: #fff !important; border: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-result { background: transparent !important; box-shadow: none !important; border: 0 !important; overflow: visible !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-result-label { padding: 16px 0 6px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-logic { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: var(--n-ink2); }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option { padding: 12px 0 !important; border-top: .5px solid var(--n-hair) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-option-name { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.craving-option-why, .craving-option-cal) { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .craving-clear { display: none !important; }
+
+/* ── Period log: Save and Cancel side by side ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-daylog-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-daylog-actions [data-cyclog-save] { order: 2; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-daylog-actions [data-cyclog-cancel] {
+  order: 1; min-height: 48px; border-radius: 8px; background: var(--n-card2) !important; color: var(--n-ink) !important; text-decoration: none !important; font-weight: 500;
+}
+
+/* ── Cycle history bars: dark track, red period part ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-hist-bar { background: var(--n-card2) !important; }
+
+/* ── Readability fixes found by the contrast audit ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.hero-phase, .cyc-guide dd, .cyc-next-body p) { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-cycle-bar-ends span, .app-cycle-bar-ends, .cyc-guide dd small) { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.hero-kicker, .cyc-guide dt) { color: var(--n-ink3) !important; }
+/* Date picker: no boxes around the grid; picked day = accent circle, today = accent ring */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-cal-grid { background: transparent !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-cal-day.on { background: var(--n-accent) !important; color: #fff !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-cal-day.today:not(.on) { box-shadow: inset 0 0 0 1.5px var(--n-accent-l) !important; color: var(--n-ink) !important; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-daylog-actions > * { width: 100% !important; justify-self: stretch !important; margin: 0 !important; display: flex !important; align-items: center; justify-content: center; }
+/* Hairline dividers between log sections and history rows, not bright white */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-daylog-sec, .app-period-list li, .app-hist-top) { border-color: var(--n-hair2) !important; }
+
+/* ── Food drawer: dark groups, controls and menus ── */
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-group { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-grow + .fl-grow, html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-grow { border-color: var(--n-hair2) !important; box-shadow: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg { background: #1a1a1c !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg button { color: var(--n-ink2) !important; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg button.on { background: #3a3a3d !important; color: var(--n-ink) !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-step button { background: #3a3a3d !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-step .fl-amt-in { background: #1a1a1c !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet :is(.fl-menu, .fl-menu select, .fl-grow > span) { background-color: transparent !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-menu select option { background: #232326; color: #fff; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-menu-one { color: var(--n-ink2) !important; }
+
+/* ── Cycle guide: highlighted terms white, the rest a soft grey ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .cyc-guide dd { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cyc-guide dd :is(b, strong) { color: var(--n-ink) !important; }
+
+/* ── Energy options: each one a visible chip on the card ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-energy { background: transparent !important; gap: 6px !important; padding: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-energy .eb-seg-btn { background: #2c2e31 !important; color: var(--n-ink) !important; border-radius: 8px !important; min-height: 36px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-energy .eb-seg-btn[aria-checked="true"] { background: var(--n-accent) !important; color: #fff !important; }
+
+/* ── Readability: tile details and small text ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-rail-tile span { color: var(--n-ink2) !important; }
+
+/* ── Today's challenge on Home: no inner outline box ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-home { box-shadow: none !important; background: transparent !important; border: 0 !important; outline: 0 !important; }
