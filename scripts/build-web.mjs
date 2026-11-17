@@ -17,6 +17,7 @@ rmSync('www', { recursive: true, force: true });
 mkdirSync('www');
 for (const f of FILES) cpSync(f, `www/${f}`);
 cpSync('vendor', 'www/vendor', { recursive: true });
+cpSync('img', 'www/img', { recursive: true });   // coach character
 
 // Capacitor's JS runtime (registerPlugin etc.) — app build only.
 cpSync('node_modules/@capacitor/core/dist/capacitor.js', 'www/capacitor.js');

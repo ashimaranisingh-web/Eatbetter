@@ -259,6 +259,68 @@
     requestAnimationFrame(step);
   }
 
+  // ── Coach: the Menu-fi character with a line for this moment ──
+  // What she says depends on the day (time, next meal, calories, energy,
+  // challenge) first, then the cycle phase. Tapping the bubble rotates.
+  let coachTap = 0;
+  const COACH_PHASE = {
+    menstrual: [
+      'Low energy is allowed today. A walk still counts.',
+      'Iron is your friend this week: palak, rajma, dates.',
+      'Rest is part of the plan, not a step back.',
+      'Warm food, early night. Your body is working hard.',
+    ],
+    follicular: [
+      'Energy’s climbing. Good week to push a little harder.',
+      'This is your strong stretch. Lift something heavy.',
+      'Try something new this week. Your body’s up for it.',
+      'Prep a few meals now. Future you will thank you.',
+    ],
+    ovulation: [
+      'Peak energy. Make today’s workout the hard one.',
+      'You’re at your strongest. Hit your protein today.',
+      'Big-day energy. Use it before it dips.',
+    ],
+    luteal: [
+      'Cravings are biology, not weakness. Eat the plan, then the treat.',
+      'Slow carbs keep the mood steady. Oats, not cookies.',
+      'Feeling bloated? Water, a walk and lighter salt. You’ve got this.',
+      'Be kind to yourself this week. Consistency beats perfect.',
+    ],
+    none: [
+      'Small steps every day. That’s the whole secret.',
+      'Show up for yourself today. Even a little counts.',
+      'Add your last period date and I’ll plan around your cycle.',
+    ],
+  };
+  function coachLines(ctx) {
+    const n = ctx.first ? `, ${ctx.first}` : '';
+    const h = new Date().getHours(), out = [];
+    if (ctx.challengeDone) out.push('Challenge done. That’s discipline.');
+    if (ctx.energy === 1) out.push('Low energy? Short walk, water, early night. Small wins.');
+    if (ctx.eaten > ctx.target + 100) out.push('Over today? It’s one day. Tomorrow’s a fresh plate.');
+    else if (h >= 18 && ctx.left > 0 && ctx.left < 400) out.push(`Nearly there${n}. ${ctx.left} cal left, keep dinner light.`);
+    if (!ctx.eaten && h < 11) out.push(`Morning${n}. Breakfast first, then go win the day.`);
+    else if (ctx.next) out.push(`Up next: ${ctx.next}. Easy win.`);
+    if (ctx.allDone) out.push(`Every meal logged${n}. That’s how it’s done.`);
+    return out.concat(COACH_PHASE[ctx.phase] || COACH_PHASE.none);
+  }
+  // Motion: she rises from behind the card once per session, breathes and
+  // sways while idle, catches a glint now and then, and hops when tapped while
+  // her new line appears word by word. All off with Reduce Motion (noir.css).
+  let coachEntered = false, coachSaid = false;
+  function coachHTML(ctx) {
+    const lines = coachLines(ctx);
+    const line = lines[coachTap % lines.length];
+    const enter = !coachEntered; coachEntered = true;
+    const say = coachSaid; coachSaid = false;
+    const words = esc(line).split(' ').map((w, i) => `<span style="--i:${i}">${w}</span>`).join(' ');
+    return `<div class="app-card app-coach${enter ? ' coach-enter' : ''}${say ? ' coach-say' : ''}" data-coach-next role="button" tabindex="0" aria-label="Coach says: ${esc(line)}. Tap for another.">
+        <span class="coach-fig" aria-hidden="true"><img class="coach-img" src="img/coach-bust.png" alt=""><i class="coach-glint"></i></span>
+        <div class="coach-bubble"><p>${words}</p></div>
+      </div>`;
+  }
+
   function renderHome() {
     const page = $('pageHome'); if (!page) return;
     // Home shows today, or the day picked on its strip (homeDs). Days in this
@@ -300,8 +362,14 @@
     const weekSec = $('weeklyTrackerSection'), homeBody = page.querySelector('.app-home-body');
     if (weekSec && homeBody.contains(weekSec)) homeBody.after(weekSec);
     // Order: context (cycle) → do (today's checklist) → adjust (energy) → review (the week).
+    const coach = isToday ? coachHTML({
+      first, phase: info ? info.phase : 'none', eaten, target, left: Math.round(left),
+      next: nm && !nm.missed ? nm.name : '', allDone: !nm,
+      energy: energyFor(ds), challengeDone: !!(chLine && /ch-home-dot done/.test(chLine)),
+    }) : '';
     page.querySelector('.app-home-body').innerHTML = `
       ${heroHTML}
+      ${coach}
       <div class="app-card app-shortcuts app-todaylist">
         <p class="app-card-label">${isToday ? 'Today' : dayDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
         ${!isToday ? dayFoodHTML(ds, target) : nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
@@ -1636,6 +1704,7 @@
 
   function onPageClick(e) {
     const t = e.target;
+    if (t.closest('[data-coach-next]')) { coachTap++; coachSaid = true; try { window.EBNative && EBNative.haptic('light'); } catch {} return renderHome(); }
     const ln = t.closest('[data-log-next]');
     if (ln) {
       e.stopPropagation();
@@ -2136,4 +2205,11 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
   window.EBApp = { go, suggest, energyFor, seedDummy };
+  // Fresh data from the cloud (sync.js): redraw everything in place, no reload.
+  document.addEventListener('eb:synced', () => {
+    ['renderCycleCalendar', 'renderSlotSection', 'renderTracker', 'renderWeeklyTracker', 'renderActivity', 'renderTabs']
+      .forEach(fn => { try { window[fn](); } catch {} });
+    try { window.EBDayMode && EBDayMode.refresh(); } catch {}
+    try { repaint(); } catch {}
+  });
 })();
