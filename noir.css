@@ -1,0 +1,265 @@
+/* ═══ Menu-fi dark design language ("noir") ═══════════════════════════════
+   From the original meal-plan design: pure black page, near-black cards with
+   a fine light edge, a lifted "counter" surface with an accent strip for the
+   numbers that matter, uppercase micro-labels, coloured meal edges + chips,
+   green accent (pink in PMS mode).
+   Switched on by html.noir (store.js). Loaded after shell.css and wins with
+   html.noir specificity, so the light design can return by removing the class. */
+
+html.noir:not(#_a):not(#_b) {
+  --n-page: #000000;
+  --n-card: #101010;
+  --n-card2: #191919;
+  --n-counter: #17191a;
+  --n-stroke: rgba(255,255,255,.18);
+  --n-hair: rgba(255,255,255,.08);
+  --n-hair2: rgba(255,255,255,.16);
+  --n-ink: #ffffff;
+  --n-ink2: #b3b3b3;
+  --n-ink3: #7a7a7a;
+  --n-accent: #007F44;
+  --n-accent-l: #00a857;
+  --n-accent-dim: #0d2a1f;
+  --n-pill: #2a2a30;
+  --n-pill-tx: #c9c9d2;
+  --n-warn: #e0913f;
+  --n-danger: #ff5c5c;
+  /* shared tokens other files already read */
+  --sheet-bg: #000000; --sheet-group: #101010; --sheet-hair: rgba(255,255,255,.12); --sheet-muted: #7a7a7a;
+  --card-edge: 0 0 0 .5px rgba(255,255,255,.18);
+  --accent: #007F44; --accent-light: #00a857; --accent-dim: #0d2a1f;
+  --bg-page: #000; --bg-primary: #101010; --bg-secondary: #191919;
+  --text-primary: #fff; --text-secondary: #b3b3b3; --text-tertiary: #7a7a7a;
+  --border-tertiary: rgba(255,255,255,.08); --border-secondary: rgba(255,255,255,.16);
+  --card-stroke: rgba(255,255,255,.18); --counter-bg: #17191a;
+  --ink: #fff;
+  color-scheme: dark;
+  background: #000;
+}
+html.noir:not(#_a):not(#_b) body.pms-mode { --n-accent: #f13294; --n-accent-l: #f5619f; --n-accent-dim: #2e0e1f; --n-counter: #1c1719;
+  --accent: #f13294; --accent-light: #f5619f; --accent-dim: #2e0e1f; }
+
+/* ── Page ── */
+html.noir body:not(#_a):not(#_b):not(#_c), html.noir body:not(#_a):not(#_b):not(#_c).has-tabs, html.noir body:not(#_a):not(#_b):not(#_c).has-tabs .container, html.noir body:not(#_a):not(#_b):not(#_c)[data-tab] .container,
+html.noir body:not(#_a):not(#_b):not(#_c)[data-tab="food"], html.noir body:not(#_a):not(#_b):not(#_c) .app-page, html.noir body:not(#_a):not(#_b):not(#_c) .app-band,
+html.noir body:not(#_a):not(#_b):not(#_c) .ob, html.noir body:not(#_a):not(#_b):not(#_c) .ob.pf, html.noir body:not(#_a):not(#_b):not(#_c) .ob .ob-body, html.noir body:not(#_a):not(#_b):not(#_c) .ob-foot, html.noir body:not(#_a):not(#_b):not(#_c) .ob-top,
+html.noir body:not(#_a):not(#_b):not(#_c) .app-subpage, html.noir body:not(#_a):not(#_b):not(#_c) .app-subpage-body {
+  background: var(--n-page) !important; color: var(--n-ink) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c).has-tabs::after, html.noir body:not(#_a):not(#_b):not(#_c)[data-tab="food"]::after { background: linear-gradient(rgba(0,0,0,0), #000 calc(100% - var(--tabbar-gap, 0px))) !important; }
+
+/* ── Text ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(h1, h2, h3, h4, .ob-title, .pf-title, .app-head h1, .app-date, .eb-list-label, .slot-food, .ml-name, .app-card-title, b, strong) { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-list-value, .app-muted, .app-meta, .eb-field-note, .ob-lead, .acct-lead, .app-mp-lead, .eb-privacy, .ml-sub, .wk-sub, .app-quick-sub) { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-group-label, .eb-group-note, .ml-head, .ml-head span, .cal-term-label, .cal-term-sub, .metric-label, .app-card-label, .app-rail-label, .tracker-label, .cycle-day-name, .ob-eyebrow, .wk-label, .wk-k, small) { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-head, .eb-group-label, .app-card-label, .app-rail-label, .cal-term-label, .metric-label, .ob-eyebrow) { text-transform: uppercase; letter-spacing: .06em; font-size: 11px !important; font-weight: 600 !important; }
+
+/* ── Cards: near-black with a fine light edge ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-card, .drawer-group, .app-goals, .app-tile, .ch-card, .eb-list, .ml-group, .insight-card, .daily-msg-card, .prep-card, .supp-card, .cycle-setup, .eb-card, .craving-result, .app-lsheet, .pf-track > *, .dish-list) {
+  background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; border: 0 !important; color: var(--n-ink) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-rail-tile, .app-card .app-rail-tile, .app-energy-card .app-rail-tile) { background: var(--n-card2) !important; box-shadow: 0 0 0 .5px var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-list-row + .eb-list-row, html.noir body:not(#_a):not(#_b):not(#_c) .ml-row + .ml-row { box-shadow: inset 0 .5px 0 var(--n-hair) !important; border-top: 0 !important; }
+
+/* Counters: the numbers that matter sit on a lifted surface with an accent strip */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#tracker:not(.is-stuck), .week-card, .app-week, .app-energy-card) {
+  background: var(--n-counter) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; border: 0 !important;
+  border-left: 3px solid var(--n-accent) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.tracker-mini, .week-mini, #tracker.is-stuck) { background: rgba(23,25,26,.94) !important; color: var(--n-ink) !important; box-shadow: 0 10px 24px -6px rgba(0,0,0,.95), 0 2px 0 0 var(--n-accent-dim) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-term-val { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-term-val.burned, html.noir body:not(#_a):not(#_b):not(#_c) .burned { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-op { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .bar, html.noir body:not(#_a):not(#_b):not(#_c) .wk-bar, html.noir body:not(#_a):not(#_b):not(#_c) .week-bar { background: var(--n-card2) !important; }
+
+/* ── Controls ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-input, .pf-inline, .eb-textarea, .craving-input, .modal-input, .activity-input, .fl-search, .fl-search input, select, textarea, input[type="text"], input[type="email"], input[type="number"], input[type="password"], input[type="date"]) {
+  background: var(--n-card2) !important; color: var(--n-ink) !important; border-color: var(--n-hair2) !important; caret-color: var(--n-accent-l);
+}
+html.noir body:not(#_a):not(#_b):not(#_c) ::placeholder { color: var(--n-ink3) !important; }
+/* Segmented / Normal-PMS: filled accent, like the original */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-seg, .mode-toggle-bar) { background: var(--n-card2) !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-seg button, .mode-toggle-bar .mode-btn) { color: var(--n-ink2) !important; background: transparent !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-seg button.on, .eb-seg button[aria-pressed="true"], .eb-seg button[aria-checked="true"], .mode-toggle-bar .mode-btn.active) { background: var(--n-accent) !important; color: #fff !important; box-shadow: 0 2px 8px var(--n-accent-dim) !important; }
+/* Buttons */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-btn.primary { background: var(--n-accent) !important; color: #fff !important; border: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-btn.primary:disabled { background: var(--n-card2) !important; color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-btn.secondary, .eb-btn.ghost) { background: var(--n-card2) !important; color: var(--n-ink) !important; border: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-link, .app-opt-btn, .ml-add, .builder-open-btn) { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-icon-btn { color: var(--n-ink) !important; }
+/* Chips */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-chip { background: var(--n-card2) !important; color: var(--n-ink) !important; border-color: var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-chip.on { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; border-color: var(--n-accent) !important; }
+/* Round ticks */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-tick, .slot-check, .app-tick, .ch-tick, .eb-check) { border-color: rgba(255,255,255,.28) !important; background-color: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-tick.on, .ml-tick[aria-checked="true"], .slot-check:checked, .app-tick.on, .ch-tick.on) { background-color: var(--n-accent) !important; border-color: var(--n-accent) !important; }
+/* Switch */
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-switch { background: #39393d !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-switch.on { background: var(--n-accent) !important; }
+
+/* ── Meal list: coloured edge + chip label per meal, like the original slot cards ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot] .ml-group { box-shadow: 0 0 0 .5px var(--n-stroke) !important; border-left: 3px solid var(--slot-accent, var(--n-stroke)) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="wakeup"]    { --slot-accent: #5aa88a; --slot-chip: #12201a; --slot-chip-tx: #8fd1b6; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="coffee"], html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="protein"], html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="snack"] { --slot-accent: #c8a63c; --slot-chip: #221d10; --slot-chip-tx: #e2c766; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="breakfast"] { --slot-accent: #4a86c8; --slot-chip: #111a22; --slot-chip-tx: #8fb8e6; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="lunch"]     { --slot-accent: #d1873f; --slot-chip: #221a11; --slot-chip-tx: #eab07a; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot="dinner"]    { --slot-accent: #8f6fc4; --slot-chip: #1b1622; --slot-chip-tx: #bba3e3; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot] .ml-head > span {
+  display: inline-block; padding: 4px 9px; border-radius: 6px; background: var(--slot-chip, var(--n-card2));
+  color: var(--slot-chip-tx, var(--n-ink2)) !important; font-size: 10px !important; font-weight: 700 !important; letter-spacing: .09em;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-row .ml-cal, html.noir body:not(#_a):not(#_b):not(#_c) .ml-cal { color: var(--n-ink2) !important; }
+
+/* ── Calendar strip ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-day-num { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page #cycleSection .cycle-day-cell.picked, html.noir body:not(#_a):not(#_b):not(#_c) .app-page #cycleSection .cycle-day-cell.today:not(.picked),
+html.noir body:not(#_a):not(#_b):not(#_c) #cycleSection .cycle-day-cell.picked { background: var(--n-card2) !important; box-shadow: 0 0 0 .5px var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #cycleSection { border-bottom-color: var(--n-hair) !important; }
+
+/* ── Tab bar ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar { background: rgba(0,0,0,.92) !important; -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); border-top: .5px solid var(--n-hair) !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill { background: transparent !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar button { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar button[aria-current="page"], html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar button.active, html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar button.on { color: var(--n-accent-l) !important; }
+
+/* ── Sheets and dialogs ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-cal, .modal, .phase-popup, .talk-popup, .as-sheet, #flSheet .fl-sheet, #foodsSheet .fl-sheet, .eb-explore-card, .app-sheet, .ch-sheet) {
+  background: var(--n-card) !important; color: var(--n-ink) !important; box-shadow: 0 -8px 32px rgba(0,0,0,.6) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-cal-overlay, .app-sheet-overlay, .phase-popup-overlay, .talk-popup-overlay, .eb-explore-sheet) { background: rgba(0,0,0,.6) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-toast, html.noir body:not(#_a):not(#_b):not(#_c) .app-undo { background: #2c2c2e !important; color: #fff !important; }
+
+/* ── Account highlights ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-test-card { background: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pf-avatar-img { background: var(--n-card2) !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-explore-bar { background: #1c1c1e !important; box-shadow: 0 0 0 .5px var(--n-stroke), 0 6px 20px rgba(0,0,0,.6) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .dish-list .dish-x { background: var(--n-card2) !important; color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .dish-tag { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; }
+
+/* ── Second pass: everything the audit still found light ── */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-card, .app-today-setup, .app-weekcard, .app-shortcuts, .app-foods, .app-logcta, .app-cycle-card, .app-period-log, .app-log-card, .app-health, .app-goals, .ch-card, .fitness-row) {
+  background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; border: 0 !important; color: var(--n-ink) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-energy-card, .app-weekcard, #tracker:not(.is-stuck)) {
+  background: var(--n-counter) !important; border-left: 3px solid var(--n-accent) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-row, .ml-add) { background: transparent !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-add { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-tile { background: var(--n-card2) !important; color: var(--n-ink) !important; box-shadow: 0 0 0 .5px var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-budget-bar, .wk-bar) { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-seg-btn) { color: var(--n-ink2) !important; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-seg-btn.on, .eb-seg-btn[aria-pressed="true"], .eb-seg-btn[aria-checked="true"], .eb-seg-btn.active) { background: var(--n-accent) !important; color: #fff !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-date, .app-budget-line, .fitness-name, .app-week-more, .app-link, .reset-btn, .fitness-tally, p, span, li, label, button) { color: inherit; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-date, .app-budget-line, .fitness-name) { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-week-more, .reset-btn, .fitness-tally, .app-link) { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.cycle-setup-btn, .activity-add-btn) { background: var(--n-accent) !important; color: #fff !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #cycleStartInput { background: var(--n-card2) !important; color: var(--n-ink) !important; color-scheme: dark; }
+html.noir body:not(#_a):not(#_b):not(#_c) .stub { background: transparent !important; border-color: rgba(255,255,255,.28) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .stub.filled { background: var(--n-accent) !important; border-color: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-swipe button { background: #2c2c2e !important; color: #fff !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-swipe button.alt { background: var(--n-accent) !important; color: #fff !important; }
+/* Ticks drawn with ::before: empty = dark ring, done = accent */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-tick, .ch-done.ch-tick, .app-tick)::before { background: transparent !important; border: 1.5px solid rgba(255,255,255,.32) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-tick.on, .ch-done.ch-tick.on, .app-tick.on, .app-tick[aria-checked="true"], .ch-tick[aria-checked="true"])::before { background: var(--n-accent) !important; border-color: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-home .ch-home-dot:not(.done) { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.32) !important; background: transparent !important; }
+/* Rows sit on top of their swipe actions, so they must be opaque */
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-row { background: var(--n-card) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.fl-label, .fl-sub, .fl-head2 small) { color: var(--n-ink3) !important; }
+
+/* ── Setup screens ── */
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-progress { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-progress > span { background: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-row, .ob-picked, .ob-section, .ob-num, .ob-why, .ob-targets-big, .eb-stepper, .ob-voice, .eb-cal-grid) {
+  background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; border: 0 !important; color: var(--n-ink) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-row.on, .eb-row[aria-pressed="true"], .eb-row[aria-checked="true"], .eb-row:has(input:checked)) { box-shadow: 0 0 0 1.5px var(--n-accent) !important; background: var(--n-accent-dim) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-row-title) { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-row-desc, .eb-hint, .ob-note, .eb-label-note, .ob-num-top, .ob-targets-sub) { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ob-how-ico, .ob-why-ico) { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-never { background: var(--n-accent-dim) !important; color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-never b { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-step-btn, .eb-mic) { background: var(--n-card2) !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-skip { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-foot::before { background: linear-gradient(transparent, #000) !important; }
+
+/* "Why Menu-fi" list: no card behind it */
+html.noir body:not(#_a):not(#_b):not(#_c) .ob-why { background: transparent !important; box-shadow: none !important; }
+/* Meal sections: 8px from label to card, 16px between cards */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec .ml-head { margin: 0 16px 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec { margin: 0 !important; }
+/* the list already puts 4px between sections, so 12 + 4 = 16 */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec + .ml-sec { margin-top: 12px !important; }
+/* Done tick: the circle fills, not the whole 44px button */
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-tick.on { background: transparent !important; }
+
+/* Meal details sheet: grouped boxes on the dark sheet */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-info-what, .ml-info-acts) { background: var(--n-card2) !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-info-what p { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-info-acts button { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-info-acts button + button { box-shadow: inset 0 .5px 0 var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-info-acts button.del { color: var(--n-danger) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-tip, .ch-preview, .ch-toggle, .app-daymode-pick, .ch-sheet .eb-input) { background: var(--n-card2) !important; color: var(--n-ink) !important; border-color: var(--n-hair2) !important; }
+/* Challenge sheet: day preview squares and progress track */
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-days span { background: var(--n-card2) !important; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-days small { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-bar { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-bar i { background: var(--n-accent) !important; }
+/* "Craving something?" between Coffee and Protein: same 16px rhythm as the cards */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .app-crave-link { margin: 12px 16px 0 !important; padding: 0 !important; min-height: 32px; text-align: left; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .app-crave-link + .ml-sec { margin-top: 12px !important; }
+
+/* Meal label chip inside the card (like the original slot cards):
+   the whole section is the card; the inner list loses its own box. */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot] {
+  background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important;
+  border-left: 3px solid var(--slot-accent, var(--n-stroke)) !important; border-radius: 12px !important; overflow: hidden; padding-top: 12px !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot] .ml-head { margin: 0 16px 4px !important; display: flex; align-items: center; justify-content: space-between; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot] .ml-group { background: transparent !important; box-shadow: none !important; border-left: 0 !important; border-radius: 0 !important; margin: 0 !important; }
+
+/* 20px between meal cards (12 here + the list's own 4px … made 16; now 16 + 4) */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec + .ml-sec,
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .app-crave-link + .ml-sec { margin-top: 16px !important; }
+/* Planned meal actions along the bottom of the card, like the original */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts { display: flex; border-top: .5px solid var(--n-hair); }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button {
+  flex: 1; min-height: 44px; border: 0; background: none; font: inherit; font-size: 13px; color: var(--n-ink2);
+  text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer;
+}
+/* Replacing a meal: target banner above the search */
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 8px; padding: 12px 14px;
+  background: var(--n-counter); border-radius: 12px; box-shadow: 0 0 0 .5px var(--n-stroke); border-left: 3px solid var(--n-accent);
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace b { display: block; font-size: 15px; margin-bottom: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace span { font-size: 13px; color: var(--n-ink2); line-height: 1.45; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace strong { color: var(--n-ink); }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-replace .eb-link { flex: none; font-size: 14px; }
+
+/* Quiet grey actions at the bottom of meal cards (left / right), no underline */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button { color: var(--n-ink2) !important; text-decoration: none !important; font-size: 14px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:first-child { text-align: left; padding-left: 16px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:last-child:not(:first-child) { text-align: right; padding-right: 16px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts.ml-acts-one button { text-align: left; padding-left: 16px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-add { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts { justify-content: space-between; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button { flex: 0 1 auto !important; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
+
+/* Food names like the original cards: 15px medium */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-name { font-size: 15px !important; font-weight: 500 !important; line-height: 1.35 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sub { font-size: 12px !important; }
+/* CTA colours like the original: secondary grey, the main action green + semibold */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection :is([data-ml-add], .ml-add[onclick^="openBuilder"]) { color: var(--n-accent-l) !important; font-weight: 600 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection :is([data-ml-restore], [data-ml-part], .ml-acts [data-ml-replace], .ml-add[onclick^="repeatLastBuild"]) { color: var(--n-ink2) !important; font-weight: 500 !important; }
+
+/* Two actions per row across meal cards: equal halves, each centred */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts { display: flex !important; justify-content: stretch !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button,
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:first-child,
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:last-child:not(:first-child),
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts.ml-acts-one button {
+  flex: 1 1 0 !important; text-align: center !important; padding: 0 8px !important; min-height: 48px; white-space: nowrap; font-size: 15px !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-build { color: var(--n-accent-l) !important; font-weight: 600 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-repeat { color: var(--n-ink2) !important; font-weight: 500 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-acts button:is(.ml-build, [data-ml-add]) { color: var(--n-accent-l) !important; font-weight: 600 !important; }

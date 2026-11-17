@@ -831,6 +831,18 @@
     }).join('')}</div>`;
   }
 
+  // Replacing a planned meal: show what this meal should add up to.
+  function replaceHTML() {
+    if (!st.replace) return '';
+    const slots = (typeof isPMSMode === 'function' && isPMSMode()) ? PMS_MEAL_SLOTS : MEAL_SLOTS;
+    const s = (slots || []).find(x => x.id === st.replace); if (!s) return '';
+    const cal = Math.round(s.targetCal || 0), p = Math.round(s.targetP || 0);
+    return `<div class="fl-replace" role="status">
+        <div><b>Replacing ${esc(s.name.toLowerCase())}</b>
+        <span>Aim for about <strong>${cal.toLocaleString()} cal</strong>${p ? ` and <strong>${p} g protein</strong>` : ''}. Search for what you're having instead.</span></div>
+        <button type="button" class="eb-link" data-fl-replace-cancel>Cancel</button>
+      </div>`;
+  }
   function html(d, opts) {
     if (st.d !== d) { Object.assign(st, { d, raw: '', open: null, fix: null, create: null, edit: null, scan: null }); }
     if (!st.slot) st.slot = defaultSlot();
@@ -842,7 +854,7 @@
         <button type="button" class="fl-clear" data-fl-clear aria-label="Clear search">×</button>
         <button type="button" class="fl-scan" data-fl-scan aria-label="Scan a barcode">${BARCODE}</button>
       </label>`;
-    if (compact) return `<div class="fl fl-compact" id="foodLog">${bar}<div id="flResults" class="fl-results">${resultsHTML()}</div></div>`;
+    if (compact) return `<div class="fl fl-compact" id="foodLog">${replaceHTML()}${bar}<div id="flResults" class="fl-results">${resultsHTML()}</div></div>`;
     return `<div class="fl" id="foodLog">
       ${bar}
       <div id="flResults" class="fl-results">${resultsHTML()}</div>
@@ -872,6 +884,7 @@
     if (!Array.isArray(log[slot])) log[slot] = log[slot] ? [log[slot]] : [];
     log[slot].push(entry);
     setSlotLog(d, log);
+    if (st.replace === slot) st.replace = null;   // the new meal now stands in for the plan
     // Lock the day in whatever mode it's in (searching on a Plan day keeps it Plan).
     const mode = window.EBDayMode ? EBDayMode.modeFor(d) : 'log';
     try { localStorage.setItem('dayMode_' + d, JSON.stringify(mode)); } catch {}
@@ -928,6 +941,7 @@
     if (at('[data-fl-lookup]')) return lookup(($('flCode') || {}).value);
     if (at('[data-fl-retry]')) return lookup(st.scan && st.scan.code);
     if (at('[data-fl-type]')) { st.scan = { status: 'enter', code: '' }; paintResults(); const i = $('flCode'); if (i) i.focus(); return; }
+    if (at('[data-fl-replace-cancel]')) { st.replace = null; st.raw = ''; st.open = null; return repaint(); }
     if (at('[data-fl-clear]')) {
       st.raw = ''; st.open = null; st.create = null;
       const s = $('flSearch'); s.value = ''; paintResults(); s.focus(); return;
@@ -1093,7 +1107,8 @@
   // Used by Replace / Add, "Add" on suggested foods, and the old add sheet.
   function focusSearch(slot, query, opts) {
     if (slot && SLOT_NAME[slot]) st.slot = slot;
-    Object.assign(st, { raw: query || '', open: null, create: null, scan: null, label: null, online: null, edit: null });
+    Object.assign(st, { raw: query || '', open: null, create: null, scan: null, label: null, online: null, edit: null,
+      replace: opts && opts.replace ? slot : null });
     if (window.EBDayMode) EBDayMode.paint();
     setTimeout(() => {
       const s = $('flSearch'); if (!s) return;
@@ -1105,7 +1120,8 @@
         // A suggested dish that isn't in the food list: start "my own food" with what we know.
         else if (opts && opts.cal) { st.create = { name: query, unit: '1 serving', cal: opts.cal, p: '', c: '', f: '' }; paintResults(); }
       }
-      const y = s.getBoundingClientRect().top + window.scrollY - 96;
+      const top = $('flResults') && document.querySelector('.fl-replace') ? document.querySelector('.fl-replace') : s;   // keep the target in view
+      const y = top.getBoundingClientRect().top + window.scrollY - 104;
       window.scrollTo(0, Math.max(0, y));
       if (!query) s.focus();
     }, 60);

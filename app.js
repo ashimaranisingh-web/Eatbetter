@@ -1107,7 +1107,7 @@
     window.checkAndRenderSurvivalBadge = survivalBadge;
     // Replace / Add and the old "Add a meal" sheet now open the page's own search.
     const origReplace = window.enterReplaceMode, origAdd = window.openAddMeal;
-    window.enterReplaceMode = slotId => window.EBFoodLog ? EBFoodLog.focusSearch(slotId) : origReplace && origReplace(slotId);
+    window.enterReplaceMode = slotId => window.EBFoodLog ? EBFoodLog.focusSearch(slotId, '', { replace: true }) : origReplace && origReplace(slotId);
     window.openAddMeal = () => window.EBFoodLog ? EBFoodLog.focusSearch() : origAdd && origAdd();
     document.addEventListener('eb:profile', repaint);
 
@@ -1192,6 +1192,8 @@
         const d = getEffectiveDefaultMeal(slot, currentDay, pms);
         if (d) rows.push(mlRow({ done: false, name: plainName(d.name), cal: d.cal, p: d.p, tick: `data-ml-accept="${slot.id}"`, open: `data-ml-info="${slot.id}:plan"`,
           swipe: `${d.items ? `<button type="button" data-ml-part="${slot.id}">Ate part</button>` : ''}<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button>` }));
+        // Same placement as the original cards: quiet actions along the bottom
+        if (d) rows.push(`<div class="ml-acts">${d.items ? `<button type="button" data-ml-part="${slot.id}">${partialMode.has(slot.id) ? 'Cancel' : 'Ate part of this'}</button>` : ''}<button type="button" data-ml-replace="${slot.id}">Replace / Add</button></div>`);
         if (d && d.items && partialMode.has(slot.id)) {
           const skipped = partialSkips[slot.id] || [], kept = d.items.filter((_, i) => !skipped.includes(i));
           const eff = kept.reduce((a, it) => a + (it.cal || 0), 0);
@@ -1208,13 +1210,23 @@
       if (BUILDERS[slot.id]) {
         const last = getLastBuild(slot.id); let lastT = 0;
         if (last && last.length) BUILDERS[slot.id].items.forEach(it => { if (last.includes(it.id)) lastT += it.cal; });
-        if (lastT > 0) rows.push(`<button type="button" class="ml-add" onclick="repeatLastBuild('${slot.id}', '${ds}')">↻ Repeat last · ${lastT} cal</button>`);
-        rows.push(`<button type="button" class="ml-add" onclick="openBuilder('${slot.id}', '${ds}')">+ ${slot.id === 'protein' ? 'Build shake' : 'Build coffee'}</button>`);
-      } else rows.push(`<button type="button" class="ml-add" data-ml-add="${slot.id}">+ Add food</button>`);
+        // Repeat on the left, Build on the right: one row, easy to reach
+        rows.push(`<div class="ml-acts${lastT > 0 ? '' : ' ml-acts-one'}">${lastT > 0 ? `<button type="button" class="ml-repeat" onclick="repeatLastBuild('${slot.id}', '${ds}')">↻ Repeat · ${lastT} cal</button>` : ''}<button type="button" class="ml-build" onclick="openBuilder('${slot.id}', '${ds}')">+ ${slot.id === 'protein' ? 'Build shake' : 'Build coffee'}</button></div>`);
+      } else if (planned) {
+        /* planned card already offers "Replace / Add" along the bottom */
+      } else if (items.length && slot.defaultMeal && !plannedOnly) {
+        // Swapped for something else: go back to the plan on the left, add more on the right
+        rows.push(`<div class="ml-acts"><button type="button" data-ml-restore="${slot.id}">↺ Back to planned meal</button><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
+      } else rows.push(`<div class="ml-acts ml-acts-one"><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
       const eaten = items.reduce((a, m) => a + (+m.cal || 0), 0);
       return `<section class="ml-sec" data-slot="${slot.id}">${head(items.length && !plannedOnly ? `${Math.round(eaten)} of ${target.replace('~', '')}` : target)}<div class="ml-group">${rows.join('')}</div></section>`;
     }).join('');
+    // "Craving something?" lives under Coffee on plan days: lift it out before
+    // the list is redrawn so it isn't thrown away, then put it back.
+    const crave = $('craveLink'); if (crave && el.contains(crave)) el.after(crave);
     el.innerHTML = `<div class="ml">${html}</div>`;
+    const coffee = el.querySelector('.ml-sec[data-slot="coffee"]');
+    if (crave && coffee && ($('pageFood') || {}).dataset?.dayview === 'plan') coffee.after(crave);
   }
   // Details sheet for a meal row (what's in it + actions)
   function mealInfo(key) {
@@ -1258,7 +1270,7 @@
     undoToast(`${plainName(nm.name || 'Item')} removed`, () => { const l = getSlotLog(ds); l[slotId] = before; setSlotLog(ds, l); repaintMeals(); });
   }
   document.addEventListener('click', e => {
-    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part]');
+    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part], #slotSection [data-ml-restore]');
     if (!t) return;
     let ds; try { ds = selectedDateStr(); } catch { return; }
     const d = t.dataset;
@@ -1268,6 +1280,7 @@
     if (d.mlUnplan) { const sid = d.mlUnplan; return undoToast('Marked not eaten', () => acceptDefault(sid, ds)), restoreDefault(sid, ds); }
     if (d.mlDel) { const [sid, i] = d.mlDel.split(':'); return delItem(sid, +i, ds); }
     if (d.mlInfo) return mealInfo(d.mlInfo);
+    if (d.mlRestore) return restoreDefault(d.mlRestore, ds);
     if (d.mlAdd) return window.EBFoodLog ? EBFoodLog.focusSearch(d.mlAdd) : null;
     if (d.mlReplace) return window.enterReplaceMode(d.mlReplace);
     if (d.mlPart) return togglePartialMode(d.mlPart);

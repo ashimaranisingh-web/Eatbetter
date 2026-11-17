@@ -305,8 +305,15 @@
     if (anchor && anchor.nextElementSibling !== search) anchor.after(search);
     let link = $('craveLink');
     if (!link) { link = document.createElement('button'); link.type = 'button'; link.id = 'craveLink'; link.className = 'eb-link app-crave-link'; link.setAttribute('data-crave-open', ''); link.textContent = 'Craving something?'; }
-    if (search.nextElementSibling !== link) search.after(link);
-    if (link.nextElementSibling !== body) link.after(body);
+    // Plan days: the link sits under Coffee in the meal list; otherwise under search.
+    const coffee = mode === 'plan' && $('slotSection') && $('slotSection').querySelector('.ml-sec[data-slot="coffee"]');
+    if (coffee) {
+      if (coffee.nextElementSibling !== link) coffee.after(link);
+      if (search.nextElementSibling !== body) search.after(body);
+    } else {
+      if (search.nextElementSibling !== link) search.after(link);
+      if (link.nextElementSibling !== body) link.after(body);
+    }
     // The finder itself waits, hidden, until the link opens it on its own page.
     if (crave && !crave.classList.contains('in-page') && crave.parentElement !== page) page.appendChild(crave);
     const ci = $('cravingInput');
