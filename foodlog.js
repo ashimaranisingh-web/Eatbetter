@@ -854,7 +854,9 @@
         <button type="button" class="fl-clear" data-fl-clear aria-label="Clear search">×</button>
         <button type="button" class="fl-scan" data-fl-scan aria-label="Scan a barcode">${BARCODE}</button>
       </label>`;
-    if (compact) return `<div class="fl fl-compact" id="foodLog">${replaceHTML()}${bar}<div id="flResults" class="fl-results">${resultsHTML()}</div></div>`;
+    // Closable (Plan days): an × beside the bar folds search back into its row.
+    const close = opts && opts.closable ? `<button type="button" class="fl-close-search" data-tools-close aria-label="Close search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` : '';
+    if (compact) return `<div class="fl fl-compact" id="foodLog">${replaceHTML()}${close ? `<div class="fl-bar-row">${bar}${close}</div>` : bar}<div id="flResults" class="fl-results">${resultsHTML()}</div></div>`;
     return `<div class="fl" id="foodLog">
       ${bar}
       <div id="flResults" class="fl-results">${resultsHTML()}</div>
@@ -1106,6 +1108,7 @@
   // Open the page's search bar, optionally for a given meal and with a query.
   // Used by Replace / Add, "Add" on suggested foods, and the old add sheet.
   function focusSearch(slot, query, opts) {
+    if (window.EBDayMode && EBDayMode.openSearch) EBDayMode.openSearch();   // Plan days: unfold the search row
     if (slot && SLOT_NAME[slot]) st.slot = slot;
     Object.assign(st, { raw: query || '', open: null, create: null, scan: null, label: null, online: null, edit: null,
       replace: opts && opts.replace ? slot : null });
@@ -1127,5 +1130,9 @@
     }, 60);
   }
 
-  window.EBFoodLog = { focusSearch, html, mounted, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
+  // Is search doing something (a query, a replace, a scan, an open food)? Then it stays unfolded.
+  const isActive = () => !!(st.raw || st.replace || st.scan || st.label || st.open || st.create || st.edit);
+  // Back to an empty, idle search.
+  function reset() { Object.assign(st, { raw: '', open: null, fix: null, create: null, edit: null, scan: null, label: null, online: null, replace: null }); }
+  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
 })();

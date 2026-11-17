@@ -286,8 +286,21 @@
     const t = e.target; if (!t.closest) return;
     if (t.closest('[data-foods-open]')) return openMealPlan();
     if (t.closest('[data-crave-open]')) return openCraving();
+    // Craving swap → log it: close the craving page and open it in food search, calories filled in.
+    const cl = t.closest('[data-crave-log]');
+    if (cl) {
+      closeSubpages();
+      window.EBAnalytics && EBAnalytics.track('craving_swap_logged');
+      if (window.EBFoodLog) EBFoodLog.focusSearch(null, cl.dataset.craveLog, { cal: +cl.dataset.craveCal || null });
+      return;
+    }
+    if (t.closest('[data-tools-search]')) { searchOpen = true; paint(); const i = $('flSearch'); if (i) i.focus(); return; }
+    if (t.closest('[data-tools-scan]')) { searchOpen = true; paint(); const b = document.querySelector('#foodLog [data-fl-scan]'); if (b) b.click(); return; }
+    if (t.closest('[data-tools-close]')) { searchOpen = false; if (window.EBFoodLog && EBFoodLog.reset) EBFoodLog.reset(); return paint(); }
   });
 
+  let searchOpen = false;   // Plan days: is the search row unfolded into a bar?
+  function openSearch() { searchOpen = true; }
   function paint() {
     const page = $('pageFood'); if (!page) return;
     if (!$('dayModeSearch')) {
@@ -297,20 +310,37 @@
     }
     const d = ds(), mode = modeFor(d), locked = hasFood(d);
     page.dataset.dayview = mode;   // not "daymode": that name belongs to the picker buttons
-    // Order: day card → Normal / PMS → search → "Craving something?" → Guide / Log → meals → "Change the foods your plan uses"
-    const tracker = $('tracker'), toggle = $('modeToggleBar'), search = $('dayModeSearch'), body = $('dayModeBody'), crave = $('cravingWrap');
-    let anchor = tracker;
-    if (toggle && anchor && anchor.nextElementSibling !== toggle) anchor.after(toggle);
-    if (toggle) anchor = toggle;
-    if (anchor && anchor.nextElementSibling !== search) anchor.after(search);
-    let link = $('craveLink');
-    if (!link) { link = document.createElement('button'); link.type = 'button'; link.id = 'craveLink'; link.className = 'eb-link app-crave-link'; link.setAttribute('data-crave-open', ''); link.textContent = 'Craving something?'; }
-    // Plan days: the link sits under Coffee in the meal list; otherwise under search.
-    const coffee = mode === 'plan' && $('slotSection') && $('slotSection').querySelector('.ml-sec[data-slot="coffee"]');
-    if (coffee) {
-      if (coffee.nextElementSibling !== link) coffee.after(link);
+    // Order: Normal / PMS → day numbers → search → "Craving something?" → Guide / Log → meals → "Change the foods your plan uses"
+    // (Normal / PMS sits above the day numbers; app.js places it.)
+    // Plan days: the meals are already listed, so search is folded into one quiet row under
+    // the numbers: "Craving some junk?" on the left, search and scan icons on the right.
+    // Everything below goes after the switch + numbers block (app.js), or the numbers alone.
+    const tracker = $('tracker') && ($('tracker').closest('.app-modecard') || $('tracker')), search = $('dayModeSearch'), body = $('dayModeBody'), crave = $('cravingWrap');
+    const plan = mode === 'plan';
+    let tools = $('dayModeTools');
+    if (plan && !tools) {
+      tools = document.createElement('div'); tools.id = 'dayModeTools'; tools.className = 'app-tools';
+      tools.innerHTML = `<button type="button" class="app-tools-crave" data-crave-open>Craving some junk? <b>Find alternatives</b></button>
+        <span class="app-tools-icons">
+          <button type="button" class="app-tools-btn" data-tools-search aria-label="Search food"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+          <button type="button" class="app-tools-btn" data-tools-scan aria-label="Scan a barcode"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg></button>
+        </span>`;
+    }
+    const open = plan && (searchOpen || (window.EBFoodLog && EBFoodLog.isActive && EBFoodLog.isActive()));
+    page.classList.toggle('tools-open', !!open);
+    if (plan) {
+      if (tracker && tracker.nextElementSibling !== tools) tracker.after(tools);
+      if (tools.nextElementSibling !== search) tools.after(search);
       if (search.nextElementSibling !== body) search.after(body);
     } else {
+      if (tools) tools.remove();
+      if (tracker && tracker.nextElementSibling !== search) tracker.after(search);
+    }
+    let link = $('craveLink');
+    if (!link) { link = document.createElement('button'); link.type = 'button'; link.id = 'craveLink'; link.className = 'eb-link app-crave-link'; link.setAttribute('data-crave-open', ''); link.textContent = 'Craving something?'; }
+    // Plan days: the craving link lives in the row above. Otherwise it sits under search.
+    if (plan) { if (link.parentElement) link.remove(); }
+    else {
       if (search.nextElementSibling !== link) search.after(link);
       if (link.nextElementSibling !== body) link.after(body);
     }
@@ -325,9 +355,9 @@
     if (slots && slots.nextElementSibling !== foot) slots.after(foot);
     const p = profile();
     foot.innerHTML = mode === 'plan' && p && String(p.food && p.food.usual || '').trim()
-      ? `<button type="button" class="app-card app-mp-link" data-foods-open><span><b>Change the foods your plan uses</b><small>Rebuild your week of meals</small></span><i aria-hidden="true">›</i></button>` : '';
+      ? `<button type="button" class="app-tools-crave app-mp-text" data-foods-open>Want different meals? <b>Change your plan’s foods</b></button>` : '';
     // Log mode's body has its own full search (with the logged list).
-    search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true }) : '';
+    search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true, closable: plan }) : '';
     body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : foodsHTML();
     if (window.EBFoodLog) EBFoodLog.mounted();
   }
@@ -414,5 +444,5 @@
   }
   const currentMode = () => modeFor(todayStr());
 
-  window.EBDayMode = { subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
+  window.EBDayMode = { openSearch, subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
 })();

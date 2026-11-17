@@ -9,7 +9,8 @@
   const GOALS = [
     { v: 'lose', t: 'Lose weight', syn: ['lose', 'loose', 'weight loss', 'fat', 'slim', 'cut'] },
     { v: 'maintain', t: 'Maintain my weight', syn: ['maintain', 'same', 'stay'] },
-    { v: 'muscle', t: 'Build muscle', syn: ['muscle', 'tone', 'strong', 'gain', 'bulk'] }
+    { v: 'gain', t: 'Gain weight', syn: ['gain', 'put on', 'weight gain', 'underweight', 'bulk'] },
+    { v: 'muscle', t: 'Build muscle', syn: ['muscle', 'tone', 'strong'] }
   ];
   const EXTRA_GOALS = [
     { v: 'pms', t: 'Ease PMS symptoms', syn: ['pms', 'period', 'cramp'] },
@@ -277,6 +278,7 @@
   function weightHint(p) {
     const c = parseFloat(p.weight.current), g = parseFloat(p.weight.goal), u = p.weight.unit;
     if (!(c > 0 && g > 0)) return '';
+    if (p.goal === 'gain' && g <= c) return 'To gain weight, set a goal above your current weight.';
     const diff = Math.round(Math.abs(c - g) * 10) / 10;
     if (diff === 0) return 'Plan set to maintain.';
     const perWeek = u === 'kg' ? 0.5 : 1.1;
@@ -286,7 +288,7 @@
   function weightValid(p) {
     const lim = p.weight.unit === 'kg' ? [30, 300] : [66, 660];
     const ok = v => { const n = parseFloat(v); return n >= lim[0] && n <= lim[1]; };
-    return ok(p.weight.current) && ok(p.weight.goal);
+    return ok(p.weight.current) && ok(p.weight.goal) && (p.goal !== 'gain' || +p.weight.goal > +p.weight.current);
   }
 
   function bodyValid(p) {
@@ -471,15 +473,15 @@
       eyebrow: 'Before you start',
       title: p => firstName(p) ? `Thanks for trying Menu-fi, ${esc(firstName(p))}` : 'Thanks for trying Menu-fi',
       render: () => `
-        <p class="ob-lead">Menu-fi is new and still growing. While you use it, the app records <b>which features you use</b>, like opening Nutrition, logging a meal or scanning a barcode, and links that to the email you sign in with. It also records <b>screen replays with every word hidden</b>, so I can see where you tap and scroll, not what’s on the screen.</p>
-        <p class="ob-tester-sub">Why I’m asking, and how it helps</p>
+        <p class="ob-lead">Menu-fi is new, so it records <b>which features you use</b> (like logging a meal or scanning a barcode), linked to your sign-in email, and <b>screen replays with every word hidden</b>: where you tap and scroll, not what’s on screen.</p>
+        <p class="ob-tester-sub">How it helps</p>
         <ul class="ob-how">
-          <li><span class="ob-how-ico">1</span><span><b>See what really gets used</b>The feedback form tells me what you think. This shows what you actually did. Together they show where Menu-fi helps and where it gets in the way.</span></li>
-          <li><span class="ob-how-ico">2</span><span><b>Follow up with you</b>If something looks confusing, say you never opened Guide or stopped logging after day two, I can ask you about it directly.</span></li>
-          <li><span class="ob-how-ico">3</span><span><b>Fix the right things first</b>I’m building Menu-fi myself, so this tells me what to fix before more women use it.</span></li>
+          <li><span class="ob-how-ico">1</span><span><b>See what really gets used</b>Feedback says what you think. This shows what you did.</span></li>
+          <li><span class="ob-how-ico">2</span><span><b>Follow up with you</b>Never opened Guide, or stopped logging on day two? I can ask why.</span></li>
+          <li><span class="ob-how-ico">3</span><span><b>Fix the right things first</b>I build Menu-fi myself, so this decides what I fix next.</span></li>
         </ul>
-        <div class="ob-never"><b>Never recorded</b><span>Your period dates, symptoms, weight, what you eat, or anything from Apple Health. Replays blank out all text, numbers and photos, and anything you type.</span></div>
-        <p class="eb-privacy">It’s your choice. You can turn this on or off any time in Account, and ask me to delete what was recorded.</p>`,
+        <div class="ob-never"><b>Never recorded</b><span>Period dates, symptoms, weight, food, Apple Health data, or anything you type. Replays hide all text, numbers and photos.</span></div>
+        <p class="eb-privacy">Your choice. Switch it off any time in Account, or ask me to delete it.</p>`,
       onNext: () => { try { window.EBAnalytics && EBAnalytics.acceptTesterNotice && EBAnalytics.acceptTesterNotice(); } catch {} }
     },
     {
@@ -857,9 +859,9 @@
         <h1 class="ob-title" id="obTitle" tabindex="-1">${titleOf(step, draft)}</h1>
         <div class="ob-fields">${step.render(draft)}</div>
       </div>
-      <div class="ob-foot">
+      <div class="ob-foot${step.footLink ? ' eb-cta-row' : ''}">
+        ${step.footLink ? `<button type="button" class="eb-btn secondary" data-ob="footLink">${step.footLink.label}</button>` : ''}
         <button type="button" class="eb-btn" data-ob="next"></button>
-        ${step.footLink ? `<button type="button" class="eb-link center" data-ob="footLink">${step.footLink.label}</button>` : ''}
       </div>`;
     const fields = el.querySelector('.ob-fields');
     const refresh = () => updateNext(step);
@@ -1143,7 +1145,7 @@
     { ask: 'First, what should I call you?', free: true,
       parse: (t, p) => { const n = t.trim().replace(/^(it'?s|i'?m|my name is|call me)\s+/i, '').split(/\s+/)[0];
         if (n && n.length > 1) { p.name = n.charAt(0).toUpperCase() + n.slice(1); return p.name; } } },
-    { ask: 'What’s your main goal? Lose weight, maintain your weight, or build muscle?',
+    { ask: 'What’s your main goal? Lose weight, maintain your weight, gain weight, or build muscle?',
       parse: (t, p) => { const v = matchOne(t, GOALS); if (v) { p.goal = v; return label(GOALS, v); } } },
     { ask: 'Anything else you’d like help with? Like easing PMS, managing PCOS, more energy, or eating more protein. Or say no.',
       parse: (t, p) => { const v = matchMany(t, EXTRA_GOALS); if (v.length) { p.goals = v; return labels(EXTRA_GOALS, v); }

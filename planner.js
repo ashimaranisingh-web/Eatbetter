@@ -212,8 +212,8 @@
     const own = p.plan && p.plan.maintenance != null && p.plan.maintenance !== '' ? +p.plan.maintenance : null;
     const overridden = own > 0;
     const tdee = overridden ? Math.min(4500, Math.max(floor, r(own / 10) * 10)) : tdeeCalc;
-    const losing = p.goal === 'lose' || goalKg < kg - 0.5;
-    const gaining = p.goal === 'muscle' || goalKg > kg + 0.5;
+    const losing = p.goal === 'lose' || (p.goal !== 'gain' && goalKg < kg - 0.5);
+    const gaining = p.goal === 'gain' || p.goal === 'muscle' || goalKg > kg + 0.5;
     const recommended = losing ? Math.min(500, r(tdee * 0.2 / 50) * 50) : gaining ? -250 : 0;
     const maxDeficit = Math.max(0, Math.min(r(tdee * 0.25 / 50) * 50, tdee - floor));
     const chosen = p.plan && p.plan.deficit != null && p.plan.deficit !== '' ? +p.plan.deficit : recommended;

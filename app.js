@@ -123,14 +123,24 @@
     }
     return `<div class="app-combo"><p>${line}</p><small>${why}</small></div>`;
   }
+  // Energy: a once-a-day check-in. After she answers it folds to one line;
+  // "More ideas" opens the levels and the workout / food rails again.
+  let energyOpen = false;
   function energyHTML(ds) {
     const cur = energyFor(ds);
     const s = suggest(ds);
     const foods = foodIdeas(ds);
     const logged = getActivities(ds).filter(a => a.suggested === ds);
+    if (cur && !energyOpen) {
+      const lvl = (ENERGY.find(e => e.v === cur) || {}).t || '';
+      return `<div class="app-card app-energy-card compact">
+        <div class="ch-head"><p class="app-card-label">Energy today · ${esc(lvl)}</p><button type="button" class="ch-manage" data-energy-more aria-expanded="false">More ideas</button></div>
+        ${s ? comboHTML(ds, s, foods) : ''}
+      </div>`;
+    }
     // The four levels stay on screen, so changing your energy is one tap.
     return `<div class="app-card app-energy-card">
-      <p class="app-card-label">Energy today</p>
+      ${cur ? `<div class="ch-head"><p class="app-card-label">Energy today</p><button type="button" class="ch-manage" data-energy-more aria-expanded="true">Show less</button></div>` : '<p class="app-card-label">Energy today</p>'}
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${cur === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${cur === e.v}">${e.t}</button>`).join('')}
       </div>
@@ -289,12 +299,11 @@
     // lift it out before Home is redrawn, then put it back in its slot.
     const weekSec = $('weeklyTrackerSection'), homeBody = page.querySelector('.app-home-body');
     if (weekSec && homeBody.contains(weekSec)) homeBody.after(weekSec);
+    // Order: context (cycle) → do (today's checklist) → adjust (energy) → review (the week).
     page.querySelector('.app-home-body').innerHTML = `
       ${heroHTML}
-      ${energyHTML(ds)}
-      ${weekCardHTML(eaten, target)}
-      <div class="app-card app-shortcuts">
-        ${chLine ? `<div class="ch-home-slot">${chLine}</div>` : ''}
+      <div class="app-card app-shortcuts app-todaylist">
+        <p class="app-card-label">${isToday ? 'Today' : dayDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
         ${!isToday ? dayFoodHTML(ds, target) : nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
             <div class="app-next-text">
               <span class="app-meta">${nm.now ? 'Now' : 'Up next'} · ${esc(nm.slot)} · ${esc(nm.time)}</span>
@@ -307,8 +316,11 @@
               <div class="app-next-text"><span class="app-meta">All meals logged</span><b class="app-next-name">Done for today</b></div>
               <button type="button" class="app-opt-btn" data-go="food">Nutrition</button>
             </div>`}
-        ${chLine ? '' : workoutRowHTML(ds)}
+        ${chLine ? `<div class="ch-home-slot">${chLine}</div>` : ''}
+        ${workoutRowHTML(ds)}
       </div>
+      ${energyHTML(ds)}
+      ${weekCardHTML(eaten, target)}
 `;
     if (weekSec && $('appParking') && weekSec.parentElement !== $('appParking')) $('appParking').appendChild(weekSec);
     paintHomeWeek();
@@ -440,16 +452,20 @@
     const isToday = ds === dateToStr(new Date());
     const when = isToday ? 'Today' : fmtDay(new Date(ds + 'T00:00'));
     const sum = logSummary(ds);
-    if (!logDraft || logDraft.ds !== ds) return `<div class="app-card app-logcta">
-        <div class="app-logcta-text"><p class="app-card-label">${when}</p><p class="app-muted">${sum ? esc(sum) : 'Nothing logged yet'}</p></div>
-        <button type="button" class="eb-btn primary sm" data-cyclog-open>${sum ? 'Edit' : 'Log'}</button>
-      </div>`;
+    // One row that expands into the log, like a disclosure.
+    const head = isToday ? 'today’s log' : `log for ${when}`;
+    const chev = up => `<svg class="app-logrow-chev${up ? ' up' : ''}" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+    if (!logDraft || logDraft.ds !== ds) return `<button type="button" class="app-card app-logrow" data-cyclog-open aria-expanded="false">
+        <span class="app-logrow-text"><b>${sum ? head.charAt(0).toUpperCase() + head.slice(1) : 'Add ' + head}</b>${sum ? `<small>${esc(sum)}</small>` : ''}</span>${chev(false)}
+      </button>`;
     const d = logDraft, water = d.water;
     const tips = d.syms.filter(v => SYM_TIPS[v]);
     const symName = v => (SYMPTOMS.find(x => x[0] === v) || [, v])[1];
     const crave = d.cravings.filter(c => CRAVE_SWAP[c]);
     return `<div class="app-card app-daylog">
-      <div class="app-row"><p class="app-card-label">How are you feeling?</p><span class="app-muted small">${when}</span></div>
+      <button type="button" class="app-logrow app-logrow-open" data-cyclog-cancel aria-expanded="true">
+        <span class="app-logrow-text"><b>${sum ? head.charAt(0).toUpperCase() + head.slice(1) : 'Add ' + head}</b></span>${chev(true)}
+      </button>
       <div class="app-daylog-sec"><p>Flow</p>${chipRow(FLOW, d.flow, 'data-flow')}</div>
       <div class="app-daylog-sec"><p>Symptoms</p>${chipRow(SYMPTOMS.filter(([v]) => v !== 'cravings'), d.syms, 'data-sym')}
         ${tips.length ? `<div class="app-tips">${tips.map((v, i) => `<details class="app-tip"${i === 0 ? ' open' : ''}>
@@ -625,7 +641,6 @@
       ? ` Your cycles vary by ${hi - lo} days (${lo}–${hi}). A spread over 7 days is worth mentioning to a doctor.`
       : ` Range ${lo}–${hi} days, which is regular.`) : '';
     // Newest first: each cycle as a bar (red = period days), length on the right.
-    const maxLen = Math.max(35, ...gaps.filter(g => g <= 60));
     const today = dateToStr(new Date());
     const rows = hist.slice().reverse().map((d, i, arr) => {
       const nextStart = i === 0 ? null : arr[i - 1];
@@ -633,12 +648,11 @@
                             : Math.round((new Date(today) - new Date(d)) / 86400000) + 1;
       const per = flowDays(d) || +p.cycle.periodLength || 5;
       const missed = len > 60;
-      const w = Math.min(100, (Math.min(len, maxLen) / maxLen) * 100);
       return `<li>
         <div class="app-hist-top"><span>${fmtDay(new Date(d + 'T00:00'))}${nextStart ? '' : ' · now'}</span>
           <em>${nextStart ? (missed ? `${len} days · long gap` : `${len} days`) : `Day ${len}`}</em>
           <button type="button" class="app-x" data-period-remove="${d}" aria-label="Remove ${d}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 7L7 17M7 7l10 10"/></svg></button></div>
-        <div class="app-hist-bar${nextStart ? '' : ' now'}" style="width:${w}%"><i style="width:${Math.min(100, per / Math.max(len, per) * 100)}%"></i></div>
+        <div class="app-hist-bar${nextStart ? '' : ' now'}"><i style="width:${Math.min(100, per / Math.max(len, per) * 100)}%"></i></div>
       </li>`;
     }).join('');
     return `<div class="app-card app-period-log">
@@ -979,6 +993,7 @@
   // ── Building the pages from the existing single page ──
   let active = 'home';
   function build() {
+    applyGoalEdits(); try { renderFitness(); } catch {}   // your own weekly goal ranges, if you edited them
     const container = document.querySelector('.container');
     if (!container || $('pageFood')) return;
     document.body.classList.add('has-tabs');
@@ -1010,10 +1025,14 @@
     food.appendChild(foodHead);
     const calSlotFood = document.createElement('div'); calSlotFood.className = 'app-shared';
     food.appendChild(calSlotFood);
-    // Normal / PMS sits right under the date strip, above everything for the day.
-    food.appendChild($('modeToggleBar'));
+    // Normal / PMS is the page's main control: right under the dates, full width,
+    // with the line explaining why it's on. Everything below follows it.
+    // The switch and the day's numbers share one grey block: the mode, and what it does to the day.
+    const modeCard = document.createElement('div'); modeCard.className = 'app-modecard';
+    modeCard.appendChild($('modeToggleBar'));
+    modeCard.appendChild($('tracker'));
+    food.appendChild(modeCard);
     if ($('modeNote')) food.appendChild($('modeNote'));
-    food.appendChild($('tracker'));
     home.appendChild($('weeklyTrackerSection'));   // the week card lives on Home only
     food.appendChild($('cravingWrap'));
     // The craving finder reads as its own thing, not a second search bar.
@@ -1040,6 +1059,12 @@
     searchBar.type = 'button'; searchBar.className = 'app-food-search'; searchBar.dataset.foodSearch = '';
     searchBar.innerHTML = `${TAB_ICONS.search}<span>Search food to log</span>`;
     food.appendChild(searchBar);
+    // Wrap up my day: the last thing on the page.
+    const wrapBtn = document.createElement('button');
+    wrapBtn.type = 'button'; wrapBtn.id = 'wrapBtn'; wrapBtn.className = 'app-card app-wrapup'; wrapBtn.dataset.wrapup = '';
+    wrapBtn.innerHTML = '<span><b>Ready to wrap up?</b><small></small></span>';
+    wrapBtn.className = 'app-wrapup';   // a quiet text action, no card
+    food.appendChild(wrapBtn);
 
     // Fitness
     const fit = mk('pageFitness');
@@ -1058,9 +1083,12 @@
         // (not in the document yet, so look inside the card rather than by id)
         const custom = body.querySelector('.activity-custom'), presets = body.querySelector('#activityPresets');
         if (custom && presets) body.insertBefore(custom, presets);
+        // What's logged today (incl. Apple Health) sits above Common workouts.
+        const logged = body.querySelector('#activityList');
+        if (custom && logged) custom.after(logged);
         // Weekly goals get their own card.
         const goals = document.createElement('div'); goals.className = 'app-card app-goals';
-        goals.innerHTML = '<p class="app-card-label">Weekly Goals</p>';
+        goals.innerHTML = '<div class="ch-head"><p class="app-card-label">Weekly Goals</p><button type="button" class="ch-manage" data-goals-manage>Manage</button></div>';
         const divider = body.querySelector('.fitness-divider'), list = body.querySelector('#fitnessList');
         if (divider) goals.appendChild(divider);
         if (list) goals.appendChild(list);
@@ -1493,7 +1521,7 @@
     if (painting) return; painting = true;
     try {
       updateMini();
-      paintFoodHead(); markPicked(); markHomePicked(); presetToggle(); trackerFold(); try { const bn = document.querySelector('#pageFitness .app-fit-burned'); if (bn) bn.innerHTML = burnedHTML(); } catch {} updateWeekMini(); paintHomeWeek(); applyTint(); pushWidget();
+      paintFoodHead(); paintWrapBtn(); markPicked(); markHomePicked(); presetToggle(); trackerFold(); try { const bn = document.querySelector('#pageFitness .app-fit-burned'); if (bn) bn.innerHTML = burnedHTML(); } catch {} updateWeekMini(); paintHomeWeek(); applyTint(); pushWidget();
       if (active === 'food') { paintWords(); window.EBDayMode && EBDayMode.paint(); }
       if (active === 'home') renderHome();
       if (active === 'fitness') renderFitnessPage();
@@ -1576,9 +1604,11 @@
     const box = $('activityPresets'); if (!box) return;
     let t = $('presetsToggle');
     if (!t) { t = document.createElement('button'); t.type = 'button'; t.id = 'presetsToggle'; t.className = 'app-week-more app-presets-toggle'; box.before(t); }
-    // Keep the toggle under the name/cal row
-    const custom = box.parentElement.querySelector('.activity-custom');
-    if (custom && custom.nextElementSibling !== t) custom.after(t);
+    // Order: name/cal row → what's logged today → Common workouts toggle → the presets
+    const custom = box.parentElement.querySelector('.activity-custom'), logged = $('activityList');
+    if (custom && logged && custom.nextElementSibling !== logged) custom.after(logged);
+    const anchor = logged || custom;
+    if (anchor && anchor.nextElementSibling !== t) anchor.after(t);
     if (t.nextElementSibling !== box) t.after(box);
     t.setAttribute('aria-expanded', presetsOpen);
     t.innerHTML = `${presetsOpen ? 'Hide common workouts' : 'Common workouts'} <i aria-hidden="true">▾</i>`;
@@ -1623,7 +1653,8 @@
     if (cm) { e.preventDefault(); return openCraving(cm.dataset.craveMore); }
     const g = t.closest('[data-go]'); if (g) { e.preventDefault(); return go(g.dataset.go); }
     const en = t.closest('[data-energy]');
-    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
+    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); energyOpen = false; window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
+    if (t.closest('[data-energy-more]')) { energyOpen = !energyOpen; return renderHome(); }
     const fi = t.closest('[data-food-idea]');
     if (fi) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(fi.dataset.ideaSlot || null, fi.dataset.foodIdea, { cal: +fi.dataset.ideaCal || null }); } else if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
     if (t.closest('[data-cyclog-open]')) { logDraft = draftFor(viewDs()); return renderCyclePage(); }
@@ -1715,7 +1746,7 @@
   function goalMode() {
     const p = EB.getProfile();
     try { const n = window.EBPlanner && EBPlanner.numbers(p); if (n) return n.losing ? 'lose' : n.gaining ? 'gain' : 'maintain'; } catch {}
-    return p.goal === 'lose' ? 'lose' : p.goal === 'muscle' ? 'gain' : 'maintain';
+    return p.goal === 'lose' ? 'lose' : (p.goal === 'gain' || p.goal === 'muscle') ? 'gain' : 'maintain';
   }
   function weekData() {
     return DAY_ORDER.map(k => {
@@ -1746,6 +1777,158 @@
     const burned = d.reduce((a, x) => a + x.burned, 0), workouts = d.reduce((a, x) => a + x.workouts, 0);
     return { big, label, sub, days, T, avg, burned, workouts };
   }
+  // ── Weekly goals: edit how often, or hide one. Saved in mealPlan_fitnessGoals (backed up). ──
+  const GOALS_KEY = 'mealPlan_fitnessGoals';
+  const goalNote = (g, n) => String(n || '').replace(/^\d+–\d+× week/, g.min === g.max ? `${g.min}× week` : `${g.min}–${g.max}× week`);
+  function applyGoalEdits() {
+    if (typeof FITNESS_GOALS === 'undefined') return;
+    let saved = {}; try { saved = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'); } catch {}
+    FITNESS_GOALS.forEach(g => {
+      if (!g._orig) g._orig = { min: g.min, max: g.max, note: g.note };
+      const e = saved[g.key] || {};
+      g.min = e.min || g._orig.min; g.max = Math.max(g.min, e.max || g._orig.max);
+      g.hidden = !!e.hidden; g.note = goalNote(g, g._orig.note);
+    });
+  }
+  function openGoalsSheet() {
+    if (document.querySelector('.goals-sheet')) return;
+    let saved = {}; try { saved = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}'); } catch {}
+    const draft = {}; FITNESS_GOALS.forEach(g => { draft[g.key] = { min: g.min, max: g.max, hidden: !!g.hidden }; });
+    const ov = document.createElement('div'); ov.className = 'eb-cal-overlay app-sheet-overlay';
+    const rowHTML = g => { const d = draft[g.key]; return `<div class="goal-edit${d.hidden ? ' off' : ''}" data-goal="${g.key}">
+        <div class="goal-edit-top"><b>${esc(g.name)}</b><button type="button" class="pf-switch${d.hidden ? '' : ' on'}" data-goal-show role="switch" aria-checked="${!d.hidden}" aria-label="Show ${esc(g.name)}"></button></div>
+        <div class="goal-edit-range">
+          <span class="goal-step"><button type="button" data-goal-step="min:-1" aria-label="Fewer, at least">−</button><b>${d.min}</b><button type="button" data-goal-step="min:1" aria-label="More, at least">+</button></span>
+          <span>to</span><span class="goal-step"><button type="button" data-goal-step="max:-1" aria-label="Fewer, at most">−</button><b>${d.max}</b><button type="button" data-goal-step="max:1" aria-label="More, at most">+</button></span>
+          <span>times a week</span>
+        </div></div>`; };
+    const paint = () => { ov.querySelector('.goals-list').innerHTML = FITNESS_GOALS.map(rowHTML).join(''); };
+    ov.innerHTML = `<div class="eb-cal app-sheet goals-sheet" role="dialog" aria-modal="true" aria-label="Weekly goals">
+      <div class="app-sheet-head"><b>Weekly goals</b><button type="button" class="eb-icon-btn" data-goals-x aria-label="Close">${ICONS.close}</button></div>
+      <div class="app-sheet-body"><div class="goals-list"></div>
+        <div class="eb-cta-row"><button type="button" class="eb-btn secondary" data-goals-x>Cancel</button><button type="button" class="eb-btn primary" data-goals-save>Save</button></div></div></div>`;
+    document.body.appendChild(ov); paint();
+    ov.addEventListener('click', e => {
+      const t = e.target;
+      if (t === ov || t.closest('[data-goals-x]')) return ov.remove();
+      const row = t.closest('[data-goal]'), d = row && draft[row.dataset.goal];
+      if (t.closest('[data-goal-show]') && d) { d.hidden = !d.hidden; return paint(); }
+      const st = t.closest('[data-goal-step]');
+      if (st && d) {
+        const [k, n] = st.dataset.goalStep.split(':');
+        d[k] = Math.min(7, Math.max(1, d[k] + +n));
+        if (k === 'min' && d.max < d.min) d.max = d.min;
+        if (k === 'max' && d.min > d.max) d.min = d.max;
+        return paint();
+      }
+      if (t.closest('[data-goals-save]')) {
+        try { localStorage.setItem(GOALS_KEY, JSON.stringify(draft)); } catch {}
+        applyGoalEdits(); ov.remove();
+        try { renderFitness(); } catch {}
+      }
+    });
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-goals-manage]')) openGoalsSheet(); });
+
+  // ── Wrap up my day: the day and the week so far, and where this pace lands by Sunday ──
+  // Deficit per logged day = maintenance + what workouts burned − what she ate (7,700 cal ≈ 1 kg).
+  // Expected weight = latest weight − average daily deficit × days left this week ÷ 7,700.
+  const WRAP_KEY = 'mealPlan_wrapped';
+  function wrapData() {
+    let ds = dateToStr(new Date()); try { ds = selectedDateStr(); } catch {}
+    const d = weekData(), idx = Math.max(0, d.findIndex(x => x.ds === ds));
+    const T = isPMSMode() ? PMS_TARGETS : TARGETS;
+    const day = d[idx], logged = d.slice(0, idx + 1).filter(x => x.eat.cal > 0);
+    const def = x => TDEE + x.burned - x.eat.cal;
+    const total = logged.reduce((a, x) => a + def(x), 0), avg = logged.length ? total / logged.length : 0;
+    const left = d.length - 1 - idx;
+    const w = (typeof getWeight === 'function' && getWeight()) || {}, unit = w.unit || 'kg', cur = +w.current || null;
+    const toUnit = kg => unit === 'lb' ? kg * 2.20462 : kg;
+    const soFarKg = total / CAL_PER_KG, aheadKg = avg * left / CAL_PER_KG;
+    const sunday = new Date(d[d.length - 1].ds + 'T00:00');
+    return { ds, day, T, logged, total, avg, left, unit, cur, soFar: toUnit(soFarKg),
+             expected: cur != null ? cur - toUnit(aheadKg) : null, sunday, dayDef: day.eat.cal ? def(day) : null };
+  }
+  function wrapHTML(W) {
+    const n0 = v => Math.round(v).toLocaleString(), kg = v => (Math.round(v * 10) / 10).toLocaleString();
+    const gap = v => v >= 0 ? `${n0(v)} cal deficit` : `${n0(-v)} cal over maintenance`;
+    const e = W.day.eat, isToday = W.ds === dateToStr(new Date());
+    const when = isToday ? 'Today' : new Date(W.ds + 'T00:00').toLocaleDateString(undefined, { weekday: 'long' });
+    const sun = W.sunday.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    const days = W.logged.length;
+    const pace = !days ? 'Log your meals and this fills in.'
+      : W.left === 0 ? 'That’s the week. Next week starts fresh tomorrow.'
+      : `If you keep this pace for the ${W.left} day${W.left === 1 ? '' : 's'} left.`;
+    return `<div class="wrap">
+      <section class="wrap-sec">
+        <p class="wrap-label">${when}</p>
+        <p class="wrap-big">${n0(e.cal)} <span>of ${n0(W.T.cal)} cal</span></p>
+        <ul class="wrap-rows">
+          <li><span>Burned</span><b>${n0(W.day.burned)} cal</b></li>
+          <li><span>Against maintenance</span><b>${W.dayDef == null ? 'Nothing logged' : gap(W.dayDef)}</b></li>
+          <li><span>Protein</span><b>${n0(e.p)} / ${n0(W.T.p)} g</b></li>
+          <li><span>Carbs · Fat · Fibre</span><b>${n0(e.c)} · ${n0(e.f)} · ${n0(e.fib)} g</b></li>
+        </ul>
+      </section>
+      <section class="wrap-sec">
+        <p class="wrap-label">This week so far</p>
+        <ul class="wrap-rows">
+          <li><span>Days logged</span><b>${days} of ${7 - W.left}</b></li>
+          <li><span>Total</span><b>${days ? gap(W.total) : '–'}</b></li>
+          <li><span>Average a day</span><b>${days ? gap(W.avg) : '–'}</b></li>
+          <li><span>That’s about</span><b>${days ? `${kg(Math.abs(W.soFar))} ${W.unit} ${W.soFar >= 0 ? 'lost' : 'gained'}` : '–'}</b></li>
+        </ul>
+      </section>
+      <section class="wrap-sec wrap-hero">
+        <p class="wrap-label">Expected by ${sun}</p>
+        ${W.expected != null && days
+          ? `<p class="wrap-big">${kg(W.expected)} <span>${W.unit}</span></p><p class="wrap-note">${pace} Today you’re at ${kg(W.cur)} ${W.unit}.</p>`
+          : `<p class="wrap-note">${W.cur == null ? 'Add your weight in Account to see this.' : pace}</p>`}
+      </section>
+      <p class="wrap-fine">An estimate from your logs and 7,700 cal per kg. Water and your cycle move the scale too, especially around your period.</p>
+      <div class="eb-cta-row">
+        <button type="button" class="eb-btn secondary" data-wrap-reopen>Open day</button>
+        <button type="button" class="eb-btn primary" data-wrap-done>Done</button>
+      </div>
+    </div>`;
+  }
+  function openWrapUp() {
+    if (document.querySelector('.wrap-sheet')) return;
+    const W = wrapData();
+    const ov = document.createElement('div'); ov.className = 'eb-cal-overlay app-sheet-overlay';
+    ov.innerHTML = `<div class="eb-cal app-sheet wrap-sheet" role="dialog" aria-modal="true" aria-label="Your day">
+      <div class="app-sheet-head"><b>Your day, wrapped</b><button type="button" class="eb-icon-btn" data-wrap-done aria-label="Close">${ICONS.close}</button></div>
+      <div class="app-sheet-body">${wrapHTML(W)}</div></div>`;
+    document.body.appendChild(ov);
+    try { const m = JSON.parse(localStorage.getItem(WRAP_KEY) || '{}'); m[W.ds] = 1; localStorage.setItem(WRAP_KEY, JSON.stringify(m)); } catch {}
+    try { window.EBAnalytics && EBAnalytics.track('day_wrapped'); } catch {}
+    ov.addEventListener('click', e => {
+      // Open day: un-wrap it, to keep logging (the card asks "Ready to wrap up?" again).
+      if (e.target.closest('[data-wrap-reopen]')) {
+        try { const m = JSON.parse(localStorage.getItem(WRAP_KEY) || '{}'); delete m[W.ds]; localStorage.setItem(WRAP_KEY, JSON.stringify(m)); } catch {}
+        ov.remove(); paintWrapBtn(); return;
+      }
+      if (e.target === ov || e.target.closest('[data-wrap-done]')) { ov.remove(); paintWrapBtn(); }
+    });
+  }
+  function paintWrapBtn() {
+    const b = $('wrapBtn'); if (!b) return;
+    let ds = dateToStr(new Date()); try { ds = selectedDateStr(); } catch {}
+    let done = false; try { done = !!JSON.parse(localStorage.getItem(WRAP_KEY) || '{}')[ds]; } catch {}
+    b.querySelector('b').textContent = done ? 'See your day’s summary' : 'Ready to wrap up?';
+    b.querySelector('small').textContent = done ? 'Wrapped. Open it again any time.' : 'Your day, your week so far, and where you’ll be by Sunday';
+    b.dataset.wrapped = done ? '1' : '';
+  }
+  // First time for a day: confirm, since wrapping counts the day as finished in the weekly estimate.
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-wrapup]'); if (!b) return;
+    if (b.dataset.wrapped) return openWrapUp();
+    const W = wrapData(), cal = Math.round(W.day.eat.cal), isToday = W.ds === dateToStr(new Date());
+    EB.ask({ title: 'Ready to wrap up?', ok: 'Wrap up', cancel: 'Not yet',
+      body: `${cal ? `You’ve logged ${cal.toLocaleString()} cal ${isToday ? 'today' : 'this day'}.` : 'Nothing is logged for this day yet.'} Wrapping up counts it as a finished day in your week’s numbers.` })
+      .then(yes => yes && openWrapUp());
+  });
+
   // Sunday: the week's summary slides up once, as a sheet.
   function weekSheetHTML(d) {
     const S = weekSummary(d), n0 = v => Math.round(v).toLocaleString();

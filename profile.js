@@ -137,6 +137,8 @@
         <div class="eb-list">
           <button type="button" class="eb-list-row" data-pf="details"><span class="eb-row-text"><span class="eb-list-label">My Details</span>
             <span class="eb-list-value">Goal, body, cycle, food and more · ${setCount} of ${steps.length} set</span></span>${ICONS.chevron}</button>
+          <button type="button" class="eb-list-row" data-pf="showWeight" role="switch" aria-checked="${!!p.showWeight}"><span class="eb-row-text"><span class="eb-list-label">Show Current Weight</span>
+            <span class="eb-list-value">A small line under the dates on every page</span></span><span class="pf-switch${p.showWeight ? ' on' : ''}" aria-hidden="true"></span></button>
         </div>
 
         ${window.EBHealth && EBHealth.native ? `
@@ -169,11 +171,11 @@
         <div class="eb-list pf-actions">
           <a class="eb-list-row" href="${PRIVACY_URL}" target="_blank" rel="noopener"><span class="eb-row-text"><span class="eb-list-label">Privacy and food data</span>
             <span class="eb-list-value">What’s saved, and where the numbers come from</span></span>${ICONS.chevron}</a>
-          ${window.EBSync && EBSync.signedIn()
-            ? `<button type="button" class="eb-list-row danger" data-pf="deleteAcct"><span class="eb-list-label">Delete Account</span></button>`
-            : `<button type="button" class="eb-list-row danger" data-pf="erase"><span class="eb-list-label">Erase Everything</span></button>`}
         </div>
         <p class="eb-group-note center">Not medical advice. Check with your doctor before big diet changes.</p>
+        ${window.EBSync && EBSync.signedIn()
+          ? '<button type="button" class="pf-danger-link" data-pf="deleteAcct">Delete account</button>'
+          : '<button type="button" class="pf-danger-link" data-pf="erase">Erase everything</button>'}
       </div>`;
   }
 
@@ -207,6 +209,12 @@
       EB.toast(on ? 'Usage stats and replays on. Thank you!' : 'Usage stats and replays off');
       return render();
     }
+    // Current weight under the dates: off unless she turns it on.
+    if (t.closest('[data-pf="showWeight"]')) {
+      patch(p => { p.showWeight = !p.showWeight; });
+      try { renderCycleCalendar(); } catch {}
+      return render();
+    }
     if (t.closest('.pf-test-card')) { try { window.EBAnalytics && EBAnalytics.track('feedback_opened'); } catch {} }
     const ps = t.closest('[data-plan-src]');
     if (ps) { patch(p => { p.planSource = ps.dataset.planSrc; }); if (window.EBPlanner) EBPlanner.refresh(); return render(); }
@@ -237,20 +245,25 @@
       EBSync.signOutAndClear().then(ok => { if (!ok) EB.toast('Couldn’t save to your account. Check your connection and try again.'); });
     }
     if (a.dataset.pf === 'deleteAcct') {
-      if (!confirm('Delete your account and everything in it? This removes your data from this phone too, and can’t be undone.')) return;
-      EBSync.deleteAccount().then(() => { try { localStorage.clear(); } catch {} location.reload(); })
-        .catch(() => EB.toast('Couldn’t delete the account. Check your connection and try again.'));
+      EB.ask({ title: 'Delete your account?', danger: true, ok: 'Delete', cancel: 'Keep account',
+        body: 'Your plan, meals, cycle history and logs are removed from your account and this phone. <b>This can’t be undone.</b>' })
+      .then(yes => yes && EBSync.deleteAccount().then(() => { try { localStorage.clear(); } catch {} location.reload(); })
+        .catch(() => EB.toast('Couldn’t delete the account. Check your connection and try again.')));
     }
     if (a.dataset.pf === 'healthOn') connectHealth();
     if (a.dataset.pf === 'healthSync') EBHealth.syncIn().then(() => EBHealth.syncOut()).then(() => { EB.toast('Synced with Apple Health'); render(); });
     if (a.dataset.pf === 'healthOff') { EBHealth.disconnect(); render(); }
     if (a.dataset.pf === 'redo') { close(); EBOnboarding.open(); }
     if (a.dataset.pf === 'erase') {
-      if (!confirm('Erase everything on this phone, including your meals and periods? This can’t be undone.')) return;
-      const p = EB.getProfile();
-      ((p.food && p.food.files) || []).forEach(f => EB.deleteFile(f.id));
-      try { localStorage.clear(); } catch {}
-      location.reload();
+      EB.ask({ title: 'Erase everything?', danger: true, ok: 'Erase', cancel: 'Keep my data',
+        body: 'Your plan, meals, periods and logs are removed from this phone. <b>This can’t be undone.</b>' })
+      .then(yes => {
+        if (!yes) return;
+        const p = EB.getProfile();
+        ((p.food && p.food.files) || []).forEach(f => EB.deleteFile(f.id));
+        try { localStorage.clear(); } catch {}
+        location.reload();
+      });
     }
   }
 
