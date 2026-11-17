@@ -98,10 +98,13 @@
   // One palette for the whole app (white, black, green / pink accent):
   // there is no dark mode any more, so the theme is always "light".
   function applyTheme() {
-    const t = 'light';
+    // Dark design language ("noir") is the app's look for now; the light
+    // version comes later. data-theme stays "light" so old dark rules don't mix in.
+    const t = 'light', NOIR = true;
     document.documentElement.dataset.theme = t;
+    document.documentElement.classList.toggle('noir', NOIR);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = t === 'light' ? '#f6f6f4' : '#000000';
+    if (meta) meta.content = NOIR ? '#000000' : '#f6f6f4';
     document.dispatchEvent(new CustomEvent('eb:theme', { detail: t }));
   }
   function setThemePref(pref) {

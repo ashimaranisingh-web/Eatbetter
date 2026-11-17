@@ -3,6 +3,8 @@
   "appName": "Menu-fi",
   "webDir": "www",
   "ios": {
-    "contentInset": "never"
-  }
+    "contentInset": "never",
+    "backgroundColor": "#000000"
+  },
+  "backgroundColor": "#000000"
 }
