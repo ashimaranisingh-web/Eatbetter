@@ -703,6 +703,14 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble::be
 html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble p span { opacity: 0; display: inline-block; animation: coachWord .32s ease forwards; animation-delay: calc(.12s + var(--i) * 45ms); }
 @keyframes coachWord { from { opacity: 0; transform: translateY(4px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-coach:active .coach-fig { transform: scale(.97); }
+/* Reduce Motion: no movement (rise, sway, hop), but light and fades stay —
+   Apple's guidance is to reduce motion, not remove all feedback. */
 @media (prefers-reduced-motion: reduce) {
-  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach :is(.coach-fig, .coach-glint, .coach-bubble, .coach-bubble::before, .coach-bubble p span) { animation: none !important; opacity: 1 !important; }
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-fig,
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-fig { animation: none !important; transform: none !important; }
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-enter .coach-fig { animation: coachFadeOnly .8s ease both !important; }
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-enter .coach-bubble { animation: coachFadeOnly .6s ease .4s both !important; }
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-glint { animation: coachGlint 7s ease-in-out 2s infinite !important; }
+  html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble p span { animation-name: coachFadeOnly !important; }
 }
+@keyframes coachFadeOnly { from { opacity: 0; } to { opacity: 1; } }
