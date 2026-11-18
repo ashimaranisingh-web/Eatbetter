@@ -26,13 +26,58 @@
   const MIRA_ICON = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 1.9 1.9.8-1.9.8L19 20.4l-.8-1.9-1.9-.8 1.9-.8z"/></svg>';
 
   // ── Energy check-in ──
-  const ENERGY = [{ v: 1, t: 'Low' }, { v: 2, t: 'Okay' }, { v: 3, t: 'Good' }, { v: 4, t: 'High' }];
+  // Three levels now. Older check-ins saved 4 ("High"); they read as High.
+  const ENERGY = [{ v: 1, t: 'Low' }, { v: 2, t: 'Medium' }, { v: 3, t: 'High' }];
+  const lvlOf = v => (v >= 3 ? 3 : v || 0);
   const EKEY = 'eb_energy';
   function energyLog() { try { return JSON.parse(localStorage.getItem(EKEY) || '{}'); } catch { return {}; } }
   function energyFor(ds) { return energyLog()[ds] || 0; }
   function setEnergy(ds, v) {
     const log = energyLog(); if (v) log[ds] = v; else delete log[ds];
     try { localStorage.setItem(EKEY, JSON.stringify(log)); } catch {}
+  }
+  // ── Time today: how long she has to cook / eat ──
+  // Energy can be high while time is short, so meal ideas use both.
+  const TIME = [{ v: 1, t: 'Under 10 min' }, { v: 2, t: '10–30 min' }, { v: 3, t: '30+ min' }];
+  const TKEY = 'eb_time';
+  function timeLog() { try { return JSON.parse(localStorage.getItem(TKEY) || '{}'); } catch { return {}; } }
+  function timeFor(ds) { return timeLog()[ds] || 0; }
+  function setTime(ds, v) {
+    const log = timeLog(); if (v) log[ds] = v; else delete log[ds];
+    try { localStorage.setItem(TKEY, JSON.stringify(log)); } catch {}
+  }
+  // One meal idea from energy × time, swapped for her diet.
+  // [name, why, cal, protein g]; diet variants override the default (veg).
+  const MEAL_IDEAS = {
+    // Low energy
+    '1-1': { veg: ['Your emergency meal: curd, a banana and a handful of nuts', 'Low on energy and time. Something already in the fridge, no cooking.', 350, 14],
+             vegan: ['Your emergency meal: soy yogurt, a banana and nuts', 'Low on energy and time. Something already in the fridge, no cooking.', 340, 12] },
+    '1-2': { veg: ['Masala oats with paneer', 'Low energy, a little time: easy but warm, one pot.', 380, 20], egg: ['Masala oats with eggs', 'Low energy, a little time: easy but warm, one pot.', 390, 22], vegan: ['Masala oats with tofu', 'Low energy, a little time: easy but warm, one pot.', 360, 18] },
+    '1-3': { veg: ['Moong dal khichdi with curd', 'Low energy, more time: warm and gentle. Let the cooker do the work.', 420, 18], egg: ['Masala oats with eggs', 'Low energy, more time: easy but warm, one pot.', 390, 22], vegan: ['Moong dal khichdi with salad', 'Low energy, more time: warm and gentle. Let the cooker do the work.', 400, 15] },
+    // Medium energy
+    '2-1': { veg: ['Sprouts chaat with curd', 'Quick to put together, still some protein.', 300, 16], vegan: ['Sprouts chaat with peanuts', 'Quick to put together, still some protein.', 320, 15] },
+    '2-2': { veg: ['Besan chilla with curd', 'A steady day: ready in 15 minutes, filling.', 360, 18], egg: ['Egg bhurji with 1 roti', 'A steady day: ready in 15 minutes, filling.', 380, 22], vegan: ['Besan chilla with peanut chutney', 'A steady day: ready in 15 minutes, filling.', 370, 16] },
+    '2-3': { veg: ['Dal, rice and a sabzi', 'Time for a proper home meal. Make extra for tomorrow.', 500, 18], nonveg: ['Chicken curry, rice and a sabzi', 'Time for a proper home meal. Make extra for tomorrow.', 560, 34] },
+    // High energy
+    '3-1': { veg: ['Skyr with nuts, seeds and fruit', 'High energy, little time: quick high protein.', 320, 24], egg: ['Eggs on toast', 'High energy, little time: quick high protein.', 340, 20], vegan: ['Soy yogurt with seeds and nuts', 'High energy, little time: quick high protein.', 320, 16] },
+    '3-2': { veg: ['Paneer wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 450, 26], egg: ['Egg wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 420, 24], nonveg: ['Chicken wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 450, 32], vegan: ['Tofu wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 420, 22] },
+    '3-3': { veg: ['Rajma, rice and salad (cook extra)', 'Energy and time: batch-cook protein for tomorrow too.', 520, 22], egg: ['Egg curry, rice and salad', 'Energy and time: cook a protein-rich meal, make extra.', 520, 26], nonveg: ['Chicken curry, rice and salad (cook extra)', 'Energy and time: batch-cook protein for tomorrow too.', 560, 36] },
+  };
+  function mealIdea(ds) {
+    const e = lvlOf(energyFor(ds)), t = timeFor(ds); if (!e || !t) return null;
+    const diet = EB.getProfile().food.diet || 'veg', row = MEAL_IDEAS[e + '-' + t];
+    // pescatarian eats eggs; non-veg falls back to egg ideas, then veg. Jain stays veg.
+    const order = { nonveg: ['nonveg', 'egg', 'veg'], egg: ['egg', 'veg'], pescatarian: ['egg', 'veg'], vegan: ['vegan', 'veg'] }[diet] || ['veg'];
+    const k = order.find(x => row[x]), [name, why, cal, p] = row[k];
+    return { name, why, cal, p };
+  }
+  function mealIdeaHTML(ds) {
+    const e = energyFor(ds), t = timeFor(ds);
+    if (!e && !t) return '';
+    if (!e || !t) return `<p class="app-idea-hint">Pick your ${!e ? 'energy' : 'time'} too for a meal idea.</p>`;
+    const m = mealIdea(ds); if (!m) return '';
+    return `<div class="app-idea"><div><span class="app-meta">Meal idea</span><b>${esc(m.name)}</b><small>${esc(m.why)} About ${m.cal} cal · ${m.p} g protein.</small></div>
+      <button type="button" class="app-opt-btn" data-idea-log="${esc(m.name)}" data-idea-cal="${m.cal}">Log</button></div>`;
   }
 
   // ── Workout options: energy + cycle phase + what she likes doing ──
@@ -66,6 +111,8 @@
     // Activities she picked in onboarding come first.
     const likes = EB.getProfile().activity.types || [];
     kinds = [...kinds.filter(k => likes.includes(k)), ...kinds.filter(k => !likes.includes(k))].slice(0, 5);
+    // Short on time: shorter sessions (10 min, or 30 at most).
+    const tm = timeFor(ds); if (tm === 1) mins = 10; else if (tm === 2) mins = Math.min(mins, 30);
     const options = kinds.map(k => {
       const m = MINS[k] && MINS[k] < mins ? MINS[k] : mins;
       return { kind: k, name: NAMES[k], mins: m, kcal: Math.round(KCAL_PER_MIN[k] * m) };
@@ -94,35 +141,6 @@
     });
   }
 
-  // One suggested pairing: the top workout plus the food that suits it.
-  // Low energy: eat first for a lift. Good/High: protein after to recover.
-  // Okay: a food for this cycle phase after. Reason comes from the phase.
-  const PHASE_WHY = { menstrual: 'iron helps replace what your period takes', follicular: 'protein builds muscle fastest now',
-    ovulation: 'fibre helps clear the oestrogen peak', luteal: 'slow carbs keep cravings steady' };
-  function comboHTML(ds, s, foods) {
-    const w = s.options[0]; if (!w) return '';
-    const energy = energyFor(ds), info = phaseOf(ds), phase = info && info.phase;
-    const pf = phase ? (phaseFoods(phase, EB.getProfile().food.diet || 'veg') || {}).foods || [] : [];
-    const protein = foods.find(f => /protein/i.test(f.why));
-    let line, why;
-    if (energy === 1) {
-      const f = foods[0]; if (!f) return '';
-      line = `A little <b>${esc(f.n)}</b> first, then <b>${w.mins} min ${esc(w.name.toLowerCase())}</b>`;
-      why = 'Easy fuel before gentle movement lifts a low day.';
-    } else if (energy >= 3 && (protein || pf[0])) {
-      const n = protein ? protein.n : pf[0];
-      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b> within the hour`;
-      why = 'Protein after a hard session helps your muscles recover.';
-    } else {
-      // The next real meal for this phase (by time of day), not a food group.
-      const h = new Date().getHours(), meals = phase ? phaseMeals(phase, EB.getProfile().food.diet || 'veg') : [];
-      const next = meals[h < 11 ? 0 : h < 16 ? 1 : 2];
-      const n = next ? next[1] : pf[0] || (foods[0] && foods[0].n); if (!n) return '';
-      line = `<b>${w.mins} min ${esc(w.name.toLowerCase())}</b>, then <b>${esc(n)}</b>${next ? ` for ${next[0].toLowerCase()}` : ''}`;
-      why = phase ? `In this phase, ${PHASE_WHY[phase]}.` : 'Move, then refuel with something real.';
-    }
-    return `<div class="app-combo"><p>${line}</p><small>${why}</small></div>`;
-  }
   // Energy: a once-a-day check-in. After she answers it folds to one line;
   // "More ideas" opens the levels and the workout / food rails again.
   let energyOpen = false;
@@ -131,21 +149,25 @@
     const s = suggest(ds);
     const foods = foodIdeas(ds);
     const logged = getActivities(ds).filter(a => a.suggested === ds);
-    if (cur && !energyOpen) {
-      const lvl = (ENERGY.find(e => e.v === cur) || {}).t || '';
+    const lv = lvlOf(cur), tm = timeFor(ds);
+    if (cur && tm && !energyOpen) {
+      const lvl = (ENERGY.find(e => e.v === lv) || {}).t || '', tt = (TIME.find(x => x.v === tm) || {}).t || '';
       return `<div class="app-card app-energy-card compact">
-        <div class="ch-head"><p class="app-card-label">Energy today · ${esc(lvl)}</p><button type="button" class="ch-manage" data-energy-more aria-expanded="false">More ideas</button></div>
-        ${s ? comboHTML(ds, s, foods) : ''}
+        <div class="ch-head"><p class="app-card-label">Energy · ${esc(lvl)}  ·  Time · ${esc(tt)}</p><button type="button" class="ch-manage" data-energy-more aria-expanded="false">Change</button></div>
+        ${mealIdeaHTML(ds)}
       </div>`;
     }
-    // The four levels stay on screen, so changing your energy is one tap.
+    // Both pickers stay on screen, so changing either is one tap.
     return `<div class="app-card app-energy-card">
-      ${cur ? `<div class="ch-head"><p class="app-card-label">Energy today</p><button type="button" class="ch-manage" data-energy-more aria-expanded="true">Show less</button></div>` : '<p class="app-card-label">Energy today</p>'}
-      <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy">
-        ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${cur === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${cur === e.v}">${e.t}</button>`).join('')}
+      <div class="ch-head"><p class="app-card-label">Energy today</p>${cur && tm ? '<button type="button" class="ch-manage" data-energy-more aria-expanded="true">Show less</button>' : ''}</div>
+      <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy today">
+        ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${lv === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${lv === e.v}">${e.t}</button>`).join('')}
       </div>
-
-      ${s ? comboHTML(ds, s, foods) : ''}
+      <p class="app-card-label app-time-label">Time today</p>
+      <div class="eb-seg app-energy app-time" role="radiogroup" aria-label="Time today">
+        ${TIME.map(x => `<button type="button" class="eb-seg-btn${tm === x.v ? ' on' : ''}" data-time="${x.v}" role="radio" aria-checked="${tm === x.v}">${x.t}</button>`).join('')}
+      </div>
+      ${mealIdeaHTML(ds)}
       ${s ? `<p class="app-rail-label">Workouts</p>
       <div class="app-rail">${s.options.map(o => {
         const done = logged.find(a => a.name === o.name);
@@ -321,6 +343,19 @@
       </div>`;
   }
 
+  // One line under the calendar (and current weight): eaten · burned · left,
+  // a thin bar, and protein. Going over is shown in plain grey, never red.
+  function todaySumHTML(eaten, burned, target, p, pTarget, isToday) {
+    const budget = target + burned, left = Math.round(budget - eaten), over = left < 0;
+    const pct = budget > 0 ? Math.min(100, Math.round(eaten / budget * 100)) : 0;
+    const n = v => Math.round(v).toLocaleString();
+    return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: eaten ${n(eaten)}, burned ${n(burned)}, ${over ? `${n(-left)} over` : `${n(left)} left`} calories. ${Math.round(p)} of ${pTarget} grams protein.">
+      <p class="app-sum-line" aria-hidden="true"><span>Eaten <b>${n(eaten)}</b></span><i>·</i><span>Burned <b>${n(burned)}</b></span><i>·</i><span>${over ? 'Over' : 'Left'} <b>${n(Math.abs(left))}</b> kcal</span></p>
+      <div class="app-sum-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <p class="app-sum-pro" aria-hidden="true"><b>${Math.round(p)}</b> / ${pTarget} g protein</p>
+    </div>`;
+  }
+
   function renderHome() {
     const page = $('pageHome'); if (!page) return;
     // Home shows today, or the day picked on its strip (homeDs). Days in this
@@ -332,9 +367,11 @@
     const ds = homeDs || selectedDateStr();
     const isToday = !homeDs, dayDate = new Date(ds + 'T00:00');
     const p = EB.getProfile();
-    const eaten = Math.round(computeConsumed(currentDay).cal);
+    const cons = computeConsumed(currentDay);
+    const eaten = Math.round(cons.cal);
     const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
     const target = isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal;
+    const pTarget = isPMSMode() ? PMS_TARGETS.p : TARGETS.p;
     const left = target - eaten + burned;
     const info = phaseOf(ds);
     const meta = info && PHASE_META[info.phase];
@@ -368,6 +405,7 @@
       energy: energyFor(ds), challengeDone: !!(chLine && /ch-home-dot done/.test(chLine)),
     }) : '';
     page.querySelector('.app-home-body').innerHTML = `
+      ${todaySumHTML(eaten, burned, target, cons.p, pTarget, isToday)}
       ${heroHTML}
       ${coach}
       <div class="app-card app-shortcuts app-todaylist">
@@ -1260,10 +1298,13 @@
   const r1n = v => Math.round((+v || 0) * 10) / 10;
   const plainName = t => String(t || '').replace(/<[^>]*>/g, '');
   const TICK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const ML_SHOW = 2, mlOpen = new Set();   // meals she's opened with "Show N more"
+  const TAGS = { worth: 'Worth it', skip: 'Skip' };
+  const WHYS = { hungry: 'Hungry', craving: 'Craving', bored: 'Bored', stressed: 'Stressed', social: 'Social', notime: 'No time' };
   function mlRow({ done, name, cal, p, sub, tick, open, swipe }) {
     return `<div class="ml-row-wrap">${swipe ? `<div class="ml-swipe">${swipe}</div>` : ''}
       <div class="ml-row${done ? ' done' : ''}">
-        <button type="button" class="ml-main" ${open || ''}><span class="ml-name">${esc(name)}</span><span class="ml-sub">${sub || `${r1n(p)} g protein`}</span></button>
+        <button type="button" class="ml-main" ${open || ''}><span class="ml-name">${esc(name)}</span>${sub && sub.trim() ? `<span class="ml-sub">${sub}</span>` : ''}</button>
         <span class="ml-cal">${Math.round(+cal || 0)} cal</span>
         <button type="button" class="ml-tick${done ? ' on' : ''}" ${tick} role="checkbox" aria-checked="${!!done}" aria-label="${done ? 'Eaten. Tap to undo' : 'Mark eaten'}">${done ? TICK : ''}</button>
       </div></div>`;
@@ -1278,7 +1319,7 @@
       if (slot.fixed) {
         const picked = getWakeupItems(ds);
         return `<section class="ml-sec" data-slot="${slot.id}">${head('')}<div class="ml-group">${WAKEUP_ITEMS.map(it =>
-          mlRow({ done: picked.includes(it.id), name: it.name, cal: it.cal, p: it.p, sub: `${esc(it.unit)}${it.p ? ` · ${r1n(it.p)} g protein` : ''}`, tick: `data-ml-wake="${it.id}"` })).join('')}</div></section>`;
+          mlRow({ done: picked.includes(it.id), name: it.name, cal: it.cal, p: it.p, sub: esc(it.unit), tick: `data-ml-wake="${it.id}"` })).join('')}</div></section>`;
       }
       let items = log[slot.id]; items = !items ? [] : Array.isArray(items) ? items : [items];
       const target = slot.targetCal ? `~${Math.round(slot.targetCal)} cal` : '';
@@ -1300,8 +1341,13 @@
         }
       }
       const plannedOnly = items.length && slot.defaultMeal && isPlannedOnly(slot, ds);
-      items.forEach((m, i) => rows.push(mlRow({ done: true, name: plainName(m.name), cal: m.cal, p: m.p, tick: plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`,
-        open: `data-ml-info="${slot.id}:${i}"`, swipe: `<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button><button type="button" class="del" ${plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`}>${plannedOnly ? 'Undo' : 'Delete'}</button>` })));
+      // Long meals show the first 2 foods; "Show N more" opens the rest.
+      const more = items.length - ML_SHOW, folded = more > 0 && !mlOpen.has(slot.id);
+      items.forEach((m, i) => (folded && i >= ML_SHOW) || rows.push(mlRow({ done: true, name: plainName(m.name), cal: m.cal, p: m.p,
+        sub: `${m.qty ? esc(plainName(m.qty)) : ''}${m.tag && TAGS[m.tag] ? ` <em class="ml-tag ml-tag-${m.tag}">${TAGS[m.tag]}</em>` : ''}`,
+        tick: plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`,
+        open: `data-ml-edit="${slot.id}:${i}" aria-haspopup="dialog"`, swipe: `<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button><button type="button" class="del" ${plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`}>${plannedOnly ? 'Undo' : 'Delete'}</button>` })));
+      if (more > 0) rows.push(`<button type="button" class="ml-more" data-ml-more="${slot.id}" aria-expanded="${!folded}">${folded ? `Show ${more} more` : 'Show less'}</button>`);
       // Coffee / protein: build from parts
       if (BUILDERS[slot.id]) {
         const last = getLastBuild(slot.id); let lastT = 0;
@@ -1314,13 +1360,14 @@
         // Swapped for something else: go back to the plan on the left, add more on the right
         rows.push(`<div class="ml-acts"><button type="button" data-ml-restore="${slot.id}">↺ Back to planned meal</button><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
       } else rows.push(`<div class="ml-acts ml-acts-one"><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
-      const eaten = items.reduce((a, m) => a + (+m.cal || 0), 0);
-      return `<section class="ml-sec" data-slot="${slot.id}">${head(items.length && !plannedOnly ? `${Math.round(eaten)} of ${target.replace('~', '')}` : target)}<div class="ml-group">${rows.join('')}</div></section>`;
+      // Header: what this meal adds up to (kcal and protein), or its target before anything's logged.
+      const eaten = items.reduce((a, m) => a + (+m.cal || 0), 0), prot = items.reduce((a, m) => a + (+m.p || 0), 0);
+      return `<section class="ml-sec" data-slot="${slot.id}">${head(items.length ? `<b>${Math.round(eaten).toLocaleString()} kcal</b> · ${Math.round(prot)} g protein` : target)}<div class="ml-group">${rows.join('')}</div></section>`;
     }).join('');
     // "Craving something?" lives under Coffee on plan days: lift it out before
     // the list is redrawn so it isn't thrown away, then put it back.
     const crave = $('craveLink'); if (crave && el.contains(crave)) el.after(crave);
-    el.innerHTML = `<div class="ml">${html}</div>`;
+    el.innerHTML = `<div class="ml">${html}${reviewHTML(ds)}</div>`;
     const coffee = el.querySelector('.ml-sec[data-slot="coffee"]');
     if (crave && coffee && ($('pageFood') || {}).dataset?.dayview === 'plan') coffee.after(crave);
   }
@@ -1365,8 +1412,150 @@
     removeSlotMeal(slotId, i, ds);
     undoToast(`${plainName(nm.name || 'Item')} removed`, () => { const l = getSlotLog(ds); l[slotId] = before; setSlotLog(ds, l); repaintMeals(); });
   }
+  // ── Edit a logged food (bottom sheet) ──
+  // Quantity (− / + or type it), unit, live kcal + protein, a tag and why,
+  // then Save, Remove or Move to another meal. Totals update straight away.
+  const UNIT_NAMES = { g: 'grams', piece: 'pieces', katori: 'katori / bowl', cup: 'cup', serving: 'serving', ml: 'ml', spoon: 'spoon', pack: 'pack' };
+  function editSheet(slotId, i) {
+    let ds; try { ds = selectedDateStr(); } catch { return; }
+    const slots = (isPMSMode() ? PMS_MEAL_SLOTS : MEAL_SLOTS).filter(x => ['breakfast', 'lunch', 'snack', 'dinner'].includes(x.id));
+    const log = getSlotLog(ds), arr = Array.isArray(log[slotId]) ? log[slotId] : log[slotId] ? [log[slotId]] : [];
+    const m = arr[i]; if (!m) return;
+    const FL = window.EBFoodLog;
+    // Foods from the food list scale by amount and unit; anything else (plan
+    // meals, the assistant, typed numbers) scales by servings of what was logged.
+    const food = FL && FL.food && m.ref && m.src !== 'you' && m.amt != null ? FL.food(m.ref) : null;
+    const byAmount = !!(food && food.units[m.unit]);
+    const base = m.base || { cal: +m.cal || 0, p: +m.p || 0, c: +m.c || 0, f: +m.f || 0, fib: +m.fib || 0 };
+    const e = { amt: byAmount ? +m.amt : (+m.mult || 1), unit: byAmount ? m.unit : 'serving', slot: slotId, tag: m.tag || '', why: m.why || '' };
+    const units = byAmount ? [...new Set(['g', 'piece', 'katori', 'cup', e.unit])].filter(u => food.units[u]) : ['serving'];
+    const calc = () => byAmount ? FL.totals(food, e.amt, e.unit)
+      : { cal: Math.round(base.cal * e.amt), p: r1n(base.p * e.amt), c: r1n(base.c * e.amt), f: r1n(base.f * e.amt), fib: r1n(base.fib * e.amt) };
+    const step = dir => byAmount ? FL.stepOf(e.unit, e.amt, dir) : Math.max(0.5, Math.round((e.amt + dir * 0.5) * 2) / 2);
+    // Radio buttons in two columns, like the meal picker when adding a food.
+    const radios = (list, sel, attr, label) => `<div class="fl-radio" role="radiogroup" aria-label="${label}">${list.map(([k, t]) =>
+      `<button type="button" class="fl-radio-opt${sel === k ? ' on' : ''}" ${attr}="${k}" role="radio" aria-checked="${sel === k}"><i aria-hidden="true"></i>${esc(t)}</button>`).join('')}</div>`;
+    const macros = t => `<b>${Math.round(t.cal)}</b><span>kcal</span><ul class="ml-edit-macros"><li><b>${r1n(t.p)} g</b>protein</li><li><b>${r1n(t.c)} g</b>carbs</li><li><b>${r1n(t.f)} g</b>fat</li><li><b>${r1n(t.fib)} g</b>fibre</li></ul>`;
+    const ov = document.createElement('div'); ov.className = 'eb-cal-overlay app-sheet-overlay';
+    const paint = () => {
+      const t = calc();
+      ov.innerHTML = `<div class="eb-cal app-sheet ml-edit" role="dialog" aria-modal="true" aria-labelledby="mlEditT">
+        <div class="app-sheet-head"><b id="mlEditT">${esc(plainName(m.name))}</b><button type="button" class="eb-icon-btn" data-sheet-close aria-label="Close">${ICONS.close}</button></div>
+        <div class="ml-edit-live" aria-live="polite">${macros(t)}</div>
+        <p class="ml-edit-label">Quantity</p>
+        <div class="ml-edit-qty">
+          <button type="button" class="ml-step" data-me-step="-1" aria-label="Less">−</button>
+          <input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${e.amt}" data-me-amt aria-label="Quantity">
+          <button type="button" class="ml-step" data-me-step="1" aria-label="More">+</button>
+        </div>
+        ${units.length > 1 ? `<div class="eb-seg ml-edit-units" role="radiogroup" aria-label="Unit">${units.map(u => `<button type="button" class="eb-seg-btn${e.unit === u ? ' on' : ''}" data-me-unit="${u}" role="radio" aria-checked="${e.unit === u}">${UNIT_NAMES[u] || u}</button>`).join('')}</div>`
+          : `<p class="ml-edit-unit">${byAmount ? esc(UNIT_NAMES[e.unit] || e.unit) : `${e.amt === 1 ? 'serving' : 'servings'} of ${esc(plainName(m.qty || m.name))}`}</p>`}
+        <p class="ml-edit-label">Meal</p>
+        ${radios(slots.map(x => [x.id, x.name]), e.slot, 'data-me-slot', 'Meal')}
+        <p class="ml-edit-label">How was it?</p>
+        ${radios(Object.entries(TAGS), e.tag, 'data-me-tag', 'How was it')}
+        <p class="ml-edit-label">Why you ate it <span>(optional)</span></p>
+        ${radios(Object.entries(WHYS), e.why, 'data-me-why', 'Why you ate it')}
+        <div class="ml-edit-acts">
+          <button type="button" class="eb-btn primary" data-me-save>Save</button>
+          <button type="button" class="eb-link del" data-me-del>Remove item</button>
+        </div></div>`;
+    };
+    // Only the live numbers change while typing, so the keyboard stays open.
+    const live = () => { const l = ov.querySelector('.ml-edit-live'); if (l) l.innerHTML = macros(calc()); };
+    paint(); document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('input', ev => { if (ev.target.matches('[data-me-amt]')) { e.amt = Math.max(0, +ev.target.value || 0); live(); } });
+    ov.addEventListener('click', ev => {
+      const at = sel => ev.target.closest(sel); let n;
+      if (ev.target === ov || at('[data-sheet-close]')) return close();
+      if ((n = at('[data-me-step]'))) { e.amt = step(+n.dataset.meStep); ov.querySelector('[data-me-amt]').value = e.amt; return live(); }
+      if ((n = at('[data-me-unit]'))) {
+        // Keep roughly the same portion when switching (200 g → 1.5 katori).
+        const grams = e.amt * (food.units[e.unit] || 1); e.unit = n.dataset.meUnit;
+        const v = grams / (food.units[e.unit] || 1);
+        e.amt = e.unit === 'g' || e.unit === 'ml' ? Math.round(v) : Math.max(0.5, Math.round(v * 2) / 2);
+        return paint();
+      }
+      if ((n = at('[data-me-slot]'))) { e.slot = n.dataset.meSlot; return paint(); }
+      if ((n = at('[data-me-tag]'))) { e.tag = e.tag === n.dataset.meTag ? '' : n.dataset.meTag; return paint(); }
+      if ((n = at('[data-me-why]'))) { e.why = e.why === n.dataset.meWhy ? '' : n.dataset.meWhy; return paint(); }
+      if (at('[data-me-del]')) { close(); return delItem(slotId, i, ds); }
+      if (at('[data-me-save]')) {
+        if (!(e.amt > 0)) { const inp = ov.querySelector('[data-me-amt]'); inp.focus(); return; }
+        const l = getSlotLog(ds), list = Array.isArray(l[slotId]) ? l[slotId] : l[slotId] ? [l[slotId]] : [];
+        const cur = list[i]; if (!cur) return close();
+        const tagged = (cur.tag || '') !== e.tag;
+        Object.assign(cur, calc());
+        if (byAmount) Object.assign(cur, { qty: FL.qtyLabel(food, e.amt, e.unit), amt: e.amt, unit: e.unit });
+        else { cur.base = base; cur.mult = e.amt; }
+        if (e.tag) cur.tag = e.tag; else delete cur.tag;
+        if (e.why) cur.why = e.why; else delete cur.why;
+        if (e.slot !== slotId) {
+          list.splice(i, 1); if (list.length) l[slotId] = list; else delete l[slotId];
+          if (!Array.isArray(l[e.slot])) l[e.slot] = l[e.slot] ? [l[e.slot]] : [];
+          l[e.slot].push(cur);
+        } else l[slotId] = list;
+        setSlotLog(ds, l);
+        window.EBAnalytics && EBAnalytics.track('food_edited');
+        if (tagged && e.tag) window.EBAnalytics && EBAnalytics.track('food_tagged');
+        close(); repaintMeals();
+        EB.toast && EB.toast(e.slot !== slotId ? `Moved to ${(slots.find(x => x.id === e.slot) || {}).name || 'another meal'}` : 'Saved');
+      }
+    });
+    setTimeout(() => { const b = ov.querySelector('[data-sheet-close]'); if (b) b.focus(); }, 50);
+  }
+
+  // ── End-of-day review (under the meals) ──
+  // Built from the tags: could-skip foods and their kcal, what to have more of
+  // tomorrow, and one pattern from the last 7 days.
+  function reviewHTML(ds, inWrap) {
+    const slots = isPMSMode() ? PMS_MEAL_SLOTS : MEAL_SLOTS;
+    const items = d => { const l = getSlotLog(d), out = [];
+      Object.keys(l).forEach(k => (Array.isArray(l[k]) ? l[k] : l[k] ? [l[k]] : []).forEach(m => m && m.name && out.push({ slot: k, m }))); return out; };
+    const today = items(ds);
+    const tagged = today.filter(x => x.m.tag);
+    const evening = ds !== dateToStr(new Date()) || new Date().getHours() >= 18;
+    if (!tagged.length) {
+      if (inWrap) return '';
+      if (!evening || today.length < 2) return '';
+      return `<div class="ml-review ml-review-empty"><p class="ml-head"><span>Today’s review</span></p>
+        <p>Tap a food above and mark it <b>Worth it</b> or <b>Skip</b>. Your review shows up here.</p></div>`;
+    }
+    const skip = tagged.filter(x => x.m.tag === 'skip');
+    const skipCal = Math.round(skip.reduce((a, x) => a + (+x.m.cal || 0), 0));
+    const lines = [];
+    if (skip.length) lines.push(['Skip next time', `${skip.map(x => esc(plainName(x.m.name))).join(', ')} · <b>${skipCal.toLocaleString()} kcal</b>`]);
+    // Tomorrow: protein gap first, then the foods she wants more of.
+    let p = 0; try { p = computeConsumed(currentDay).p; } catch {}
+    const pT = isPMSMode() ? PMS_TARGETS.p : TARGETS.p, gap = Math.round(pT - p);
+    const tmr = [];
+    if (gap >= 10) tmr.push(`Protein was <b>${gap} g short</b>. Add curd, eggs, paneer or dal to a meal.`);
+    if (tmr.length) lines.push(['Tomorrow', tmr.join(' ')]);
+    // Pattern: the last 7 days of "could skip" foods.
+    const week = [];
+    for (let k = 0; k < 7; k++) { const d = new Date(ds + 'T00:00'); d.setDate(d.getDate() - k); items(dateToStr(d)).forEach(x => x.m.tag === 'skip' && week.push(x)); }
+    const hourOf = x => x.m.at ? new Date(x.m.at).getHours() : ((slotWindow((slots.find(s => s.id === x.slot) || {}).time) || {}).start ?? 12);
+    let pattern = '';
+    if (week.length >= 3) {
+      const late = week.filter(x => hourOf(x) >= 19).length;
+      const whys = {}; week.forEach(x => x.m.why && (whys[x.m.why] = (whys[x.m.why] || 0) + 1));
+      const topWhy = Object.entries(whys).sort((a, b) => b[1] - a[1])[0];
+      if (late / week.length >= 0.5) pattern = `Most foods you’d skip this week were after 7 p.m.`;
+      else if (topWhy && topWhy[1] / week.length >= 0.5) pattern = `Most foods you’d skip this week were ${topWhy[0] === 'notime' ? 'when you were short on time' : topWhy[0] === 'social' ? 'with other people' : `when you felt ${WHYS[topWhy[0]].toLowerCase()}`}.`;
+      else { const bySlot = {}; week.forEach(x => bySlot[x.slot] = (bySlot[x.slot] || 0) + 1);
+        const top = Object.entries(bySlot).sort((a, b) => b[1] - a[1])[0], nm = (slots.find(s => s.id === top[0]) || {}).name;
+        if (nm && top[1] / week.length >= 0.5) pattern = `Most foods you’d skip this week were at ${esc(nm.toLowerCase())}.`; }
+    }
+    if (pattern) lines.push(['Pattern', pattern]);
+    if (!lines.length) lines.push(['Nice', 'Everything you tagged today was worth it.']);
+    if (inWrap) return `<section class="wrap-sec"><p class="wrap-label">Review</p><dl class="wrap-review">${lines.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></section>`;
+    return `<div class="ml-review"><p class="ml-head"><span>Today’s review</span></p>
+      <dl>${lines.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
+  }
+
   document.addEventListener('click', e => {
-    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part], #slotSection [data-ml-restore]');
+    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part], #slotSection [data-ml-restore], #slotSection [data-ml-edit], #slotSection [data-ml-more]');
     if (!t) return;
     let ds; try { ds = selectedDateStr(); } catch { return; }
     const d = t.dataset;
@@ -1376,6 +1565,8 @@
     if (d.mlUnplan) { const sid = d.mlUnplan; return undoToast('Marked not eaten', () => acceptDefault(sid, ds)), restoreDefault(sid, ds); }
     if (d.mlDel) { const [sid, i] = d.mlDel.split(':'); return delItem(sid, +i, ds); }
     if (d.mlInfo) return mealInfo(d.mlInfo);
+    if (d.mlEdit) { const [sid, i] = d.mlEdit.split(':'); return editSheet(sid, +i); }
+    if (d.mlMore) { mlOpen.has(d.mlMore) ? mlOpen.delete(d.mlMore) : mlOpen.add(d.mlMore); return mealList(); }
     if (d.mlRestore) return restoreDefault(d.mlRestore, ds);
     if (d.mlAdd) return window.EBFoodLog ? EBFoodLog.focusSearch(d.mlAdd) : null;
     if (d.mlReplace) return window.enterReplaceMode(d.mlReplace);
@@ -1724,6 +1915,10 @@
     const en = t.closest('[data-energy]');
     if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); energyOpen = false; window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
     if (t.closest('[data-energy-more]')) { energyOpen = !energyOpen; return renderHome(); }
+    const tb = t.closest('[data-time]');
+    if (tb) { setTime(selectedDateStr(), +tb.dataset.time); energyOpen = false; window.EBAnalytics && EBAnalytics.track('time_logged'); return repaint(); }
+    const il = t.closest('[data-idea-log]');
+    if (il) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(null, il.dataset.ideaLog, { cal: +il.dataset.ideaCal || null }); } return; }
     const fi = t.closest('[data-food-idea]');
     if (fi) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(fi.dataset.ideaSlot || null, fi.dataset.foodIdea, { cal: +fi.dataset.ideaCal || null }); } else if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
     if (t.closest('[data-cyclog-open]')) { logDraft = draftFor(viewDs()); return renderCyclePage(); }
@@ -1929,6 +2124,7 @@
       : W.left === 0 ? 'That’s the week. Next week starts fresh tomorrow.'
       : `If you keep this pace for the ${W.left} day${W.left === 1 ? '' : 's'} left.`;
     return `<div class="wrap">
+      ${reviewHTML(W.ds, true)}
       <section class="wrap-sec">
         <p class="wrap-label">${when}</p>
         <p class="wrap-big">${n0(e.cal)} <span>of ${n0(W.T.cal)} cal</span></p>

@@ -359,10 +359,8 @@
   }
   let compact = false;   // Plan / Guide days: just the bar until she types or scans
   function resultsHTML() {
-    if (compact) {
-      if (!st.raw.trim() && !st.create && !st.focused) return '';
-      return resultsBody();
-    }
+    // Compact search now lives on its own page, so its results always show
+    // (Favourites, Frequent and Recent before she types).
     return resultsBody();
   }
   function onlineHTML() {
@@ -379,15 +377,19 @@
     const { q } = parse(st.raw);
     if (!q) {
       const favs = get(FAV, []).map(byId).filter(Boolean);
-      const rec = get(RECENT, []).map(r => [byId(r.id), r]).filter(x => x[0] && !get(FAV, []).includes(x[0].id)).slice(0, 8);
-      const shown = new Set([...favs.map(f => f.id), ...rec.map(([f]) => f.id)]);
+      // Frequent: what she has most (2+ times). Recent: the rest, newest first.
+      const all = get(RECENT, []).map(r => [byId(r.id), r]).filter(x => x[0] && !get(FAV, []).includes(x[0].id));
+      const freq = all.filter(([, r]) => (r.n || 1) >= 2).sort((a, b) => (b[1].n || 1) - (a[1].n || 1)).slice(0, 5);
+      const rec = all.filter(x => !freq.includes(x)).slice(0, 8);
+      const shown = new Set([...favs.map(f => f.id), ...freq.map(([f]) => f.id), ...rec.map(([f]) => f.id)]);
       const packs = [];
       Object.entries(get(SCANNED, {})).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).forEach(([k, v]) => {
         const f = v && byId(v.ref || 'b:' + k);
         if (f && !shown.has(f.id) && packs.length < 6) { shown.add(f.id); packs.push(f); }
       });
-      if (!favs.length && !rec.length && !packs.length) return `<p class="fl-hint">Type what you ate, like “2 roti”, “1 katori dal”, “aloo” or “100 g paneer”, or scan a pack. Foods you add show up here next time.</p>`;
+      if (!favs.length && !freq.length && !rec.length && !packs.length) return `<p class="fl-hint">Type what you ate, like “2 roti”, “1 katori dal”, “aloo” or “100 g paneer”, or scan a pack. Foods you add show up here next time.</p>`;
       return (favs.length ? `<p class="fl-label">Favourites</p><ul class="fl-list">${favs.map(f => rowHTML(f)).join('')}</ul>` : '')
+        + (freq.length ? `<p class="fl-label">Frequent</p><ul class="fl-list">${freq.map(([f, r]) => rowHTML(f, `${qtyLabel(f, r.amt, r.unit)} · ${totals(f, r.amt, r.unit).cal} cal · had ${r.n} times`)).join('')}</ul>` : '')
         + (rec.length ? `<p class="fl-label">Recent</p><ul class="fl-list">${rec.map(([f, r]) => rowHTML(f, `${qtyLabel(f, r.amt, r.unit)} · ${totals(f, r.amt, r.unit).cal} cal`)).join('')}</ul>` : '')
         + (packs.length ? `<p class="fl-label">Packs you’ve scanned</p><ul class="fl-list">${packs.map(f => rowHTML(f)).join('')}</ul>` : '');
     }
@@ -879,12 +881,14 @@
     const s = $('flSearch'); if (s) { s.focus(); try { s.setSelectionRange(s.value.length, s.value.length); } catch {} }
   }
   function remember(id, amt, unit) {
-    put(RECENT, [{ id, amt, unit }].concat(get(RECENT, []).filter(r => r.id !== id)).slice(0, 15));
+    // n counts how often she's had it, for the "Frequent" list on the search page.
+    const all = get(RECENT, []), was = all.find(r => r.id === id);
+    put(RECENT, [{ id, amt, unit, n: ((was && was.n) || 1) + (was ? 1 : 0) }].concat(all.filter(r => r.id !== id)).slice(0, 30));
   }
   function addEntry(entry, slot) {
     const d = st.d, log = getSlotLog(d);
     if (!Array.isArray(log[slot])) log[slot] = log[slot] ? [log[slot]] : [];
-    log[slot].push(entry);
+    log[slot].push({ ...entry, at: Date.now() });   // when she logged it (for the evening review)
     setSlotLog(d, log);
     if (st.replace === slot) st.replace = null;   // the new meal now stands in for the plan
     // Lock the day in whatever mode it's in (searching on a Plan day keeps it Plan).
@@ -902,6 +906,8 @@
       try { window.EBNative && EBNative.haptic && EBNative.haptic('light'); } catch {}
     } else live.innerHTML = totalHTML(f, fix ? { ...t, ...fix } : t);
   }
+  // The search page (Plan / Guide days) closes once a food is added.
+  function closePage() { if (window.EBDayMode && EBDayMode.closeSearch) EBDayMode.closeSearch(); }
   const stepOf = (unit, amt, dir) => {
     const s = unit === 'g' || unit === 'ml' ? (amt >= 100 ? 25 : 10) : 0.5;
     return Math.max(s, Math.round((amt + dir * s) / s) * s);
@@ -943,7 +949,7 @@
     if (at('[data-fl-lookup]')) return lookup(($('flCode') || {}).value);
     if (at('[data-fl-retry]')) return lookup(st.scan && st.scan.code);
     if (at('[data-fl-type]')) { st.scan = { status: 'enter', code: '' }; paintResults(); const i = $('flCode'); if (i) i.focus(); return; }
-    if (at('[data-fl-replace-cancel]')) { st.replace = null; st.raw = ''; st.open = null; return repaint(); }
+    if (at('[data-fl-replace-cancel]')) { st.replace = null; st.raw = ''; st.open = null; closePage(); return repaint(); }
     if (at('[data-fl-clear]')) {
       st.raw = ''; st.open = null; st.create = null;
       const s = $('flSearch'); s.value = ''; paintResults(); s.focus(); return;
@@ -981,6 +987,7 @@
       window.EBAnalytics && EBAnalytics.track('food_logged', { mode: 'log', source: f.src, corrected: !!st.fix });
       EB.toast && EB.toast(`${f.n} added to ${SLOT_NAME[st.slot]}`);
       Object.assign(st, { raw: '', open: null, fix: null, scan: null, online: null });
+      closePage();
       return repaint();
     }
     if (at('[data-fl-create]')) {
@@ -1006,6 +1013,7 @@
       window.EBAnalytics && EBAnalytics.track('food_created', { mode: 'log' });
       EB.toast && EB.toast(`${item.name} saved and added`);
       Object.assign(st, { raw: '', open: null, create: null });
+      closePage();
       return repaint();
     }
     // Logged entries: edit, move meal, delete
@@ -1102,6 +1110,7 @@
   });
   document.addEventListener('focusin', e => {
     if (e.target.id !== 'flSearch') return;
+    if (document.body.classList.contains('fl-page-open')) return;
     setTimeout(() => { const y = e.target.getBoundingClientRect().top + window.scrollY - 96; if (Math.abs(window.scrollY - y) > 40) window.scrollTo(0, y); }, 250);
   });
 
@@ -1123,9 +1132,11 @@
         // A suggested dish that isn't in the food list: start "my own food" with what we know.
         else if (opts && opts.cal) { st.create = { name: query, unit: '1 serving', cal: opts.cal, p: '', c: '', f: '' }; paintResults(); }
       }
-      const top = $('flResults') && document.querySelector('.fl-replace') ? document.querySelector('.fl-replace') : s;   // keep the target in view
-      const y = top.getBoundingClientRect().top + window.scrollY - 104;
-      window.scrollTo(0, Math.max(0, y));
+      if (!document.body.classList.contains('fl-page-open')) {   // the search page has its own scroll
+        const top = $('flResults') && document.querySelector('.fl-replace') ? document.querySelector('.fl-replace') : s;   // keep the target in view
+        const y = top.getBoundingClientRect().top + window.scrollY - 104;
+        window.scrollTo(0, Math.max(0, y));
+      }
       if (!query) s.focus();
     }, 60);
   }
@@ -1134,5 +1145,7 @@
   const isActive = () => !!(st.raw || st.replace || st.scan || st.label || st.open || st.create || st.edit);
   // Back to an empty, idle search.
   function reset() { Object.assign(st, { raw: '', open: null, fix: null, create: null, edit: null, scan: null, label: null, online: null, replace: null }); }
-  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
+  // For the edit sheet on Nutrition's meal cards.
+  const food = id => byId(id);
+  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, food, totals, qtyLabel, unitText, stepOf, focus: () => { st.focused = true; }, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
 })();

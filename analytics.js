@@ -27,6 +27,9 @@
     workout_removed:      ['source'],
     weight_logged:        [],
     energy_logged:        [],
+    time_logged:          [],
+    food_edited:          [],   // that a logged food was edited, never which or how much
+    food_tagged:          [],   // that a tag was set, never the tag or the food
     health_synced:        [],
     cycle_log_used:       ['section'],
     mood_face_saved:      [],   // that a face was saved, never the drawing
