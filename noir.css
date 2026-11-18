@@ -714,3 +714,103 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-coach:active .coach-fig { transfo
   html.noir body:not(#_a):not(#_b):not(#_c) .app-coach.coach-say .coach-bubble p span { animation-name: coachFadeOnly !important; }
 }
 @keyframes coachFadeOnly { from { opacity: 0; } to { opacity: 1; } }
+
+/* ══ Today line, Time picker, meal cards, edit sheet, review, search page ══ */
+/* One line under the calendar / current weight: eaten · burned · left */
+.app-sum { padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum { background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; }
+.app-sum-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 14px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-line { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-line b { color: var(--n-ink) !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-line i { font-style: normal; color: var(--n-ink3) !important; }
+.app-sum-bar { height: 4px; border-radius: 2px; margin: 8px 0 6px; overflow: hidden; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar i { display: block; height: 100%; border-radius: 2px; background: var(--n-accent-l) !important; transition: width .4s ease; }
+/* Over: plain grey, never red */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-bar i { background: var(--n-ink2) !important; }
+.app-sum-pro { margin: 0; font-size: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-pro { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-pro b { color: var(--n-ink) !important; font-weight: 600; }
+
+/* Time today + meal idea */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-time-label { margin-top: 12px !important; }
+.app-idea { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px; border-radius: 10px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-idea { background: var(--n-card2) !important; }
+.app-idea > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-idea b { color: var(--n-ink) !important; font-size: 15px; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-idea small { color: var(--n-ink2) !important; font-size: 13px; line-height: 1.4; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-idea-hint { margin: 12px 0 0; font-size: 13px; color: var(--n-ink3) !important; }
+
+/* Meal card header: kcal · protein */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-head em { color: var(--n-ink2) !important; font-size: 13px !important; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-head em b { color: var(--n-ink) !important; font-weight: 600; }
+/* Show N more / Show less */
+.ml-more { display: block; width: 100%; min-height: 44px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-more { color: var(--n-accent-l) !important; border-top: .5px solid var(--n-hair) !important; }
+/* Tag on a row */
+.ml-tag { font-style: normal; display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-tag { background: var(--n-pill) !important; color: var(--n-pill-tx) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-tag-worth, html.noir body:not(#_a):not(#_b):not(#_c) .ml-tag-more { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; }
+
+/* Edit sheet */
+.ml-edit { max-height: 88vh; overflow-y: auto; }
+.ml-edit .app-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ml-edit .app-sheet-head b { flex: 1; text-align: left; font-size: 17px; }
+.ml-edit-live { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px; }
+.ml-edit-live b { font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-live span { color: var(--n-ink2) !important; font-size: 14px; }
+.ml-edit-label { margin: 16px 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-label { color: var(--n-ink3) !important; }
+.ml-edit-label span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.ml-edit-qty { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; }
+.ml-edit-qty input { text-align: center; font-size: 17px !important; min-height: 48px; }
+.ml-step { min-height: 48px; border-radius: 10px; border: 0; font-size: 22px; font-weight: 500; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-step { background: var(--n-card2) !important; color: var(--n-ink) !important; }
+.ml-edit-units { margin-top: 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-unit { margin: 8px 0 0; font-size: 13px; color: var(--n-ink2) !important; }
+.ml-edit-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ml-edit-chips .eb-chip { min-height: 36px; padding: 0 12px; border-radius: 18px; font-size: 14px; }
+.ml-edit-acts { display: grid; gap: 4px; margin-top: 20px; }
+.ml-edit-acts .eb-link { min-height: 44px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-acts .del { color: var(--n-danger) !important; }
+
+/* End-of-day review */
+.ml-review { margin-top: 16px; padding: 12px 16px 14px; border-radius: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-review { background: var(--n-card) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-review .ml-head { margin: 0 0 8px !important; }
+.ml-review dl { margin: 0; display: grid; gap: 10px; }
+.ml-review dl > div { display: grid; gap: 2px; }
+.ml-review dt { font-size: 12px; font-weight: 600; }
+.ml-review dd { margin: 0; font-size: 14px; line-height: 1.45; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-review dt { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.ml-review dd, .ml-review > p) { color: var(--n-ink) !important; }
+.ml-review > p { margin: 0; font-size: 14px; line-height: 1.45; }
+
+/* Search: its own full-screen page */
+body.fl-page-open { overflow: hidden; }
+#dayModeSearch.fl-page { position: fixed; inset: 0; z-index: 250; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 24px); margin: 0 !important; max-width: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #dayModeSearch.fl-page { background: var(--n-page) !important; }
+.flp-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 44px; margin-bottom: 8px; }
+.flp-head b { font-size: 17px; font-weight: 600; }
+.flp-back { justify-self: start; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; font: inherit; font-size: 17px; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .flp-back { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .flp-head b { color: var(--n-ink) !important; }
+/* Guide days: a tap target that looks like the search bar */
+.fl-fakebar { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 0; font: inherit; font-size: 16px; text-align: left; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-fakebar { background: var(--n-card2) !important; color: var(--n-ink3) !important; }
+/* Review inside "Your day, wrapped" */
+.wrap-review { margin: 0; display: grid; gap: 10px; }
+.wrap-review > div { display: grid; gap: 2px; }
+.wrap-review dt { font-size: 12px; font-weight: 600; }
+.wrap-review dd { margin: 0; font-size: 14px; line-height: 1.45; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-review dt { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wrap-review dd { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .app-sheet-head { display: flex !important; justify-content: space-between !important; align-items: center; padding: 0 !important; margin: 0 0 4px !important; width: auto !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .app-sheet-head b { flex: 1; text-align: left !important; }
+/* Edit sheet: kcal big, then all four macros in a row */
+.ml-edit-live { flex-wrap: wrap; }
+.ml-edit-macros { flex-basis: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.ml-edit-macros li { display: grid; gap: 2px; padding: 8px; border-radius: 8px; font-size: 12px; }
+.ml-edit-macros li b { font-family: inherit !important; font-size: 15px !important; font-weight: 600 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-macros li { background: var(--n-card2) !important; color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-macros li b { color: var(--n-ink) !important; }

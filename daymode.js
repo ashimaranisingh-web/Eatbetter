@@ -294,13 +294,15 @@
       if (window.EBFoodLog) EBFoodLog.focusSearch(null, cl.dataset.craveLog, { cal: +cl.dataset.craveCal || null });
       return;
     }
-    if (t.closest('[data-tools-search]')) { searchOpen = true; paint(); const i = $('flSearch'); if (i) i.focus(); return; }
+    if (t.closest('[data-tools-search]')) { searchOpen = true; if (window.EBFoodLog && EBFoodLog.focus) EBFoodLog.focus(); paint(); const i = $('flSearch'); if (i) i.focus(); return; }
     if (t.closest('[data-tools-scan]')) { searchOpen = true; paint(); const b = document.querySelector('#foodLog [data-fl-scan]'); if (b) b.click(); return; }
     if (t.closest('[data-tools-close]')) { searchOpen = false; if (window.EBFoodLog && EBFoodLog.reset) EBFoodLog.reset(); return paint(); }
   });
 
   let searchOpen = false;   // Plan days: is the search row unfolded into a bar?
-  function openSearch() { searchOpen = true; }
+  function openSearch() { searchOpen = true; if (window.EBFoodLog && EBFoodLog.focus) EBFoodLog.focus(); }
+  function closeSearch() { searchOpen = false; if (window.EBFoodLog && EBFoodLog.reset) EBFoodLog.reset(); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && searchOpen && !$('flSheet')) { closeSearch(); paint(); } });
   function paint() {
     const page = $('pageFood'); if (!page) return;
     if (!$('dayModeSearch')) {
@@ -326,8 +328,11 @@
           <button type="button" class="app-tools-btn" data-tools-scan aria-label="Scan a barcode"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg></button>
         </span>`;
     }
-    const open = plan && (searchOpen || (window.EBFoodLog && EBFoodLog.isActive && EBFoodLog.isActive()));
+    // Plan / Guide days: search is its own full-screen page (recent + frequent foods),
+    // so the meal list underneath never gets mixed up with results.
+    const open = mode !== 'log' && (searchOpen || (window.EBFoodLog && EBFoodLog.isActive && EBFoodLog.isActive()));
     page.classList.toggle('tools-open', !!open);
+    document.body.classList.toggle('fl-page-open', !!open);
     if (plan) {
       if (tracker && tracker.nextElementSibling !== tools) tracker.after(tools);
       if (tools.nextElementSibling !== search) tools.after(search);
@@ -357,7 +362,13 @@
     foot.innerHTML = mode === 'plan' && p && String(p.food && p.food.usual || '').trim()
       ? `<button type="button" class="app-tools-crave app-mp-text" data-foods-open>Want different meals? <b>Change your plan’s foods</b></button>` : '';
     // Log mode's body has its own full search (with the logged list).
-    search.innerHTML = mode !== 'log' && window.EBFoodLog ? EBFoodLog.html(d, { compact: true, closable: plan }) : '';
+    search.classList.toggle('fl-page', !!open);
+    if (open) search.setAttribute('role', 'dialog'); else search.removeAttribute('role');
+    search.setAttribute('aria-label', 'Search food');
+    const bar = `<button type="button" class="fl-fakebar" data-tools-search><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search food, e.g. 2 roti</span></button>`;
+    search.innerHTML = mode === 'log' || !window.EBFoodLog ? ''
+      : open ? `<div class="flp-head"><button type="button" class="flp-back" data-tools-close aria-label="Back"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Back</button><b>Add food</b><span></span></div>${EBFoodLog.html(d, { compact: true })}`
+      : plan ? '' : bar;
     body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : foodsHTML();
     if (window.EBFoodLog) EBFoodLog.mounted();
   }
@@ -444,5 +455,5 @@
   }
   const currentMode = () => modeFor(todayStr());
 
-  window.EBDayMode = { openSearch, subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
+  window.EBDayMode = { openSearch, closeSearch, subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
 })();

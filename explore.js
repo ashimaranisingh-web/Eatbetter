@@ -13,7 +13,7 @@
 
   // Her data: profile, meals, cycle, energy, workouts, weight, challenges,
   // food favourites and history. UI, sign-in and analytics keys still save.
-  const DATA = /^(eb_profile|eb_energy|eb_symptoms|eb_cycle_daily|eb_challenges|eb_health|eb_food_(recent|fav|scanned)|eb_lastDayMode|mealPlan_|slotEaten_|wakeup_items_|lastBuild_|dayMode_)/;
+  const DATA = /^(eb_profile|eb_energy|eb_time|eb_symptoms|eb_cycle_daily|eb_challenges|eb_health|eb_food_(recent|fav|scanned)|eb_lastDayMode|mealPlan_|slotEaten_|wakeup_items_|lastBuild_|dayMode_)/;
 
   const exploring = () => {
     try {
