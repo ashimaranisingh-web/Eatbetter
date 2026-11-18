@@ -337,14 +337,17 @@
 
   // One line under the calendar (and current weight): eaten · burned · left,
   // a thin bar, and protein. Going over is shown in plain grey, never red.
+  // Is "Current weight" on screen above Home's cards? (switched on and a weight saved)
+  const weightShown = () => { try { return !!EB.getProfile().showWeight && +getWeight().current > 0; } catch { return false; } };
+  let homeSum = '';   // today's line, shown at the top of the week card
   function todaySumHTML(eaten, burned, target, p, pTarget, isToday) {
     const budget = target + burned, left = Math.round(budget - eaten), over = left < 0;
     const pct = budget > 0 ? Math.min(100, Math.round(eaten / budget * 100)) : 0;
     const n = v => Math.round(v).toLocaleString();
-    return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: eaten ${n(eaten)}, burned ${n(burned)}, ${over ? `${n(-left)} over` : `${n(left)} left`} calories. ${Math.round(p)} of ${pTarget} grams protein.">
+    return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: eaten ${n(eaten)}, burned ${n(burned)}, ${over ? `${n(-left)} over` : `${n(left)} left`} calories.">
+      <p class="app-card-label">${isToday ? 'Today' : 'This day'}</p>
       <p class="app-sum-line" aria-hidden="true"><span>Eaten <b>${n(eaten)}</b></span><i>·</i><span>Burned <b>${n(burned)}</b></span><i>·</i><span>${over ? 'Over' : 'Left'} <b>${n(Math.abs(left))}</b> kcal</span></p>
       <div class="app-sum-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-      <p class="app-sum-pro" aria-hidden="true"><b>${Math.round(p)}</b> / ${pTarget} g protein</p>
     </div>`;
   }
 
@@ -397,9 +400,10 @@
       energy: energyFor(ds), challengeDone: !!(chLine && /ch-home-dot done/.test(chLine)),
     }) : '';
     page.querySelector('.app-home-body').innerHTML = `
-      ${todaySumHTML(eaten, burned, target, cons.p, pTarget, isToday)}
+      ${weightShown() ? coach : ''}
+      ${(homeSum = todaySumHTML(eaten, burned, target, cons.p, pTarget, isToday), weekCardHTML(eaten, target))}
+      ${weightShown() ? '' : coach}
       ${heroHTML}
-      ${coach}
       <div class="app-card app-shortcuts app-todaylist">
         <p class="app-card-label">${isToday ? 'Today' : dayDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
         ${!isToday ? dayFoodHTML(ds, target) : nm ? `<div class="app-today-next" data-go="food" role="button" tabindex="0" aria-label="${nm.now ? 'Now' : 'Up next'}: ${esc(nm.name)}">
@@ -418,7 +422,6 @@
         ${workoutRowHTML(ds)}
       </div>
       ${energyHTML(ds)}
-      ${weekCardHTML(eaten, target)}
 `;
     if (weekSec && $('appParking') && weekSec.parentElement !== $('appParking')) $('appParking').appendChild(weekSec);
     paintHomeWeek();
@@ -1739,14 +1742,15 @@
       else { const n = Math.ceil((CAL_PER_KG - real) / avg); kgVal = `${n} day${n === 1 ? '' : 's'}`; }
     }
     return `<div class="app-card app-weekcard">
-      <div class="app-row"><p class="app-card-label">This week</p><span class="app-muted small">${range}</span></div>
+      ${homeSum}
+      <div class="app-row app-week-row"><p class="app-card-label">This week</p><span class="app-muted small">${range}</span></div>
       ${head}
-      <div class="app-week-lines">
+      ${homeWeekOpen ? `<div class="app-week-lines">
         <button type="button" data-go="food"><span>1 kg in</span><b>${kgVal}</b></button>
         <button type="button" data-go="fitness"><span>Burned this week</span><b>${burnedWk.toLocaleString()} cal</b></button>
       </div>
-      ${homeWeekOpen ? `<ul class="app-weekdays" aria-label="Calories by day, target ${T.toLocaleString()}">${days}</ul>${note}` : ''}
-      <button type="button" class="app-week-more" data-home-week aria-expanded="${homeWeekOpen}">${homeWeekOpen ? 'Hide days' : 'Show each day'} <i aria-hidden="true">▾</i></button>
+      <ul class="app-weekdays" aria-label="Calories by day, target ${T.toLocaleString()}">${days}</ul>${note}` : ''}
+      <button type="button" class="app-week-more" data-home-week aria-expanded="${homeWeekOpen}">${homeWeekOpen ? 'Show less' : 'Show more'} <i aria-hidden="true">▾</i></button>
     </div>`;
   }
   document.addEventListener('click', e => {
