@@ -141,25 +141,17 @@
     });
   }
 
-  // Energy: a once-a-day check-in. After she answers it folds to one line;
-  // "More ideas" opens the levels and the workout / food rails again.
-  let energyOpen = false;
+  // Energy + Time: always open. The meal idea, workouts and foods update
+  // as soon as she taps a different option.
   function energyHTML(ds) {
     const cur = energyFor(ds);
     const s = suggest(ds);
     const foods = foodIdeas(ds);
     const logged = getActivities(ds).filter(a => a.suggested === ds);
     const lv = lvlOf(cur), tm = timeFor(ds);
-    if (cur && tm && !energyOpen) {
-      const lvl = (ENERGY.find(e => e.v === lv) || {}).t || '', tt = (TIME.find(x => x.v === tm) || {}).t || '';
-      return `<div class="app-card app-energy-card compact">
-        <div class="ch-head"><p class="app-card-label">Energy · ${esc(lvl)}  ·  Time · ${esc(tt)}</p><button type="button" class="ch-manage" data-energy-more aria-expanded="false">Change</button></div>
-        ${mealIdeaHTML(ds)}
-      </div>`;
-    }
     // Both pickers stay on screen, so changing either is one tap.
     return `<div class="app-card app-energy-card">
-      <div class="ch-head"><p class="app-card-label">Energy today</p>${cur && tm ? '<button type="button" class="ch-manage" data-energy-more aria-expanded="true">Show less</button>' : ''}</div>
+      <p class="app-card-label">Energy today</p>
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy today">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${lv === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${lv === e.v}">${e.t}</button>`).join('')}
       </div>
@@ -1913,10 +1905,9 @@
     if (cm) { e.preventDefault(); return openCraving(cm.dataset.craveMore); }
     const g = t.closest('[data-go]'); if (g) { e.preventDefault(); return go(g.dataset.go); }
     const en = t.closest('[data-energy]');
-    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); energyOpen = false; window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
-    if (t.closest('[data-energy-more]')) { energyOpen = !energyOpen; return renderHome(); }
+    if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
     const tb = t.closest('[data-time]');
-    if (tb) { setTime(selectedDateStr(), +tb.dataset.time); energyOpen = false; window.EBAnalytics && EBAnalytics.track('time_logged'); return repaint(); }
+    if (tb) { setTime(selectedDateStr(), +tb.dataset.time); window.EBAnalytics && EBAnalytics.track('time_logged'); return repaint(); }
     const il = t.closest('[data-idea-log]');
     if (il) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(null, il.dataset.ideaLog, { cal: +il.dataset.ideaCal || null }); } return; }
     const fi = t.closest('[data-food-idea]');
