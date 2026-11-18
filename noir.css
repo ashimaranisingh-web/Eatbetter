@@ -814,3 +814,9 @@ html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .app-sheet-head b { flex: 1; 
 .ml-edit-macros li b { font-family: inherit !important; font-size: 15px !important; font-weight: 600 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-macros li { background: var(--n-card2) !important; color: var(--n-ink3) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit-macros li b { color: var(--n-ink) !important; }
+
+/* Home: Today + This week in one card, at the top */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum { background: transparent !important; box-shadow: none !important; padding: 0 0 12px !important; margin: 0 0 12px !important; border-radius: 0 !important; border-bottom: .5px solid var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum .app-card-label { margin: 0 0 8px !important; }
+/* Home: no calendar strip (the other tabs keep it) */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome #cycleSection :is(.cycle-month-row, .cycle-calendar-wrap, .cycle-mood-hint) { display: none !important; }
