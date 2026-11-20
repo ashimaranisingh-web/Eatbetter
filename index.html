@@ -1081,7 +1081,7 @@
   }
   .cycle-dot.menstrual  { background: #ef5350; }
   .cycle-dot.follicular { background: #42a5f5; }
-  .cycle-dot.ovulation  { background: #43a047; }
+  .cycle-dot.ovulation  { background: #2bbbad; }   /* teal: green is the app's "on track" colour */
   .cycle-dot.luteal     { background: #ffd600; }
 
   /* ── Smart insights ── */
@@ -4128,38 +4128,42 @@ function computeConsumed(day) {
   return totals;
 }
 
-function renderTracker() {
-  const consumed = computeConsumed(currentDay);
-  const burned = totalBurned(currentDay);
-  const netCal = consumed.cal - burned;
+// One source for a day's calories, used by Home and Nutrition alike, so both
+// read the same: Target − Eaten + Burned = Left (or Over, shown in orange).
+function calorieDay(day) {
+  const consumed = computeConsumed(day || currentDay);
   const target = isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal;   // PMS days carry the higher target
-  const isDeficit = netCal < 0;
-  const isOver = netCal > target;
-  const fmt = (v) => r2(v).toLocaleString();
+  const eaten = Math.round(consumed.cal), burned = Math.round(totalBurned(day || currentDay));
+  const left = target - eaten + burned;
+  return { consumed, target, eaten, burned, left, over: left < 0 };
+}
+
+function renderTracker() {
+  const C = calorieDay(currentDay), consumed = C.consumed;
+  const fmt = (v) => Math.round(v).toLocaleString();
 
   document.getElementById('trackerDayLabel').textContent = DAY_NAMES[currentDay] + "'s progress";
 
-  const netDisplay = isDeficit ? `−${fmt(Math.abs(netCal))}` : fmt(netCal);
-  const netClass = isOver ? ' over' : (isDeficit ? ' deficit' : '');
-  let netSub = `of ${fmt(target)}`;
-  if (isOver) netSub = `+${fmt(netCal - target)} over`;
-  else if (isDeficit) netSub = `${fmt(Math.abs(netCal))} cal deficit`;
-  else netSub = `of ${fmt(target)}`;
-
+  // Same words and order as Home: Target − Eaten + Burned = Left.
   document.getElementById('calEquation').innerHTML = `
     <div class="cal-term">
-      <div class="cal-term-val">${fmt(consumed.cal)}</div>
-      <div class="cal-term-label">Eaten</div>
+      <div class="cal-term-val">${fmt(C.target)}</div>
+      <div class="cal-term-label">Target</div>
     </div>
     <div class="cal-op">−</div>
     <div class="cal-term">
-      <div class="cal-term-val burned">${fmt(burned)}</div>
+      <div class="cal-term-val">${fmt(C.eaten)}</div>
+      <div class="cal-term-label">Eaten</div>
+    </div>
+    <div class="cal-op">+</div>
+    <div class="cal-term">
+      <div class="cal-term-val burned">${fmt(C.burned)}</div>
       <div class="cal-term-label">Burned</div>
     </div>
     <div class="cal-op">=</div>
     <div class="cal-term">
-      <div class="cal-term-val net${netClass}">${netDisplay}</div>
-      <div class="cal-term-sub">${netSub}</div>
+      <div class="cal-term-val net${C.over ? ' over-warn' : ''}">${fmt(Math.abs(C.left))}</div>
+      <div class="cal-term-label">${C.over ? 'Over' : 'Left'}</div>
     </div>
   `;
 
@@ -4592,7 +4596,7 @@ function getPhaseForDate(dateStr, cycleStartStr) {
 const PHASE_META = {
   menstrual:  { dot: 'menstrual',  emoji: '🔴', label: 'Menstrual',  color: '#ef5350' },
   follicular: { dot: 'follicular', emoji: '💙', label: 'Follicular', color: '#42a5f5' },
-  ovulation:  { dot: 'ovulation',  emoji: '💚', label: 'Ovulation',  color: '#43a047' },
+  ovulation:  { dot: 'ovulation',  emoji: '🩵', label: 'Ovulation',  color: '#2bbbad' },
   luteal:     { dot: 'luteal',     emoji: '🌙', label: 'PMS',        color: '#ffd600' },
 };
 

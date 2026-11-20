@@ -725,7 +725,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-line b { color: var(--n-ink) 
 html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-line i { font-style: normal; color: var(--n-ink3) !important; }
 .app-sum-bar { height: 4px; border-radius: 2px; margin: 8px 0 6px; overflow: hidden; }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar { background: var(--n-card2) !important; }
-html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar i { display: block; height: 100%; border-radius: 2px; background: var(--n-accent-l) !important; transition: width .4s ease; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar i { display: block; height: 100%; border-radius: 2px; background: var(--n-accent) !important; transition: width .4s ease; }
 /* Over: plain grey, never red */
 html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-bar i { background: var(--n-ink2) !important; }
 .app-sum-pro { margin: 0; font-size: 12px; }
@@ -1018,14 +1018,13 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-big b { color: var(--n-ink) !
 html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-big span { color: var(--n-ink2) !important; font-size: 15px; }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-big b { color: var(--n-ink2) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum-line { display: block; font-size: 13px; color: var(--n-ink3) !important; margin: 0; }
-.app-wkmini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.app-wkmini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
 .app-wkmini li { display: grid; justify-items: center; gap: 4px; }
 .wkm-bar { position: relative; display: block; width: 100%; max-width: 32px; height: 48px; border-radius: 6px; overflow: hidden; }
 .wkm-bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 6px; }
 html.noir body:not(#_a):not(#_b):not(#_c) .wkm-bar { background: var(--n-card2) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .wkm-bar i { background: var(--n-accent) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.today .wkm-bar i { background: var(--n-accent-l) !important; }
-html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.over .wkm-bar i { background: var(--n-ink3) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.future .wkm-bar { background: transparent !important; box-shadow: inset 0 0 0 1px var(--n-hair2); }
 .wkm-d { font-size: 12px; font-weight: 600; }
 html.noir body:not(#_a):not(#_b):not(#_c) .wkm-d { color: var(--n-ink3) !important; }
@@ -1075,3 +1074,37 @@ html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap:has(.gr-swipe-act:focus
 html.noir body:not(#_a):not(#_b):not(#_c) .gr-list { display: grid; gap: 8px; background: transparent !important; border-radius: 0; overflow: visible; }
 html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap { border-radius: 10px; }
 html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap + .gr-swipe-wrap { border-top: 0 !important; }
+/* Week bars: tap a day to see what was eaten */
+.app-wkmini .wkm { display: grid; justify-items: center; gap: 4px; width: 100%; padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.app-wkmini .wkm:disabled { cursor: default; }
+.wkm-n { height: 16px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; visibility: hidden; }
+.app-wkmini .wkm[aria-pressed="true"] .wkm-n { visibility: visible; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wkm-n { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini .wkm[aria-pressed="true"] .wkm-bar { box-shadow: 0 0 0 1.5px var(--n-ink2); }
+/* Nutrition equation now reads like Home: Target − Eaten + Burned = Left */
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-equation { grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr !important; gap: 2px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-op { padding: 0 2px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-term-val.net { font-weight: 700 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-term-val.net.over-grey { color: var(--n-ink2) !important; }
+/* "Eat in a 400 cal deficit…" shows only with Macros open */
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker:not(.macros-open) #planGapLabel { display: none !important; }
+/* Week bars, stacked: green up to the target, orange only for what went over it */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.over .wkm-bar i.wkm-ok { background: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.today .wkm-bar i.wkm-ok { background: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li .wkm-bar i.wkm-x { background: var(--n-warn) !important; border-radius: 6px 6px 0 0; }
+.app-wkmini .wkm-bar i.wkm-ok.cut { border-radius: 0 0 6px 6px; }
+/* Over the day's target: orange everywhere (Home number + bar, Nutrition Left) */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-big b { color: var(--n-warn) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-bar i { background: var(--n-warn) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-term-val.net.over-warn { color: var(--n-warn) !important; }
+/* Groceries + kitchen tiles read as one group: 8px between them */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-grocery { margin-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-grocery + .app-tiles { margin-top: 16px !important; }
+/* Text links above/below the kitchen group carry tap padding (12px / 8px);
+   subtract it so the visible gap matches the page's 16px rhythm */
+html.noir body:not(#_a):not(#_b):not(#_c) #mealPlanFoot + .app-grocery { margin-top: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles { margin-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles + .app-food-search:not([hidden]) ~ .app-wrapup, html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles ~ .app-wrapup { margin-top: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles { column-gap: 12px !important; }
+/* Current weight lives on Home only */
+html.noir body:not(#_a):not(#_b):not(#_c) #cycleSection .cycle-weight { display: none !important; }

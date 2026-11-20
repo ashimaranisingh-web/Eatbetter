@@ -220,7 +220,7 @@
   const PHASE_STYLE = {
     menstrual:  { deep: '#b23a3c', word: 'Period' },
     follicular: { deep: '#2f6fb0', word: 'Follicular' },
-    ovulation:  { deep: '#2e7d32', word: 'Ovulation' },
+    ovulation:  { deep: '#00695c', word: 'Ovulation' },
     luteal:     { deep: '#8a6500', word: 'PMS' },
   };
   function applyTint() {
@@ -295,7 +295,7 @@
   }
 
   // One line under the calendar (and current weight): eaten · burned · left,
-  // a thin bar, and protein. Going over is shown in plain grey, never red.
+  // a thin bar. Going over shows in orange, the same as the week bars and Nutrition.
   // Is "Current weight" on screen above Home's cards? (switched on and a weight saved)
   const weightShown = () => { try { return !!EB.getProfile().showWeight && +getWeight().current > 0; } catch { return false; } };
   let homeSum = '';   // today's line, shown at the top of the week card
@@ -303,11 +303,11 @@
     const budget = target + burned, left = Math.round(budget - eaten), over = left < 0;
     const pct = budget > 0 ? Math.min(100, Math.round(eaten / budget * 100)) : 0;
     const n = v => Math.round(v).toLocaleString();
-    // One answer first (what's left), then where it came from. Over is grey, never red.
+    // One answer first (what's left), then where it came from. Over is orange.
     return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: ${over ? `${n(-left)} calories over` : `${n(left)} calories left`}. Eaten ${n(eaten)}, burned ${n(burned)}, target ${n(target)}.">
       <p class="app-sum-big" aria-hidden="true"><b>${n(Math.abs(left))}</b><span>kcal ${over ? 'over' : 'left'} ${isToday ? 'today' : 'this day'}</span></p>
       <div class="app-sum-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
-      <p class="app-sum-line" aria-hidden="true">${n(eaten)} eaten · ${n(burned)} burned · target ${n(target)}</p>
+      <p class="app-sum-line" aria-hidden="true">Target ${n(target)} − eaten ${n(eaten)} + burned ${n(burned)}</p>
     </div>`;
   }
 
@@ -322,10 +322,8 @@
     const ds = homeDs || selectedDateStr();
     const isToday = !homeDs, dayDate = new Date(ds + 'T00:00');
     const p = EB.getProfile();
-    const cons = computeConsumed(currentDay);
-    const eaten = Math.round(cons.cal);
-    const burned = getActivities(ds).reduce((a, x) => a + (parseInt(x.cal) || 0), 0);
-    const target = isPMSMode() ? PMS_TARGETS.cal : TARGETS.cal;
+    const C = calorieDay(currentDay), cons = C.consumed;   // same numbers as Nutrition
+    const eaten = C.eaten, burned = C.burned, target = C.target;
     const pTarget = isPMSMode() ? PMS_TARGETS.p : TARGETS.p;
     const left = target - eaten + burned;
     const info = phaseOf(ds);
@@ -1724,8 +1722,12 @@
     // today highlighted, over days grey, days ahead empty. One verdict line under it.
     const minis = d.map(x => {
       const dt = new Date(x.ds + 'T00:00'), c = Math.round(x.eat.cal), future = x.ds > today, isT = x.ds === today;
-      const h = future || !c ? 0 : Math.min(100, Math.round(c / (T * 1.25) * 100));
-      return `<li class="${isT ? 'today' : ''}${future ? ' future' : ''}${c > T && !isT ? ' over' : ''}"><span class="wkm-bar"><i style="height:${h}%"></i></span><span class="wkm-d">${dt.toLocaleDateString(undefined, { weekday: 'narrow' })}</span></li>`;
+      // Stacked: green up to the target (where she'd have stopped), orange only for the extra.
+      const sc = v => Math.round(v / (T * 1.25) * 100);
+      const ok = future || !c ? 0 : Math.min(100, sc(Math.min(c, T))), extra = future || c <= T ? 0 : Math.min(100 - ok, sc(c - T));
+      // Tap a day to see what she ate (the number sits above its bar).
+      const day = dt.toLocaleDateString(undefined, { weekday: 'long' });
+      return `<li class="${isT ? 'today' : ''}${future ? ' future' : ''}${c > T ? ' over' : ''}"><button type="button" class="wkm" data-wkm ${future ? 'disabled' : ''} aria-label="${day}: ${future ? 'not yet' : `${c.toLocaleString()} cal eaten${c > T ? `, ${(c - T).toLocaleString()} over` : ''}`}" aria-pressed="false"><b class="wkm-n" aria-hidden="true">${future ? '' : c.toLocaleString()}</b><span class="wkm-bar"><i class="wkm-ok${extra ? ' cut' : ''}" style="height:${ok}%"></i>${extra ? `<i class="wkm-x" style="bottom:${ok}%;height:${extra}%"></i>` : ''}</span><span class="wkm-d">${dt.toLocaleDateString(undefined, { weekday: 'narrow' })}</span></button></li>`;
     }).join('');
     const diffWk = expected - ate;
     const verdict = !ate ? 'Log your meals and your week shows up here.'
@@ -1744,6 +1746,13 @@
       <button type="button" class="app-week-more" data-home-week aria-expanded="${homeWeekOpen}">${homeWeekOpen ? 'Show less' : 'Show more'} <i aria-hidden="true">▾</i></button>
     </div>`;
   }
+  // Week bars: one tap shows that day's number, a second tap (or another day) hides it.
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-wkm]'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.closest('.app-wkmini').querySelectorAll('[data-wkm]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    b.setAttribute('aria-pressed', String(on));
+  });
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-home-week]'); if (!b) return;
     homeWeekOpen = !homeWeekOpen;
@@ -2215,7 +2224,7 @@
     const F = (w, px) => `${w} ${px}px -apple-system, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif`;
     const n0 = v => Math.round(v).toLocaleString();
     const today = phaseOf(todayStr()), st = today && PHASE_STYLE[today.phase];
-    g.fillStyle = st ? st.deep : '#2e7d32'; g.fillRect(0, 0, W, H);
+    g.fillStyle = st ? st.deep : '#00695c'; g.fillRect(0, 0, W, H);
     if (today) { g.fillStyle = 'rgba(255,255,255,.07)'; g.font = F(900, 900); g.textAlign = 'right'; g.fillText(String(today.dayNum), W + 140, 820); g.textAlign = 'left'; }
     const text = (str, x, y, w, px, a = 1, align = 'left') => { g.globalAlpha = a; g.font = F(w, px); g.textAlign = align; g.fillText(str, x, y); g.globalAlpha = 1; g.textAlign = 'left'; };
     g.fillStyle = '#fff';
