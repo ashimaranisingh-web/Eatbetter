@@ -13,7 +13,7 @@ struct WidgetDay: Codable {
     let d: String          // "2026-11-13"
     let day: Int           // day of cycle
     let label: String      // "Ovulation"
-    let color: String      // phase colour, "#2bbbad"
+    let color: String      // phase colour, "#f48fb1"
     let deep: String       // darker phase colour for backgrounds
     let periodIn: Int?     // days until next period
 }
@@ -89,7 +89,7 @@ private func entry(at date: Date, data: WidgetData?) -> MenufiEntry {
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> MenufiEntry {
         MenufiEntry(date: .now,
-                    day: WidgetDay(d: "", day: 13, label: "Ovulation", color: "#2bbbad", deep: "#00695c", periodIn: 15),
+                    day: WidgetDay(d: "", day: 13, label: "Ovulation", color: "#f48fb1", deep: "#ad1457", periodIn: 15),
                     next: WidgetMeal(slot: "Lunch", time: "1–2pm", start: 13, end: 14, name: "Dal, rice and greens", detail: "About 450 cal", logged: false),
                     allLogged: false,
                     workout: WidgetWorkout(name: "45 min strength", detail: "About 270 cal", done: false, guess: false))
