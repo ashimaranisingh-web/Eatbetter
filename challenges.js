@@ -233,7 +233,7 @@
         <div class="ch-head"><p class="app-card-label">Today’s challenges</p><button type="button" class="ch-manage" data-ch-manage>Manage</button></div>
         <ul class="ch-list">${rows}</ul>
       </div>
-      <button type="button" class="ch-new-out" data-ch-new>+ New challenge</button>`;
+      <button type="button" class="ch-new-out eb-btn primary" data-ch-new>+ New challenge</button>`;
   }
   // One line for Home: "Today: 20 push-ups, 15 crunches".
   function homeLine() {

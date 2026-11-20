@@ -13,7 +13,7 @@
   // Saved data that follows the person between devices. Left out on purpose:
   // eb_health (each phone connects to Health itself), eb_theme, eb_consent,
   // eb_sync, weekExpanded and Supabase's own session keys.
-  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_time|eb_symptoms|eb_cycle_daily|eb_moodfaces|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
+  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_time|eb_grocery|eb_symptoms|eb_cycle_daily|eb_moodfaces|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
 
   let session = null, applying = false, pushTimer = null;
 
@@ -114,6 +114,9 @@
       lastSyncedAt: m.lastSyncedAt || 0,
     }) || local;
     const changedHere = !same(merged, local);
+    // Her account's data arriving ends "looking around": otherwise the look-around
+    // guard drops these writes, the data never lands, and the app reloads forever.
+    if (changedHere && window.EBExplore && EBExplore.isOn()) EBExplore.end();
     if (changedHere) apply(merged);
     if (!same(merged, row.data.keys)) await push(merged, readAt); else setMeta({ lastSyncedAt: readAt });
     return changedHere;
@@ -126,7 +129,9 @@
     try {
       const hadProfile = !!(window.EB && EB.getProfile && EB.getProfile().completedAt);
       if (!(await syncNow())) return;
-      if (!hadProfile) return location.reload();
+      // At most one restore-reload a minute, so a failed restore can never loop.
+      let recent = false; try { recent = Date.now() - (+sessionStorage.getItem('eb_restore_reload') || 0) < 60000; } catch {}
+      if (!hadProfile && !recent) { try { sessionStorage.setItem('eb_restore_reload', String(Date.now())); } catch {} return location.reload(); }
       document.dispatchEvent(new CustomEvent('eb:profile'));
       document.dispatchEvent(new CustomEvent('eb:synced'));
     }

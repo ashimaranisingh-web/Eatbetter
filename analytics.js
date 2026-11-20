@@ -28,6 +28,10 @@
     weight_logged:        [],
     energy_logged:        [],
     time_logged:          [],
+    food_corrected:       [],   // that she fixed a food's name or numbers, never which
+    grocery_opened:       [],   // groceries: never the items
+    grocery_added:        [],
+    grocery_bought:       [],
     food_edited:          [],   // that a logged food was edited, never which or how much
     food_tagged:          [],   // that a tag was set, never the tag or the food
     health_synced:        [],

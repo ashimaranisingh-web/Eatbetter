@@ -96,7 +96,10 @@
     const sig = JSON.stringify(own).length + ':' + own.length + ':' + JSON.stringify(scanned).length;
     if (cache && sig === cacheSig) return cache;
     const out = [], seen = new Map();
+    // Foods she corrected: her copy shows, the original is hidden for her.
+    const replaced = new Set(Object.values(scanned).map(f => f && f.replaces).filter(Boolean));
     const push = f => {
+      if (replaced.has(f.id)) return;
       const key = f.n.toLowerCase(), words = norm(f.n + ' ' + (f.k || '')).split(' ');
       // Same name twice: keep the first (more personal) one, but pool the search words.
       if (seen.has(key)) { const a = seen.get(key); words.forEach(w => a.words.includes(w) || a.words.push(w)); return; }
@@ -118,12 +121,29 @@
     } catch {}
     (window.EB_FOODDB || []).forEach(([id, n, k, cal, p, c, f, fib, units, src, desc]) =>
       push({ id, n, k, per: 100, units, nut: { cal, p, c, f, fib }, src, desc }));
-    offFoods().forEach(f => { const key = f.n.toLowerCase(); if (!seen.has(key)) { seen.set(key, f); out.push(f); } });
+    offFoods().forEach(f => { const key = f.n.toLowerCase(); if (!replaced.has(f.id) && !seen.has(key)) { seen.set(key, f); out.push(f); } });
     cache = out; cacheSig = sig;
     return out;
   }
+  // Her corrected copy of a food: numbers scaled back to the food's base
+  // (per 100 g, or per serving), saved with her foods, replacing the original for her.
+  function saveCorrected(f, fix, amt, unit) {
+    const k = (amt * (f.units[unit] || 0)) / (f.per || 1); if (!(k > 0)) return null;
+    const per = v => Math.round((+v || 0) / k * 10) / 10;
+    const key = f.code || ('u-' + String(f.replaces || f.id).replace(/[^a-z0-9:-]/gi, '-'));
+    const { id, nn, words, ...base } = f;
+    const orig = f.replaces || f.id;   // a scanned pack saved under its own barcode replaces nothing
+    remember_scan(key, { ...base, n: String(fix.n || f.n).trim() || f.n, src: 'you', replaces: orig === 'b:' + key ? undefined : orig,
+      nut: { ...f.nut, cal: Math.round(per(fix.cal)), p: per(fix.p), c: per(fix.c), f: per(fix.f), fib: per(fix.fib) } });
+    window.EBAnalytics && EBAnalytics.track('food_corrected');
+    return byId('b:' + key);
+  }
   const temp = {};   // online results and closest matches, until she adds one
-  const byId = id => temp[id] || catalog().find(f => f.id === id) || (id && id.slice(0, 2) === 'p:' ? offIndia(id.slice(2)) : null);
+  const byId = id => {
+    const mine = Object.entries(get(SCANNED, {})).find(([, f]) => f && f.replaces === id);
+    if (mine) id = 'b:' + mine[0];   // she corrected this one: use her copy
+    return temp[id] || catalog().find(f => f.id === id) || (id && id.slice(0, 2) === 'p:' ? offIndia(id.slice(2)) : null);
+  };
 
   function defaultUnit(f) {
     const u = f.units;
@@ -295,17 +315,21 @@
     if (t.sug != null && t.sug >= 15) notes.push('Quite sweet. Having it with some protein keeps cravings steadier.');
     return notes.length ? `<p class="fl-phase-note">${notes.join(' ')}</p>` : '';
   }
+  // Edit nutrition: name and numbers for the amount chosen. Saving keeps it in
+  // her own foods (synced to her account), in place of the original.
   function fixHTML(t) {
     const v = st.fix || t;
-    return `<div class="fl-fix">${[['cal', 'Calories'], ['p', 'Protein g'], ['c', 'Carbs g'], ['f', 'Fat g']].map(([k, l]) =>
-      `<label><span>${l}</span><input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${v[k]}" data-fl-fixin="${k}"></label>`).join('')}</div>`;
+    return `<label class="fl-fix-name"><span>Name</span><input class="eb-input" type="text" value="${esc(v.n || '')}" data-fl-fixname autocomplete="off" aria-label="Food name"></label>
+      <div class="fl-fix">${[['cal', 'Calories'], ['p', 'Protein g'], ['c', 'Carbs g'], ['f', 'Fat g'], ['fib', 'Fibre g']].map(([k, l]) =>
+      `<label><span>${l}</span><input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${v[k] ?? 0}" data-fl-fixin="${k}"></label>`).join('')}</div>
+      <p class="fl-src">Saved to your foods, so next time it comes up with your name and numbers.</p>`;
   }
   // The drawer, Apple-style: one big number, a grouped list of controls, one button.
   function heroHTML(t) {
     const kp = (+t.p || 0) * 4, kc = (+t.c || 0) * 4, kf = (+t.f || 0) * 9, sum = kp + kc + kf || 1;
     const pct = v => Math.round(v / sum * 1000) / 10;
     return `<div class="fl-hero"><b class="fl-hero-n">${t.cal}</b><span class="fl-hero-u">cal</span></div>
-      <p class="fl-mac"><span><i class="m-p"></i>Protein ${t.p} g</span><span><i class="m-c"></i>Carbs ${t.c} g</span><span><i class="m-f"></i>Fat ${t.f} g</span></p>
+      <p class="fl-mac"><span><i class="m-p"></i>Protein ${t.p} g</span><span><i class="m-c"></i>Carbs ${t.c} g</span><span><i class="m-f"></i>Fat ${t.f} g</span><span><i class="m-fib"></i>Fibre ${t.fib || 0} g</span></p>
       <div class="fl-macbar" aria-hidden="true"><i class="m-p" style="width:${pct(kp)}%"></i><i class="m-c" style="width:${pct(kc)}%"></i><i class="m-f" style="width:${pct(kf)}%"></i></div>
       ${phaseNote(t)}`;
   }
@@ -329,7 +353,7 @@
           ${units.length > 1 ? `<span class="fl-menu"><select data-fl-unit aria-label="Unit">${units.map(u => `<option value="${u}"${u === st.unit ? ' selected' : ''}>${esc(unitText(f, u))}</option>`).join('')}</select></span>`
             : `<span class="fl-menu-one">${esc(unitText(f, st.unit))}</span>`}</label>
       </div>
-      <button type="button" class="eb-btn primary fl-add" data-fl-add>Add to ${SLOT_NAME[st.slot]}</button>
+      <button type="button" class="eb-btn primary fl-add" data-fl-add>${st.fix ? 'Save and add to' : 'Add to'} ${SLOT_NAME[st.slot]}</button>
       ${st.fix ? '' : `<button type="button" class="eb-link fl-editnut" data-fl-fix>Edit nutrition</button>`}
       ${f.src === 'shared' && f.code && !st.fix ? `<button type="button" class="eb-link fl-editnut" data-fl-flag="${esc(f.code)}">Different on your pack? Report it</button>` : ''}
     </div>`;
@@ -744,6 +768,7 @@
     if (!native()) { st.scan = { status: 'enter', code: '' }; paintResults(); const i = $('flCode'); if (i) i.focus(); return; }
     try {
       const r = await EBNative.scanBarcode();
+      if (r && r.upload) return readLabel('photos');   // "Upload label" on the camera screen
       if (r && r.code) return lookup(r.code);
     } catch (e) {
       const code = e && (e.code || e.message);
@@ -977,12 +1002,13 @@
       if (!ed) st.fix = null;
       return liveUpdate(box, f, cur.amt, cur.unit, ed ? null : st.fix);
     }
-    if (at('[data-fl-fix]')) { const f = byId(st.open); st.fix = totals(f, st.amt, st.unit); return paintResults(); }
+    if (at('[data-fl-fix]')) { const f = byId(st.open); st.fix = { ...totals(f, st.amt, st.unit), n: f.n }; return paintResults(); }
     if (at('[data-fl-add]')) {
       let f = byId(st.open); if (!f || !(st.amt > 0)) return;
       if (f.id.slice(0, 2) === 'o:') f = persistTemp(f, st.scan && st.scan.status === 'similar' ? st.scan.code : null);
+      if (st.fix) { f = saveCorrected(f, st.fix, st.amt, st.unit) || f; st.fix = null; }
       const tot = st.fix ? { ...totals(f, st.amt, st.unit), ...st.fix } : totals(f, st.amt, st.unit);
-      addEntry({ name: esc(f.n), qty: qtyLabel(f, st.amt, st.unit), ...tot, src: st.fix ? 'you' : f.src, est: true, ref: f.id, amt: st.amt, unit: st.unit }, st.slot);
+      addEntry({ name: esc(f.n), qty: qtyLabel(f, st.amt, st.unit), ...tot, src: f.src, est: true, ref: f.id, amt: st.amt, unit: st.unit }, st.slot);
       remember(f.id, st.amt, st.unit);
       window.EBAnalytics && EBAnalytics.track('food_logged', { mode: 'log', source: f.src, corrected: !!st.fix });
       EB.toast && EB.toast(`${f.n} added to ${SLOT_NAME[st.slot]}`);
@@ -1073,6 +1099,7 @@
       cur.amt = Math.max(0, +t.value || 0); if (!ed) st.fix = null;
       return liveUpdate(t.closest('.fl-detail'), f, cur.amt, cur.unit, null);
     }
+    if (t.matches('[data-fl-fixname]')) { st.fix.n = t.value; return; }
     if (t.matches('[data-fl-fixin]')) {
       st.fix[t.dataset.flFixin] = Math.max(0, +t.value || 0);
       return liveUpdate(t.closest('.fl-detail'), byId(st.open), st.amt, st.unit, st.fix);
