@@ -820,3 +820,258 @@ html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum { background: t
 html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum .app-card-label { margin: 0 0 8px !important; }
 /* Home: no calendar strip (the other tabs keep it) */
 html.noir body:not(#_a):not(#_b):not(#_c) #pageHome #cycleSection :is(.cycle-month-row, .cycle-calendar-wrap, .cycle-mood-hint) { display: none !important; }
+
+/* ══ Groceries: tile on Nutrition + To buy / Stocked sheet ══ */
+.app-grocery { display: flex; align-items: center; gap: 12px; width: 100%; margin: 16px 0 0; padding: 12px 16px; border: 0; border-radius: 12px; font: inherit; text-align: left; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-grocery { background: var(--n-card) !important; color: var(--n-ink) !important; box-shadow: 0 0 0 .5px var(--n-stroke) !important; }
+.app-grocery-t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.app-grocery-t b { font-size: 15px; font-weight: 600; }
+.app-grocery-t span { font-size: 13px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-grocery-t span { color: var(--n-ink3) !important; }
+.app-grocery > i { font-style: normal; font-size: 22px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-grocery > i { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-grocery .app-tile-ico { color: var(--n-accent-l) !important; }
+
+.gr-sheet { max-height: 88vh; display: flex; flex-direction: column; }
+.gr-sheet .app-sheet-body { overflow-y: auto; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-sheet .app-sheet-head { display: flex !important; justify-content: space-between !important; align-items: center; padding: 0 !important; margin: 0 0 8px !important; width: auto !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-sheet .app-sheet-head b { flex: 1; text-align: left !important; font-size: 17px; }
+.gr-add { display: flex; gap: 8px; flex: none; padding-top: 12px; }
+.gr-add input { flex: 1; min-width: 0; min-height: 44px; font-size: 16px !important; }
+.gr-add .eb-btn { flex: none; min-height: 44px; padding: 0 16px; width: auto; }
+.gr-list { margin: 0; padding: 0; list-style: none; border-radius: 10px; overflow: hidden; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-list { background: var(--n-card2) !important; }
+.gr-item { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px 4px 4px 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-item + .gr-item { border-top: .5px solid var(--n-hair) !important; }
+.gr-name { flex: 1; min-width: 0; display: grid; font-size: 15px; }
+.gr-name small { font-size: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-name { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-name small { color: var(--n-ink3) !important; }
+.gr-del, .gr-plus { flex: none; width: 40px; height: 40px; border: 0; background: none; font-size: 22px; line-height: 1; cursor: pointer; border-radius: 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-del { color: var(--n-ink3) !important; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-plus { color: var(--n-accent-l) !important; background: transparent !important; font-weight: 600; }
+.gr-empty { margin: 12px 4px; font-size: 14px; line-height: 1.45; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-empty { color: var(--n-ink2) !important; }
+.gr-plan { margin-top: 20px; }
+.gr-plan-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.gr-plan-head p { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-plan-head p { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-plan-head .eb-link { color: var(--n-accent-l) !important; font-weight: 600; min-height: 36px; }
+
+/* "You're looking around" bar: out of the way while a sheet, page or setup is open */
+body:has(.eb-cal-overlay, .ob, .fl-page, .eb-explore-sheet) .eb-explore-bar { display: none !important; }
+.eb-explore-bar { touch-action: none; }
+
+/* Groceries: one list, checkbox on the right, add box pinned to the bottom */
+.gr-sheet .app-sheet-body { flex: 1; min-height: 0; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-add { border-top: .5px solid var(--n-hair) !important; }
+.gr-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.gr-count { margin: 0; font-size: 13px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-count { color: var(--n-ink3) !important; }
+.gr-filter { min-height: 36px; padding: 0 14px; border-radius: 18px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter { background: var(--n-card2) !important; color: var(--n-ink) !important; border-color: var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter.on { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; border-color: var(--n-accent) !important; }
+.gr-check { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin: 0 8px 0 4px; border-radius: 50%; padding: 0; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-check { background: transparent !important; border: 2px solid var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-check.on { background: var(--n-accent) !important; border-color: var(--n-accent) !important; }
+.gr-badge { flex: none; font-style: normal; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-badge { background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-item.stocked .gr-name { color: var(--n-ink2) !important; }
+
+/* Every sheet: title on the left, close in the top-right corner (same round button everywhere) */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-sheet-head, .ch-sheet-head) { justify-content: space-between !important; padding: 0 44px 0 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-sheet-head, .ch-sheet-head) b { flex: 1; text-align: left !important; font-size: 17px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-sheet-head :is([data-acct="close"], [data-sheet-close], [data-ch-x], .eb-icon-btn:last-child) {
+  position: absolute !important; right: 0; top: 50%; transform: translateY(-50%); width: 30px !important; height: 30px !important; min-height: 0 !important;
+  border-radius: 50% !important; background: var(--n-card2) !important; color: var(--n-ink2) !important; display: grid !important; place-items: center; padding: 0 !important; border: 0 !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-sheet-head :is([data-acct="close"], .eb-icon-btn:last-child) svg { width: 14px !important; height: 14px !important; stroke-width: 2.6; }
+
+/* Home: Current weight sits under the coach (in the cards), not in the shared strip */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome #cycleSection .cycle-weight { display: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-home-weight { margin: 0 0 16px !important; position: relative; z-index: 1; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-energy-card .app-time { margin-top: 8px !important; }
+
+/* Menstruation: one "Your cycle" card; history folded under "See history" */
+.cyc-history { margin: 0; }
+.cyc-history > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.cyc-history > summary::-webkit-details-marker { display: none; }
+.cyc-history > summary::after { content: '›'; font-size: 22px; font-weight: 400; transition: transform .2s ease; }
+.cyc-history[open] > summary::after { transform: rotate(90deg); }
+.cyc-history > summary span { margin-left: auto; margin-right: 10px; font-size: 13px; font-weight: 400; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cyc-now-label { border-top: .5px solid var(--n-hair2) !important; padding-top: 16px !important; margin-top: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cyc-history > summary { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.cyc-history > summary span, .cyc-history > summary::after) { color: var(--n-ink3) !important; }
+.cyc-history-body { display: grid; gap: 12px; padding-bottom: 8px; }
+
+/* Fitness: "+ New challenge" as the primary button */
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-new-out.eb-btn.primary { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin: 0 0 16px; padding: 0 16px; border-radius: 12px; background: var(--n-accent) !important; color: #fff !important; font-size: 16px; font-weight: 600; }
+
+/* Fitness: common workouts as chips (name + duration; calories counted, not shown) */
+html body:not(#_a):not(#_b):not(#_c) .app-log-card .activity-presets { display: flex !important; flex-wrap: wrap; gap: 8px !important; margin: 16px 0 0 !important; grid-template-columns: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip { display: inline-flex !important; align-items: baseline; gap: 6px; width: auto; min-height: 40px; padding: 0 16px !important; border-radius: 20px; border: 1px solid var(--n-hair2) !important; background: var(--n-card2) !important; cursor: pointer; align-items: center; }
+.activity-check.wk-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip .activity-check-name { color: var(--n-ink) !important; font-size: 14px; font-weight: 500; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip .preset-dur { color: var(--n-ink3) !important; font-size: 13px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip:has(input:checked) { background: var(--n-accent-dim) !important; border-color: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip:has(input:checked) :is(.activity-check-name, .preset-dur) { color: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip:has(input:focus-visible) { outline: 2px solid var(--n-accent-l); outline-offset: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-log-card .activity-check.wk-chip { border-radius: 20px !important; width: auto !important; flex: none; border-bottom-width: 1px !important; }
+
+/* Rule of 8: the calendar strip (and Current weight) to the first card = 16, like every card gap */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-band:has(.app-shared) { padding-bottom: 0 !important; margin-bottom: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-band:has(.app-shared) #cycleSection { margin-bottom: 0 !important; }
+/* Workout chips: 8 between chips, 8 between name and duration */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-log-card .activity-check.wk-chip { column-gap: 8px !important; row-gap: 0 !important; }
+
+/* Add-food sheet: fibre joins protein, carbs and fat (gap on the 8 grid) */
+html body #flSheet .m-fib { background: #8a9a5b; }
+html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-mac { gap: 4px 16px; }
+
+/* Edit sheet: the name is editable in place, styled as the title */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .ml-edit-name { flex: 1; min-width: 0; min-height: 40px; margin: 0; padding: 0 8px; border: 0 !important; border-radius: 8px; background: transparent !important; color: var(--n-ink) !important; font: inherit; font-size: 17px; font-weight: 600; box-shadow: inset 0 -1px 0 var(--n-hair2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .ml-edit-name:focus { background: var(--n-card2) !important; outline: none; box-shadow: inset 0 0 0 1px var(--n-accent) !important; }
+
+/* Edit sheet radios: no box, just the dot and text; the chosen one turns green */
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .fl-radio { gap: 0 8px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .fl-radio-opt { background: transparent !important; border: 0 !important; box-shadow: none !important; min-height: 40px; padding: 0 !important; border-radius: 0; font-size: 15px; color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .fl-radio-opt[aria-checked="true"] { color: var(--n-accent-l) !important; font-weight: 600; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-edit .fl-radio-opt[aria-checked="true"] i { border-color: var(--n-accent-l) !important; background: radial-gradient(circle, var(--n-accent-l) 0 4px, transparent 4.5px) !important; }
+
+/* Coach: the shine only crosses her sunglasses */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-coach .coach-glint {
+  clip-path: inset(21% 34% 71% 35% round 6px);
+  background: linear-gradient(112deg, transparent 44%, rgba(255,255,255,.75) 50%, transparent 56%) no-repeat;
+  background-size: 260% 100%;
+}
+
+/* ══ Tab bar: icons only; the selected tab grows a pill and its name slides in on the right ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill { display: flex !important; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px !important; grid-template-columns: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button {
+  flex: 0 0 auto; display: inline-flex !important; flex-direction: row !important; align-items: center; justify-content: center; gap: 0;
+  height: 44px !important; min-width: 44px; padding: 0 10px !important; border-radius: 22px !important;
+  background: transparent !important; color: var(--n-ink3) !important;
+  transition: background-color .3s ease, padding .3s ease, gap .3s ease, color .2s ease;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button span {
+  display: inline-block; max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap;
+  font-size: 14px !important; font-weight: 600 !important; line-height: 1;
+  transition: max-width .35s cubic-bezier(.2,.8,.2,1), opacity .2s ease .05s;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button.on {
+  gap: 8px; padding: 0 16px 0 12px !important; background: var(--n-accent-dim) !important; color: var(--n-accent-l) !important;
+}
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button.on span { max-width: 120px; opacity: 1; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button.on::before, html.noir body:not(#_a):not(#_b):not(#_c) .eb-tabbar-pill button.on::after { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-tabbar-pill button, .eb-tabbar-pill button span) { transition: none !important; }
+}
+
+/* ══ Rule of 8 ══════════════════════════════════════════════════════
+   Card padding 8 everywhere; every spacing below on the 8 grid (4 only as a half-step). */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-card, .app-today-setup, .app-weekcard, .app-shortcuts, .app-foods, .app-logcta, .app-cycle-card, .app-period-log, .app-log-card, .app-health, .app-goals, .ch-card, .cycle-weight, .app-grocery, .app-tile):not(.app-coach) { padding: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot] { padding-top: 8px !important; }
+/* Buttons: drop the browser's default 1px/6px padding; classes set their own */
+:where(button) { padding: 0; }
+/* Calendar strip */
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-calendar { gap: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-day-cell { padding-top: 8px !important; padding-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-month-btn { padding: 4px 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-mood-hint { margin-top: 4px !important; }
+/* Segmented controls (Energy & Time, Normal/PMS, units) */
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-seg { gap: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .eb-seg-btn { padding: 0 8px !important; }
+/* Nutrition */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-tiles { gap: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-main { padding-top: 8px !important; padding-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-row { padding-right: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .reset-btn { padding-top: 8px !important; padding-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cal-op { padding: 0 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ml-sec[data-slot] .ml-head > span { padding: 4px 8px !important; }
+/* Fitness */
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-input { padding: 8px 12px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-log-title { margin-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-custom { margin: 0 0 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.fitness-list, .fitness-row-top) { gap: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fitness-week-note { padding-top: 8px !important; margin-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .ch-manage { padding-top: 12px !important; padding-bottom: 12px !important; }
+/* Home */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-budget { margin-bottom: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-bar { margin: 8px 0 !important; }
+/* Menstruation */
+html.noir body:not(#_a):not(#_b):not(#_c) .cyc-next-body { padding-left: 24px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-x { padding: 0 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-check.wk-chip :is(.activity-check-name, .preset-dur) { font-weight: 500 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-card.app-todaylist { padding: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-item { padding-top: 8px !important; padding-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .activity-item-remove { padding: 0 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .tracker-goal-row { display: block; margin: 8px 0 0; text-align: center; }
+html.noir body:not(#_a):not(#_b):not(#_c) .tracker-goal-row:empty { display: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-fix-name { display: grid; gap: 4px; margin: 8px 0; }
+
+/* ══ Home: Calories card ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum { border-bottom: 0 !important; padding: 0 !important; margin: 8px 0 0 !important; }
+.app-sum-big { display: flex; align-items: baseline; gap: 8px; margin: 0; }
+.app-sum-big b { font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-big b { color: var(--n-ink) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum-big span { color: var(--n-ink2) !important; font-size: 15px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-sum.over .app-sum-big b { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-sum-line { display: block; font-size: 13px; color: var(--n-ink3) !important; margin: 0; }
+.app-wkmini { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.app-wkmini li { display: grid; justify-items: center; gap: 4px; }
+.wkm-bar { position: relative; display: block; width: 100%; max-width: 32px; height: 48px; border-radius: 6px; overflow: hidden; }
+.wkm-bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 6px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wkm-bar { background: var(--n-card2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wkm-bar i { background: var(--n-accent) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.today .wkm-bar i { background: var(--n-accent-l) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.over .wkm-bar i { background: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.future .wkm-bar { background: transparent !important; box-shadow: inset 0 0 0 1px var(--n-hair2); }
+.wkm-d { font-size: 12px; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .wkm-d { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wkmini li.today .wkm-d { color: var(--n-accent-l) !important; }
+.app-wk-verdict { margin: 8px 0 0; font-size: 14px; line-height: 1.4; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wk-verdict { color: var(--n-ink2) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-wk-verdict b { color: var(--n-ink) !important; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-weekcard .app-budget { margin: 16px 0 !important; }
+
+/* ══ One label style everywhere: 13px, semibold, grey, sentence case ══
+   (meal chips like "BREAKFAST · 9–10AM" and the cycle-day kicker are their own components) */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-card-label, .eb-group-label, .app-rail-label, .ml-edit-label, .gr-plan-head p, .cyc-sub, .wrap-label, .cal-term-label, .metric-label, .tracker-label, .wk-label, .ch-head .app-card-label) {
+  font-size: 13px !important; font-weight: 600 !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--n-ink3) !important;
+}
+
+/* ══ Nutrition numbers card: no empty header; 8 padding, 16 between sections, 8 within ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker .tracker-head { display: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard { padding: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #modeToggleBar { margin: 0 0 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker { padding: 16px 0 0 !important; row-gap: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker #calEquation { margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker .tracker-goal-row { margin: 8px 0 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker #trackerGrid { margin: 16px 0 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker #macrosToggle { margin: 8px 0 0 !important; min-height: 40px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-modecard #modeToggleBar { margin-bottom: 8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #tracker { padding-top: 8px !important; }
+
+/* Groceries: swipe a row left to reveal Delete (Hide on plan suggestions) */
+.gr-swipe-wrap { position: relative; overflow: hidden; list-style: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap + .gr-swipe-wrap { border-top: .5px solid var(--n-hair) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap .gr-item { position: relative; z-index: 1; background: var(--n-card2) !important; border-top: 0 !important; transition: transform .25s ease; min-height: 48px; padding: 4px 8px 4px 12px; }
+.gr-swipe-act { position: absolute; top: 0; right: 0; bottom: 0; width: 88px; border: 0; font: inherit; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-act { background: #d63a3a !important; color: #fff !important; }
+.gr-swipe-wrap.open .gr-item, .gr-swipe-wrap:has(.gr-swipe-act:focus-visible) .gr-item { transform: translateX(-88px); }
+@media (prefers-reduced-motion: reduce) { html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap .gr-item { transition: none; } }
+
+/* "To buy only" is a checkbox, not a chip */
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 !important; border: 0 !important; background: transparent !important; color: var(--n-ink) !important; font-size: 14px; font-weight: 500; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter input { appearance: none; -webkit-appearance: none; flex: none; width: 20px; height: 20px; margin: 0; border-radius: 6px; border: 2px solid var(--n-ink3); display: grid; place-items: center; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter input:checked { background: var(--n-accent); border-color: var(--n-accent); }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter input:checked::after { content: ''; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-filter input:focus-visible { outline: 2px solid var(--n-accent-l); outline-offset: 2px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap.open .gr-item,
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap:has(.gr-swipe-act:focus-visible) .gr-item { transform: translateX(-88px) !important; }
+
+/* Groceries: each row its own rounded card, 8px apart */
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-list { display: grid; gap: 8px; background: transparent !important; border-radius: 0; overflow: visible; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap { border-radius: 10px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .gr-swipe-wrap + .gr-swipe-wrap { border-top: 0 !important; }

@@ -13,7 +13,7 @@
 
   // Her data: profile, meals, cycle, energy, workouts, weight, challenges,
   // food favourites and history. UI, sign-in and analytics keys still save.
-  const DATA = /^(eb_profile|eb_energy|eb_time|eb_symptoms|eb_cycle_daily|eb_challenges|eb_health|eb_food_(recent|fav|scanned)|eb_lastDayMode|mealPlan_|slotEaten_|wakeup_items_|lastBuild_|dayMode_)/;
+  const DATA = /^(eb_profile|eb_energy|eb_time|eb_grocery|eb_symptoms|eb_cycle_daily|eb_challenges|eb_health|eb_food_(recent|fav|scanned)|eb_lastDayMode|mealPlan_|slotEaten_|wakeup_items_|lastBuild_|dayMode_)/;
 
   const exploring = () => {
     try {
@@ -78,10 +78,29 @@
   // A reminder above the tab bar on every tab while she's looking around.
   function banner() {
     if (!exploring() || document.querySelector('.eb-explore-bar')) return;
+    try { if (sessionStorage.getItem('eb_explore_bar_off')) return; } catch {}
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'eb-explore-bar';
     b.innerHTML = '<span><b>You’re looking around.</b> Finish setup to save your progress.</span><span aria-hidden="true">›</span>';
-    b.addEventListener('click', startSetup);
+    // Swipe it away (sideways or down). It comes back next time the app opens.
+    let sx = 0, sy = 0, dx = 0, dy = 0, moved = false;
+    b.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = dy = 0; moved = false; b.style.transition = 'none'; }, { passive: true });
+    b.addEventListener('touchmove', e => {
+      dx = e.touches[0].clientX - sx; dy = Math.max(0, e.touches[0].clientY - sy);
+      if (Math.abs(dx) > 8 || dy > 8) moved = true;
+      b.style.transform = `translate(calc(-50% + ${dx}px), ${dy}px)`;   // it's centred with -50% b.style.opacity = String(Math.max(0.2, 1 - Math.max(Math.abs(dx), dy) / 200));
+    }, { passive: true });
+    b.addEventListener('touchend', () => {
+      b.style.transition = 'transform .2s ease, opacity .2s ease';
+      if (Math.abs(dx) > 80 || dy > 50) {
+        b.style.transform = Math.abs(dx) > 80 ? `translateX(${dx > 0 ? 70 : -170}%)` : 'translate(-50%, 140%)'; b.style.opacity = '0';
+        try { sessionStorage.setItem('eb_explore_bar_off', '1'); } catch {}
+        setTimeout(() => b.remove(), 200);
+      } else { b.style.transform = ''; b.style.opacity = ''; }
+    });
+    b.addEventListener('click', e => { if (moved) { e.preventDefault(); moved = false; return; } startSetup(); });
+    b.setAttribute('aria-describedby', 'exploreBarHint');
+    b.insertAdjacentHTML('beforeend', '<span id="exploreBarHint" hidden>Swipe to hide</span>');
     document.body.appendChild(b);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(banner, 300)); else setTimeout(banner, 300);

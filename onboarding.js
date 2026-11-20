@@ -842,25 +842,43 @@
     };
   }
 
+  // Skipping setup: say plainly what she'll miss. Without her weight, goal and
+  // food, Menu-fi can't work out calories or plan meals.
+  function confirmSkip() {
+    const missing = [
+      !draft.goal && 'your goal',
+      !(+(draft.weight || {}).current > 0) && 'your weight',
+      !String((draft.food || {}).usual || '').trim() && !(draft.food || {}).diet && 'what you eat',
+    ].filter(Boolean);
+    const list = missing.length ? missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}` : 'the rest of setup';
+    EB.ask({ title: 'Skip setup?', ok: 'Skip anyway', cancel: 'Keep going',
+      body: `Without ${list}, Menu-fi can’t work out your calories or plan meals for you, so most of the app won’t fit you yet. You can look around and finish setup any time. Nothing is saved until you do.` })
+      .then(yes => { if (!yes) return; window.EBExplore && EBExplore.start(); close(); location.reload(); });
+  }
+
   function renderStep() {
     el.classList.remove('ob-splash');
     const steps = visible();
     if (idx >= steps.length) return renderReview();
     const step = steps[idx];
     const pct = Math.round((idx / steps.length) * 100);
+    // Skip (to look around) sits left of the main button during first setup.
+    // Steps with their own left button (the tester notice) keep that instead.
+    const canSkip = !EB.getProfile().completedAt;
     el.innerHTML = `
       <div class="ob-top">
         <button type="button" class="eb-icon-btn" data-ob="back" aria-label="Back">${ICONS.back}</button>
         <div class="ob-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${idx}" aria-label="Step ${idx + 1} of ${steps.length}"><span style="width:${Math.max(pct, 4)}%"></span></div>
-        ${EB.getProfile().completedAt ? themeBtn() : '<button type="button" class="ob-skip" data-ob="skip">Skip</button>'}
+        ${EB.getProfile().completedAt ? themeBtn() : ''}
       </div>
       <div class="ob-body${step.info ? ' ob-content' : ''}">
         ${step.eyebrow ? `<p class="ob-eyebrow">${step.eyebrow}</p>` : ''}
         <h1 class="ob-title" id="obTitle" tabindex="-1">${titleOf(step, draft)}</h1>
         <div class="ob-fields">${step.render(draft)}</div>
       </div>
-      <div class="ob-foot${step.footLink ? ' eb-cta-row' : ''}">
-        ${step.footLink ? `<button type="button" class="eb-btn secondary" data-ob="footLink">${step.footLink.label}</button>` : ''}
+      <div class="ob-foot${step.footLink || canSkip ? ' eb-cta-row' : ''}">
+        ${step.footLink ? `<button type="button" class="eb-btn secondary" data-ob="footLink">${step.footLink.label}</button>`
+          : canSkip ? '<button type="button" class="eb-btn secondary" data-ob="skip">Skip setup</button>' : ''}
         <button type="button" class="eb-btn" data-ob="next"></button>
       </div>`;
     const fields = el.querySelector('.ob-fields');
@@ -889,7 +907,7 @@
       if (a.dataset.ob === 'theme') { EB.toggleTheme(); a.outerHTML = themeBtn(); }
       if (a.dataset.ob === 'back') { if (reviewReturn) return renderReview(); idx--; idx < 0 ? renderWelcome() : renderStep(); }
       if (a.dataset.ob === 'next') next();
-      if (a.dataset.ob === 'skip') { window.EBExplore && EBExplore.start(); close(); location.reload(); return; }
+      if (a.dataset.ob === 'skip') return confirmSkip();
       if (a.dataset.ob === 'footLink' && step.footLink.action === 'declineStats') {
         try { window.EBAnalytics && EBAnalytics.setConsent(false); } catch {}
         idx++; return renderStep();

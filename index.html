@@ -2308,13 +2308,13 @@
   <div class="tracker-head">
     <span class="tracker-label" id="trackerDayLabel">Monday's progress</span>
     <span style="display:flex;align-items:center;gap:10px">
-      <span class="tracker-stat" id="planGapLabel"></span>
       <span class="tracker-right"><span class="tracker-stat" id="planTargetLabel"></span><span class="tracker-stat"><small>Maintenance</small><b id="tdeeLabel">2,072</b></span></span>
       <button class="reset-btn" id="resetBtn">Reset day</button>
     </span>
   </div>
 
   <div class="cal-equation" id="calEquation"></div>
+  <p class="tracker-stat tracker-goal-row" id="planGapLabel"></p>   <!-- "Eat in a 250 cal deficit…": under the numbers -->
 
   <div class="tracker-grid" id="trackerGrid"></div>
 </div>
@@ -4200,11 +4200,13 @@ function renderActivity() {
 
   const presetsEl = document.getElementById('activityPresets');
   if (!presetsEl) return;
-  // Common workouts as a tick list: ticking logs it, unticking removes it.
+  // Common workouts as chips: name and duration only. Tapping logs it with its
+  // calories (worked out, not shown); tapping again removes it.
   presetsEl.innerHTML = ACTIVITY_PRESETS.map((p, i) => {
     const on = list.some(a => a.name === p.name);
-    return `<label class="activity-check${on ? ' on' : ''}"><input type="checkbox" data-preset-idx="${i}"${on ? ' checked' : ''}>
-      <span class="activity-check-name">${escapeHtml(p.name)}</span><span class="preset-cal">${p.cal} cal</span></label>`;
+    const m = p.name.match(/^(.*?)\s*\((.*)\)$/), nm = m ? m[1] : p.name, dur = m ? m[2].replace(/(\d)(hr|min)/, '$1 $2') : '';
+    return `<label class="activity-check wk-chip${on ? ' on' : ''}"><input type="checkbox" data-preset-idx="${i}"${on ? ' checked' : ''}>
+      <span class="activity-check-name">${escapeHtml(nm)}</span>${dur ? `<span class="preset-dur">${escapeHtml(dur)}</span>` : ''}</label>`;
   }).join('');
   presetsEl.querySelectorAll('[data-preset-idx]').forEach(box => {
     box.addEventListener('change', () => {
@@ -4699,13 +4701,15 @@ function renderCycleCalendar() {
       <div class="cycle-calendar">${cells}</div>
     </div>
     <p class="cycle-mood-hint">Double tap on a date to share your mood</p>
-    ${currentWeightHTML()}
-    <button type="button" class="cycle-reset-btn" data-period-log>Log a period</button>`;
+    <button type="button" class="cycle-reset-btn" data-period-log>Log a period</button>
+    ${currentWeightHTML()}`;
 
   requestAnimationFrame(() => {
     const wrap = document.getElementById('cycleCalWrap');
     if (!wrap) return;
-    const cellW = 46;
+    // Measured, so changing the cell spacing never breaks "centre on today".
+    const cellsEl = wrap.querySelectorAll('.cycle-day-cell');
+    const cellW = cellsEl.length > 1 ? cellsEl[1].offsetLeft - cellsEl[0].offsetLeft : 48;
     const offset = todayIdx * cellW - (wrap.clientWidth / 2) + cellW / 2;
     wrap.scrollLeft = Math.max(0, offset);
     updateCycleMonth();
@@ -6631,6 +6635,7 @@ renderWeight();
 <script src="meals.js"></script>
 <script src="fooddb.js"></script>
 <script src="daymode.js"></script>
+<script src="grocery.js"></script>
 <script src="foodlog.js"></script>
 </div>
 </body>

@@ -115,7 +115,9 @@ public class MenufiPlugin: CAPPlugin, CAPBridgedPlugin {
                 guard let vc = self.bridge?.viewController else { call.reject("no view"); return }
                 let scanner = BarcodeScannerViewController()
                 scanner.onFinish = { code in
-                    if let code = code {
+                    if code == BarcodeScannerViewController.uploadPhoto {
+                        call.resolve(["upload": true])   // she wants to pick a label photo instead
+                    } else if let code = code {
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                         call.resolve(["code": code])
                     } else {
@@ -249,6 +251,8 @@ private extension UIImage.Orientation {
 
 /// Camera view with a guide box, a hint and Cancel. Closes on the first barcode read.
 final class BarcodeScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+    /// Passed to onFinish when she taps "Upload label" (pick a nutrition-label photo instead).
+    static let uploadPhoto = "__upload_label_photo__"
     var onFinish: ((String?) -> Void)?
     private let session = AVCaptureSession()
     private var preview: AVCaptureVideoPreviewLayer?
@@ -301,6 +305,26 @@ final class BarcodeScannerViewController: UIViewController, AVCaptureMetadataOut
         cancel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cancel)
 
+        // Just above Cancel: upload a photo of the nutrition label instead of scanning.
+        var up = UIButton.Configuration.filled()
+        up.image = UIImage(systemName: "photo.on.rectangle")
+        up.title = "Upload label photo"
+        up.imagePadding = 8
+        up.baseBackgroundColor = UIColor(white: 0, alpha: 0.55)
+        up.baseForegroundColor = .white
+        up.cornerStyle = .capsule
+        up.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        let upload = UIButton(configuration: up)
+        upload.accessibilityLabel = "Upload a photo of the nutrition label"
+        upload.addTarget(self, action: #selector(uploadTapped), for: .touchUpInside)
+        upload.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(upload)
+        NSLayoutConstraint.activate([
+            upload.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            upload.bottomAnchor.constraint(equalTo: cancel.topAnchor, constant: -16),
+            upload.heightAnchor.constraint(equalToConstant: 48)
+        ])
+
         // Torch for dim kitchens (only on devices that have one).
         if device.hasTorch {
             var t = UIButton.Configuration.filled()
@@ -345,6 +369,7 @@ final class BarcodeScannerViewController: UIViewController, AVCaptureMetadataOut
     }
 
     @objc private func cancelTapped() { finish(nil) }
+    @objc private func uploadTapped() { finish(Self.uploadPhoto) }
 
     @objc private func toggleTorch() {
         guard let d = device, d.hasTorch, (try? d.lockForConfiguration()) != nil else { return }

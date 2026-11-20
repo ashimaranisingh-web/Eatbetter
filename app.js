@@ -46,40 +46,6 @@
     const log = timeLog(); if (v) log[ds] = v; else delete log[ds];
     try { localStorage.setItem(TKEY, JSON.stringify(log)); } catch {}
   }
-  // One meal idea from energy × time, swapped for her diet.
-  // [name, why, cal, protein g]; diet variants override the default (veg).
-  const MEAL_IDEAS = {
-    // Low energy
-    '1-1': { veg: ['Your emergency meal: curd, a banana and a handful of nuts', 'Low on energy and time. Something already in the fridge, no cooking.', 350, 14],
-             vegan: ['Your emergency meal: soy yogurt, a banana and nuts', 'Low on energy and time. Something already in the fridge, no cooking.', 340, 12] },
-    '1-2': { veg: ['Masala oats with paneer', 'Low energy, a little time: easy but warm, one pot.', 380, 20], egg: ['Masala oats with eggs', 'Low energy, a little time: easy but warm, one pot.', 390, 22], vegan: ['Masala oats with tofu', 'Low energy, a little time: easy but warm, one pot.', 360, 18] },
-    '1-3': { veg: ['Moong dal khichdi with curd', 'Low energy, more time: warm and gentle. Let the cooker do the work.', 420, 18], egg: ['Masala oats with eggs', 'Low energy, more time: easy but warm, one pot.', 390, 22], vegan: ['Moong dal khichdi with salad', 'Low energy, more time: warm and gentle. Let the cooker do the work.', 400, 15] },
-    // Medium energy
-    '2-1': { veg: ['Sprouts chaat with curd', 'Quick to put together, still some protein.', 300, 16], vegan: ['Sprouts chaat with peanuts', 'Quick to put together, still some protein.', 320, 15] },
-    '2-2': { veg: ['Besan chilla with curd', 'A steady day: ready in 15 minutes, filling.', 360, 18], egg: ['Egg bhurji with 1 roti', 'A steady day: ready in 15 minutes, filling.', 380, 22], vegan: ['Besan chilla with peanut chutney', 'A steady day: ready in 15 minutes, filling.', 370, 16] },
-    '2-3': { veg: ['Dal, rice and a sabzi', 'Time for a proper home meal. Make extra for tomorrow.', 500, 18], nonveg: ['Chicken curry, rice and a sabzi', 'Time for a proper home meal. Make extra for tomorrow.', 560, 34] },
-    // High energy
-    '3-1': { veg: ['Skyr with nuts, seeds and fruit', 'High energy, little time: quick high protein.', 320, 24], egg: ['Eggs on toast', 'High energy, little time: quick high protein.', 340, 20], vegan: ['Soy yogurt with seeds and nuts', 'High energy, little time: quick high protein.', 320, 16] },
-    '3-2': { veg: ['Paneer wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 450, 26], egg: ['Egg wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 420, 24], nonveg: ['Chicken wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 450, 32], vegan: ['Tofu wrap with salad', 'Good energy: a high-protein wrap in 20 minutes.', 420, 22] },
-    '3-3': { veg: ['Rajma, rice and salad (cook extra)', 'Energy and time: batch-cook protein for tomorrow too.', 520, 22], egg: ['Egg curry, rice and salad', 'Energy and time: cook a protein-rich meal, make extra.', 520, 26], nonveg: ['Chicken curry, rice and salad (cook extra)', 'Energy and time: batch-cook protein for tomorrow too.', 560, 36] },
-  };
-  function mealIdea(ds) {
-    const e = lvlOf(energyFor(ds)), t = timeFor(ds); if (!e || !t) return null;
-    const diet = EB.getProfile().food.diet || 'veg', row = MEAL_IDEAS[e + '-' + t];
-    // pescatarian eats eggs; non-veg falls back to egg ideas, then veg. Jain stays veg.
-    const order = { nonveg: ['nonveg', 'egg', 'veg'], egg: ['egg', 'veg'], pescatarian: ['egg', 'veg'], vegan: ['vegan', 'veg'] }[diet] || ['veg'];
-    const k = order.find(x => row[x]), [name, why, cal, p] = row[k];
-    return { name, why, cal, p };
-  }
-  function mealIdeaHTML(ds) {
-    const e = energyFor(ds), t = timeFor(ds);
-    if (!e && !t) return '';
-    if (!e || !t) return `<p class="app-idea-hint">Pick your ${!e ? 'energy' : 'time'} too for a meal idea.</p>`;
-    const m = mealIdea(ds); if (!m) return '';
-    return `<div class="app-idea"><div><span class="app-meta">Meal idea</span><b>${esc(m.name)}</b><small>${esc(m.why)} About ${m.cal} cal · ${m.p} g protein.</small></div>
-      <button type="button" class="app-opt-btn" data-idea-log="${esc(m.name)}" data-idea-cal="${m.cal}">Log</button></div>`;
-  }
-
   // ── Workout options: energy + cycle phase + what she likes doing ──
   const KCAL_PER_MIN = { walking: 4, yoga: 3, pilates: 4, strength: 6, hiit: 9, running: 10, dance: 7, sports: 7, cycling: 7, swimming: 8, stretching: 2.5 };
   const NAMES = { walking: 'Walk', yoga: 'Yoga', pilates: 'Pilates', strength: 'Strength training', hiit: 'HIIT', running: 'Run',
@@ -134,6 +100,15 @@
     else if (phase === 'luteal' || (typeof isPMSMode === 'function' && isPMSMode())) picks = [['Oats', 'Slow carbs, fewer sugar crashes'], ['Almonds', 'Magnesium can ease cramps and mood'], ['Banana', 'B6 and easy energy'], ['Roasted chana', 'Protein and fibre for cravings'], ['Curd', 'Calcium may ease PMS']];
     else if (energy <= 2) picks = [['Banana', 'Fast, easy energy'], ['Dates', 'A natural sugar lift'], ['Coconut water', 'Tiredness is often thirst'], ['Peanuts', 'Protein and fat that last'], ['Poha', 'Light carbs that don’t weigh you down']];
     else picks = [protein, ['Sprouts', 'Fibre and protein, slow release'], ['Coconut water', 'Fluids and electrolytes for training'], ['Curd', 'Protein and gut-friendly'], ['Apple', 'Fibre for steady energy']];
+    // Short on time: swap anything that needs cooking for a grab-and-go pick.
+    const COOK = /^(khichdi|poha|oats|palak|ginger tea|sprouts)$/i;
+    const QUICK = [['Curd', 'Ready in the fridge, protein in a minute'], ['Roasted chana', 'No cooking, protein and fibre'], ['Banana', 'Grab and go'], ['Almonds', 'A handful, nothing to make'], ['Dates', 'Quick energy, no prep']];
+    if (timeFor(ds) === 1) {
+      const have = new Set(picks.map(p => p[0]));
+      picks = picks.map(p => COOK.test(p[0]) ? (QUICK.find(q => !have.has(q[0]) && have.add(q[0])) || p) : p);
+    } else if (timeFor(ds) === 3 && energy >= 2 && !picks.some(p => COOK.test(p[0]))) {
+      picks = [['Sprouts', 'Time to make something fresh: protein and fibre'], ...picks.slice(0, 4)];
+    }
     const all = window.EBMeals ? EBMeals.foods() : [];
     return picks.map(([n, why]) => {
       const f = all.find(x => x.n.toLowerCase().startsWith(n.toLowerCase())) || all.find(x => x.n.toLowerCase().includes(n.toLowerCase()));
@@ -151,15 +126,13 @@
     const lv = lvlOf(cur), tm = timeFor(ds);
     // Both pickers stay on screen, so changing either is one tap.
     return `<div class="app-card app-energy-card">
-      <p class="app-card-label">Energy today</p>
+      <p class="app-card-label">Energy and time today</p>
       <div class="eb-seg app-energy" role="radiogroup" aria-label="Energy today">
         ${ENERGY.map(e => `<button type="button" class="eb-seg-btn${lv === e.v ? ' on' : ''}" data-energy="${e.v}" role="radio" aria-checked="${lv === e.v}">${e.t}</button>`).join('')}
       </div>
-      <p class="app-card-label app-time-label">Time today</p>
       <div class="eb-seg app-energy app-time" role="radiogroup" aria-label="Time today">
         ${TIME.map(x => `<button type="button" class="eb-seg-btn${tm === x.v ? ' on' : ''}" data-time="${x.v}" role="radio" aria-checked="${tm === x.v}">${x.t}</button>`).join('')}
       </div>
-      ${mealIdeaHTML(ds)}
       ${s ? `<p class="app-rail-label">Workouts</p>
       <div class="app-rail">${s.options.map(o => {
         const done = logged.find(a => a.name === o.name);
@@ -273,58 +246,44 @@
     requestAnimationFrame(step);
   }
 
-  // ── Coach: the Menu-fi character with a line for this moment ──
-  // What she says depends on the day (time, next meal, calories, energy,
-  // challenge) first, then the cycle phase. Tapping the bubble rotates.
+  // ── Coach: the Menu-fi character with a motivating line ──
+  // Motivation only (her numbers and next meal live in the cards below).
+  // A different line each day; tapping the bubble shows the next one.
   let coachTap = 0;
-  const COACH_PHASE = {
-    menstrual: [
-      'Low energy is allowed today. A walk still counts.',
-      'Iron is your friend this week: palak, rajma, dates.',
-      'Rest is part of the plan, not a step back.',
-      'Warm food, early night. Your body is working hard.',
-    ],
-    follicular: [
-      'Energy’s climbing. Good week to push a little harder.',
-      'This is your strong stretch. Lift something heavy.',
-      'Try something new this week. Your body’s up for it.',
-      'Prep a few meals now. Future you will thank you.',
-    ],
-    ovulation: [
-      'Peak energy. Make today’s workout the hard one.',
-      'You’re at your strongest. Hit your protein today.',
-      'Big-day energy. Use it before it dips.',
-    ],
-    luteal: [
-      'Cravings are biology, not weakness. Eat the plan, then the treat.',
-      'Slow carbs keep the mood steady. Oats, not cookies.',
-      'Feeling bloated? Water, a walk and lighter salt. You’ve got this.',
-      'Be kind to yourself this week. Consistency beats perfect.',
-    ],
-    none: [
-      'Small steps every day. That’s the whole secret.',
-      'Show up for yourself today. Even a little counts.',
-      'Add your last period date and I’ll plan around your cycle.',
-    ],
-  };
-  function coachLines(ctx) {
-    const n = ctx.first ? `, ${ctx.first}` : '';
-    const h = new Date().getHours(), out = [];
-    if (ctx.challengeDone) out.push('Challenge done. That’s discipline.');
-    if (ctx.energy === 1) out.push('Low energy? Short walk, water, early night. Small wins.');
-    if (ctx.eaten > ctx.target + 100) out.push('Over today? It’s one day. Tomorrow’s a fresh plate.');
-    else if (h >= 18 && ctx.left > 0 && ctx.left < 400) out.push(`Nearly there${n}. ${ctx.left} cal left, keep dinner light.`);
-    if (!ctx.eaten && h < 11) out.push(`Morning${n}. Breakfast first, then go win the day.`);
-    else if (ctx.next) out.push(`Up next: ${ctx.next}. Easy win.`);
-    if (ctx.allDone) out.push(`Every meal logged${n}. That’s how it’s done.`);
-    return out.concat(COACH_PHASE[ctx.phase] || COACH_PHASE.none);
+  const COACH_QUOTES = [
+    'Small steps every day. That’s the whole secret.',
+    'You don’t have to be perfect. You just have to keep going.',
+    'Progress, not perfection.',
+    'Every meal is a fresh start.',
+    'Choose the version of today you’ll be glad about tonight.',
+    'One good choice makes the next one easier.',
+    'Your body hears everything your mind says. Be kind.',
+    'Consistency beats intensity, every single time.',
+    'Rest is part of the plan, not a step back.',
+    'Strong is built one ordinary day at a time.',
+    'You’ve done hard things before. This is one more.',
+    'Show up for yourself today. Even a little counts.',
+    'Start where you are. Today is enough.',
+    'Fuel your body like you love it, because you do.',
+    'A slow day is still a step forward.',
+    'You’re not starting over. You’re starting stronger.',
+    'Look how far you’ve already come.',
+    'Make today count. Tomorrow will thank you.',
+    'Believe in the woman you’re becoming.',
+    'Tiny habits, big change.',
+  ];
+  function coachLines() {
+    // Start on a different line each day, so it never feels stuck.
+    const now = new Date(), day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
+    const k = day % COACH_QUOTES.length;
+    return COACH_QUOTES.slice(k).concat(COACH_QUOTES.slice(0, k));
   }
   // Motion: she rises from behind the card once per session, breathes and
   // sways while idle, catches a glint now and then, and hops when tapped while
   // her new line appears word by word. All off with Reduce Motion (noir.css).
   let coachEntered = false, coachSaid = false;
   function coachHTML(ctx) {
-    const lines = coachLines(ctx);
+    const lines = coachLines();
     const line = lines[coachTap % lines.length];
     const enter = !coachEntered; coachEntered = true;
     const say = coachSaid; coachSaid = false;
@@ -344,10 +303,11 @@
     const budget = target + burned, left = Math.round(budget - eaten), over = left < 0;
     const pct = budget > 0 ? Math.min(100, Math.round(eaten / budget * 100)) : 0;
     const n = v => Math.round(v).toLocaleString();
-    return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: eaten ${n(eaten)}, burned ${n(burned)}, ${over ? `${n(-left)} over` : `${n(left)} left`} calories.">
-      <p class="app-card-label">${isToday ? 'Today' : 'This day'}</p>
-      <p class="app-sum-line" aria-hidden="true"><span>Eaten <b>${n(eaten)}</b></span><i>·</i><span>Burned <b>${n(burned)}</b></span><i>·</i><span>${over ? 'Over' : 'Left'} <b>${n(Math.abs(left))}</b> kcal</span></p>
+    // One answer first (what's left), then where it came from. Over is grey, never red.
+    return `<div class="app-sum${over ? ' over' : ''}" role="group" aria-label="${isToday ? 'Today' : 'This day'}: ${over ? `${n(-left)} calories over` : `${n(left)} calories left`}. Eaten ${n(eaten)}, burned ${n(burned)}, target ${n(target)}.">
+      <p class="app-sum-big" aria-hidden="true"><b>${n(Math.abs(left))}</b><span>kcal ${over ? 'over' : 'left'} ${isToday ? 'today' : 'this day'}</span></p>
       <div class="app-sum-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <p class="app-sum-line" aria-hidden="true">${n(eaten)} eaten · ${n(burned)} burned · target ${n(target)}</p>
     </div>`;
   }
 
@@ -400,9 +360,9 @@
       energy: energyFor(ds), challengeDone: !!(chLine && /ch-home-dot done/.test(chLine)),
     }) : '';
     page.querySelector('.app-home-body').innerHTML = `
-      ${weightShown() ? coach : ''}
+      ${coach}
+      ${weightShown() && typeof currentWeightHTML === 'function' ? currentWeightHTML().replace('cycle-weight', 'cycle-weight app-home-weight') : ''}
       ${(homeSum = todaySumHTML(eaten, burned, target, cons.p, pTarget, isToday), weekCardHTML(eaten, target))}
-      ${weightShown() ? '' : coach}
       ${heroHTML}
       <div class="app-card app-shortcuts app-todaylist">
         <p class="app-card-label">${isToday ? 'Today' : dayDate.toLocaleDateString(undefined, { weekday: 'long' })}</p>
@@ -756,13 +716,15 @@
         <div class="app-hist-bar${nextStart ? '' : ' now'}"><i style="width:${Math.min(100, per / Math.max(len, per) * 100)}%"></i></div>
       </li>`;
     }).join('');
-    return `<div class="app-card app-period-log">
-        <div class="app-row"><p class="app-card-label">Your cycles</p>
-          <button type="button" class="app-link" data-period-log>Add a date</button></div>
-        ${patterns || ''}
-        <p class="app-muted">${verdict}${spread}</p>
-        ${rows ? `<ul class="app-period-list">${rows}</ul>` : ''}
-      </div>`;
+    // Part of the one "Your cycle" card: averages, then past periods folded away.
+    return `<details class="cyc-history"${historyOpen ? ' open' : ''} data-cyc-history>
+        <summary>Previous cycles${hist.length ? ` <span>${hist.length} period${hist.length === 1 ? '' : 's'}</span>` : ''}</summary>
+        <div class="cyc-history-body">
+          ${patterns || ''}
+          <p class="app-muted">${verdict}${spread}</p>
+          ${rows ? `<ul class="app-period-list">${rows}</ul>` : ''}
+        </div>
+      </details>`;
   }
 
   // What to expect in each phase: mood, energy, libido, body.
@@ -800,6 +762,8 @@
   }
 
   let nowOpen = false;  // the current-phase section, folded until she opens it
+  let historyOpen = true;   // "Previous cycles" opens by default; stays as she leaves it
+  document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cyc-history]')) historyOpen = e.target.open; }, true);
   document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cyc-now]')) nowOpen = e.target.open; }, true);
   function renderCyclePage() {
     const page = $('pageCycle'); if (!page) return;
@@ -826,7 +790,8 @@
     body.innerHTML = `
       ${logCardHTML(ds, info && info.phase)}
       <div class="app-card app-cycle-card">
-        <p class="app-card-label">Your cycle</p>
+        ${periodLogHTML(p, patternsHTML(p))}
+        <p class="app-card-label cyc-now-label">Your cycle</p>
         ${info ? cycleBar(info) : ''}
         ${cur ? `<details class="cyc-now" style="--phase:${PHASE_META[cur.phase].color}"${nowOpen ? ' open' : ''} data-cyc-now>
             <summary class="cyc-now-head"><i></i><span><b>${PHASE_NAME[cur.phase]} <em class="cyc-now-tag">Now</em></b><small>${span(cur)}</small></span></summary>
@@ -837,8 +802,7 @@
               <div class="cyc-next-body">${phaseDetail(r.phase, diet, false)}</div></details></li>`).join('')}</ul>`
           : '<p class="app-muted">Add the first day of your last period and I’ll map your cycle.</p>'}
         <p class="app-muted small">General guidance, not medical advice.</p>
-      </div>
-      ${periodLogHTML(p, patternsHTML(p))}`;
+      </div>`;
     // The strip shows which day this page is about.
     document.querySelectorAll('#cycleSection .cycle-day-cell').forEach(c => c.classList.toggle('picked', active === 'cycle' && c.dataset.date === ds));
   }
@@ -857,13 +821,13 @@
   function healthHTML() {
     const H = window.EBHealth;
     const row = (sub, btn) => `<div class="app-card app-health"><div class="app-health-row">${icon('heart', 'pink')}
-      <div class="app-health-text"><b>Apple Health</b><span>${sub}</span></div>${btn}</div></div>`;
+      <div class="app-health-text"><b>Sync Apple Health</b>${sub ? `<span>${sub}</span>` : ''}</div>${btn}</div></div>`;
     if (H && H.native) {
       return H.isConnected()
         ? row('Connected · workouts, weight and periods sync in', '<button type="button" class="app-opt-btn" data-health="sync">Sync</button>')
         : row('Bring in workouts, weight and period days', '<button type="button" class="app-opt-btn" data-health="connect">Connect</button>');
     }
-    return row('Available in the iPhone app', '');
+    return row('', '');
   }
   function renderFitnessPage() {
     const page = $('pageFitness'); if (!page) return;
@@ -1156,6 +1120,17 @@
         <button type="button" class="app-tile" data-sheet="prep"><span class="app-tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v3H8zM7 6h10a1 1 0 011 1v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7a1 1 0 011-1zM6 11h12"/></svg></span><b>Meal Prep Jars</b><span>3 recipes · every 3–4 days</span></button>`;
       food.appendChild(tiles);
     }
+    // Groceries: To buy + Stocked. Shown on every kind of day, so it sits apart from the tiles.
+    const groc = document.createElement('button');
+    groc.type = 'button'; groc.className = 'app-card app-grocery'; groc.dataset.grocery = '';
+    const paintGroc = () => {
+      const c = window.EBGrocery ? EBGrocery.counts() : { buy: 0, stock: 0 };
+      groc.innerHTML = `<span class="app-tile-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 10.2a2 2 0 002 1.6h7.6a2 2 0 002-1.5L20.5 8H6.2"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg></span>
+        <span class="app-grocery-t"><b>Groceries</b><span>${c.buy ? `${c.buy} to buy` : 'Nothing to buy'} · ${c.stock} stocked</span></span><i aria-hidden="true">›</i>`;
+    };
+    paintGroc(); setTimeout(paintGroc, 0); window.addEventListener('eb:grocery', paintGroc); window.addEventListener('eb:synced', paintGroc);
+    groc.addEventListener('click', () => window.EBGrocery && EBGrocery.open());
+    food.insertBefore(groc, food.querySelector('.app-tiles') || null);
     const searchBar = document.createElement('button');
     searchBar.type = 'button'; searchBar.className = 'app-food-search'; searchBar.dataset.foodSearch = '';
     searchBar.innerHTML = `${TAB_ICONS.search}<span>Search food to log</span>`;
@@ -1197,7 +1172,7 @@
         const ch = document.createElement('div'); ch.className = 'app-fit-challenges';
         const hl = document.createElement('div'); hl.className = 'app-fit-health';
         const bn = document.createElement('div'); bn.className = 'app-fit-burned';
-        activityGroup.before(ch); ch.after(bn); goals.after(hl);
+        activityGroup.before(ch); ch.after(bn); activityGroup.after(hl);   // Apple Health right under Log a workout
       }
     }
 
@@ -1422,7 +1397,7 @@
     const food = FL && FL.food && m.ref && m.src !== 'you' && m.amt != null ? FL.food(m.ref) : null;
     const byAmount = !!(food && food.units[m.unit]);
     const base = m.base || { cal: +m.cal || 0, p: +m.p || 0, c: +m.c || 0, f: +m.f || 0, fib: +m.fib || 0 };
-    const e = { amt: byAmount ? +m.amt : (+m.mult || 1), unit: byAmount ? m.unit : 'serving', slot: slotId, tag: m.tag || '', why: m.why || '' };
+    const e = { amt: byAmount ? +m.amt : (+m.mult || 1), unit: byAmount ? m.unit : 'serving', slot: slotId, tag: m.tag || '', why: m.why || '', name: plainName(m.name) };
     const units = byAmount ? [...new Set(['g', 'piece', 'katori', 'cup', e.unit])].filter(u => food.units[u]) : ['serving'];
     const calc = () => byAmount ? FL.totals(food, e.amt, e.unit)
       : { cal: Math.round(base.cal * e.amt), p: r1n(base.p * e.amt), c: r1n(base.c * e.amt), f: r1n(base.f * e.amt), fib: r1n(base.fib * e.amt) };
@@ -1435,7 +1410,7 @@
     const paint = () => {
       const t = calc();
       ov.innerHTML = `<div class="eb-cal app-sheet ml-edit" role="dialog" aria-modal="true" aria-labelledby="mlEditT">
-        <div class="app-sheet-head"><b id="mlEditT">${esc(plainName(m.name))}</b><button type="button" class="eb-icon-btn" data-sheet-close aria-label="Close">${ICONS.close}</button></div>
+        <div class="app-sheet-head"><b class="sr-only" id="mlEditT">Edit ${esc(e.name)}</b><input class="ml-edit-name" type="text" value="${esc(e.name)}" data-me-name aria-label="Food name" autocomplete="off" enterkeyhint="done"><button type="button" class="eb-icon-btn" data-sheet-close aria-label="Close">${ICONS.close}</button></div>
         <div class="ml-edit-live" aria-live="polite">${macros(t)}</div>
         <p class="ml-edit-label">Quantity</p>
         <div class="ml-edit-qty">
@@ -1460,7 +1435,10 @@
     const live = () => { const l = ov.querySelector('.ml-edit-live'); if (l) l.innerHTML = macros(calc()); };
     paint(); document.body.appendChild(ov);
     const close = () => ov.remove();
-    ov.addEventListener('input', ev => { if (ev.target.matches('[data-me-amt]')) { e.amt = Math.max(0, +ev.target.value || 0); live(); } });
+    ov.addEventListener('input', ev => {
+      if (ev.target.matches('[data-me-amt]')) { e.amt = Math.max(0, +ev.target.value || 0); live(); }
+      if (ev.target.matches('[data-me-name]')) e.name = ev.target.value;   // e.g. "All India" → "Mother Dairy Paneer"
+    });
     ov.addEventListener('click', ev => {
       const at = sel => ev.target.closest(sel); let n;
       if (ev.target === ov || at('[data-sheet-close]')) return close();
@@ -1481,6 +1459,7 @@
         const l = getSlotLog(ds), list = Array.isArray(l[slotId]) ? l[slotId] : l[slotId] ? [l[slotId]] : [];
         const cur = list[i]; if (!cur) return close();
         const tagged = (cur.tag || '') !== e.tag;
+        if (e.name.trim() && e.name.trim() !== plainName(cur.name)) cur.name = esc(e.name.trim());
         Object.assign(cur, calc());
         if (byAmount) Object.assign(cur, { qty: FL.qtyLabel(food, e.amt, e.unit), amt: e.amt, unit: e.unit });
         else { cur.base = base; cur.mult = e.amt; }
@@ -1741,11 +1720,23 @@
       if (real >= CAL_PER_KG) kgVal = 'Done this week';
       else { const n = Math.ceil((CAL_PER_KG - real) / avg); kgVal = `${n} day${n === 1 ? '' : 's'}`; }
     }
+    // The week as seven small bars (height = calories against the daily target),
+    // today highlighted, over days grey, days ahead empty. One verdict line under it.
+    const minis = d.map(x => {
+      const dt = new Date(x.ds + 'T00:00'), c = Math.round(x.eat.cal), future = x.ds > today, isT = x.ds === today;
+      const h = future || !c ? 0 : Math.min(100, Math.round(c / (T * 1.25) * 100));
+      return `<li class="${isT ? 'today' : ''}${future ? ' future' : ''}${c > T && !isT ? ' over' : ''}"><span class="wkm-bar"><i style="height:${h}%"></i></span><span class="wkm-d">${dt.toLocaleDateString(undefined, { weekday: 'narrow' })}</span></li>`;
+    }).join('');
+    const diffWk = expected - ate;
+    const verdict = !ate ? 'Log your meals and your week shows up here.'
+      : diffWk >= 0 ? `<b>On track this week</b> · ${diffWk.toLocaleString()} cal under`
+      : `<b>${(-diffWk).toLocaleString()} cal over so far</b> · easy to even out over the next few days`;
     return `<div class="app-card app-weekcard">
+      <div class="app-row app-week-row"><p class="app-card-label">Calories</p><span class="app-muted small">${range}</span></div>
       ${homeSum}
-      <div class="app-row app-week-row"><p class="app-card-label">This week</p><span class="app-muted small">${range}</span></div>
-      ${head}
-      ${homeWeekOpen ? `<div class="app-week-lines">
+      <ul class="app-wkmini" aria-label="Calories each day this week, against your ${T.toLocaleString()} target">${minis}</ul>
+      <p class="app-wk-verdict">${verdict}</p>
+      ${homeWeekOpen ? `${head}<div class="app-week-lines">
         <button type="button" data-go="food"><span>1 kg in</span><b>${kgVal}</b></button>
         <button type="button" data-go="fitness"><span>Burned this week</span><b>${burnedWk.toLocaleString()} cal</b></button>
       </div>
@@ -1854,22 +1845,15 @@
   }
   // Luna and Profile are overlays: their tab lights up while they're open.
   // Fitness: "Log a workout" shows just name + cal; common workouts open on demand.
-  let presetsOpen = false;
   function presetToggle() {
     const box = $('activityPresets'); if (!box) return;
-    let t = $('presetsToggle');
-    if (!t) { t = document.createElement('button'); t.type = 'button'; t.id = 'presetsToggle'; t.className = 'app-week-more app-presets-toggle'; box.before(t); }
-    // Order: name/cal row → what's logged today → Common workouts toggle → the presets
+    // Order: name/cal row → the workout chips (always shown) → what's logged today
     const custom = box.parentElement.querySelector('.activity-custom'), logged = $('activityList');
-    if (custom && logged && custom.nextElementSibling !== logged) custom.after(logged);
-    const anchor = logged || custom;
-    if (anchor && anchor.nextElementSibling !== t) anchor.after(t);
-    if (t.nextElementSibling !== box) t.after(box);
-    t.setAttribute('aria-expanded', presetsOpen);
-    t.innerHTML = `${presetsOpen ? 'Hide common workouts' : 'Common workouts'} <i aria-hidden="true">▾</i>`;
-    box.hidden = !presetsOpen;
+    if (custom && custom.nextElementSibling !== box) custom.after(box);
+    if (logged && box.nextElementSibling !== logged) box.after(logged);
+    $('presetsToggle')?.remove();
+    box.hidden = false;
   }
-  document.addEventListener('click', e => { if (e.target.closest('#presetsToggle')) { presetsOpen = !presetsOpen; presetToggle(); } });
 
   function markActive() {
     const overlay = document.querySelector('.as-overlay') ? 'chat' : (window.EBProfile && EBProfile.isOpen && EBProfile.isOpen()) ? 'profile' : null;
@@ -1912,8 +1896,6 @@
     if (en) { setEnergy(selectedDateStr(), +en.dataset.energy); window.EBAnalytics && EBAnalytics.track('energy_logged'); return repaint(); }
     const tb = t.closest('[data-time]');
     if (tb) { setTime(selectedDateStr(), +tb.dataset.time); window.EBAnalytics && EBAnalytics.track('time_logged'); return repaint(); }
-    const il = t.closest('[data-idea-log]');
-    if (il) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(null, il.dataset.ideaLog, { cal: +il.dataset.ideaCal || null }); } return; }
     const fi = t.closest('[data-food-idea]');
     if (fi) { if (window.EBFoodLog) { go('food'); EBFoodLog.focusSearch(fi.dataset.ideaSlot || null, fi.dataset.foodIdea, { cal: +fi.dataset.ideaCal || null }); } else if (window.EBMeals) EBMeals.openSearch(fi.dataset.foodIdea); return; }
     if (t.closest('[data-cyclog-open]')) { logDraft = draftFor(viewDs()); return renderCyclePage(); }
