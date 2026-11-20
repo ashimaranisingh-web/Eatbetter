@@ -220,7 +220,7 @@
   const PHASE_STYLE = {
     menstrual:  { deep: '#b23a3c', word: 'Period' },
     follicular: { deep: '#2f6fb0', word: 'Follicular' },
-    ovulation:  { deep: '#00695c', word: 'Ovulation' },
+    ovulation:  { deep: '#ad1457', word: 'Ovulation' },
     luteal:     { deep: '#8a6500', word: 'PMS' },
   };
   function applyTint() {
@@ -2224,7 +2224,7 @@
     const F = (w, px) => `${w} ${px}px -apple-system, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif`;
     const n0 = v => Math.round(v).toLocaleString();
     const today = phaseOf(todayStr()), st = today && PHASE_STYLE[today.phase];
-    g.fillStyle = st ? st.deep : '#00695c'; g.fillRect(0, 0, W, H);
+    g.fillStyle = st ? st.deep : '#ad1457'; g.fillRect(0, 0, W, H);
     if (today) { g.fillStyle = 'rgba(255,255,255,.07)'; g.font = F(900, 900); g.textAlign = 'right'; g.fillText(String(today.dayNum), W + 140, 820); g.textAlign = 'left'; }
     const text = (str, x, y, w, px, a = 1, align = 'left') => { g.globalAlpha = a; g.font = F(w, px); g.textAlign = align; g.fillText(str, x, y); g.globalAlpha = 1; g.textAlign = 'left'; };
     g.fillStyle = '#fff';

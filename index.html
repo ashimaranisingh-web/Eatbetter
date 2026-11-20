@@ -1081,7 +1081,7 @@
   }
   .cycle-dot.menstrual  { background: #ef5350; }
   .cycle-dot.follicular { background: #42a5f5; }
-  .cycle-dot.ovulation  { background: #2bbbad; }   /* teal: green is the app's "on track" colour */
+  .cycle-dot.ovulation  { background: #f48fb1; }   /* pink: green is "on track", red is the period, blue follicular */
   .cycle-dot.luteal     { background: #ffd600; }
 
   /* ── Smart insights ── */
@@ -4596,7 +4596,7 @@ function getPhaseForDate(dateStr, cycleStartStr) {
 const PHASE_META = {
   menstrual:  { dot: 'menstrual',  emoji: '🔴', label: 'Menstrual',  color: '#ef5350' },
   follicular: { dot: 'follicular', emoji: '💙', label: 'Follicular', color: '#42a5f5' },
-  ovulation:  { dot: 'ovulation',  emoji: '🩵', label: 'Ovulation',  color: '#2bbbad' },
+  ovulation:  { dot: 'ovulation',  emoji: '🩷', label: 'Ovulation',  color: '#f48fb1' },
   luteal:     { dot: 'luteal',     emoji: '🌙', label: 'PMS',        color: '#ffd600' },
 };
 
