@@ -2244,7 +2244,7 @@ html body #pageFitness .activity-add-btn { padding: 0 16px; min-width: 0; }
 /* ══ v10: personal layer — phase colour, big cycle day, poster, words ══ */
 /* The header colour follows today's cycle phase (--tint, set by app.js),
    fading smoothly when the phase changes. Falls back to the mode accent. */
-@property --tint { syntax: '<color>'; inherits: true; initial-value: #2e7d32; }
+@property --tint { syntax: '<color>'; inherits: true; initial-value: #00695c; }
 #pageHome .app-band {
   background:
     radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--tint) 72%, #fff 28%) 0%, transparent 60%),
