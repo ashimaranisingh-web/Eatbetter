@@ -330,7 +330,8 @@
     }
     // Plan / Guide days: search is its own full-screen page (recent + frequent foods),
     // so the meal list underneath never gets mixed up with results.
-    const open = mode !== 'log' && (searchOpen || (window.EBFoodLog && EBFoodLog.isActive && EBFoodLog.isActive()));
+    // Every mode searches on its own full-screen page (Log included); the day page keeps just a bar and the meal cards.
+    const open = searchOpen || (window.EBFoodLog && EBFoodLog.isActive && EBFoodLog.isActive());
     page.classList.toggle('tools-open', !!open);
     document.body.classList.toggle('fl-page-open', !!open);
     if (plan) {
@@ -343,11 +344,12 @@
     }
     let link = $('craveLink');
     if (!link) { link = document.createElement('button'); link.type = 'button'; link.id = 'craveLink'; link.className = 'eb-link app-crave-link'; link.setAttribute('data-crave-open', ''); link.textContent = 'Craving something?'; }
-    // Plan days: the craving link lives in the row above. Otherwise it sits under search.
+    // Plan days: the craving link lives in the row above. Otherwise it sits just above the search bar,
+    // so the bar leads straight into the meal cards.
     if (plan) { if (link.parentElement) link.remove(); }
     else {
-      if (search.nextElementSibling !== link) search.after(link);
-      if (link.nextElementSibling !== body) link.after(body);
+      if (link.nextElementSibling !== search) search.before(link);
+      if (search.nextElementSibling !== body) search.after(body);
     }
     // The finder itself waits, hidden, until the link opens it on its own page.
     if (crave && !crave.classList.contains('in-page') && crave.parentElement !== page) page.appendChild(crave);
@@ -366,10 +368,10 @@
     if (open) search.setAttribute('role', 'dialog'); else search.removeAttribute('role');
     search.setAttribute('aria-label', 'Search food');
     const bar = `<button type="button" class="fl-fakebar" data-tools-search><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search food, e.g. 2 roti</span></button>`;
-    search.innerHTML = mode === 'log' || !window.EBFoodLog ? ''
+    search.innerHTML = !window.EBFoodLog ? ''
       : open ? `<div class="flp-head"><button type="button" class="flp-back" data-tools-close aria-label="Back"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Back</button><b>Add food</b><span></span></div>${EBFoodLog.html(d, { compact: true })}`
       : plan ? '' : bar;
-    body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? logHTML(d) : foodsHTML();
+    body.innerHTML = mode === 'guide' ? guideHTML(d) : mode === 'log' ? '' : foodsHTML();
     if (window.EBFoodLog) EBFoodLog.mounted();
   }
 

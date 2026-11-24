@@ -6116,12 +6116,25 @@ function openBuilder(slotId, dateStr) {
   renderBuilder(slotId, dateStr);
 }
 
+// A builder item as a food, so it opens in the same amount drawer as search.
+// "60ml" / "15g" items can be changed in ml or g; others ("1 scoop") by servings.
+function builderFood(it) {
+  const m = String(it.unit).match(/^(\d+(?:\.\d+)?)\s*(ml|g)$/i);
+  const nut = { cal: it.cal, p: it.p, c: it.c, f: it.f, fib: it.fib || 0 };
+  return m ? { id: 'bld:' + it.id, n: it.name, per: +m[1], units: { serving: +m[1], [m[2].toLowerCase()]: 1 }, serving: it.unit, nut, src: 'builder' }
+           : { id: 'bld:' + it.id, n: it.name, per: 1, units: { serving: 1 }, serving: it.unit, nut, src: 'builder' };
+}
+// Tap an item: pick how much (same drawer as everywhere). Tap a ticked item: take it out.
 function toggleBuilderItem(slotId, itemId, dateStr) {
   if (!builderPicks[slotId]) builderPicks[slotId] = {};
-  if (builderPicks[slotId][itemId]) delete builderPicks[slotId][itemId];
-  else builderPicks[slotId][itemId] = true;
-  renderBuilder(slotId, dateStr);
+  if (builderPicks[slotId][itemId]) { delete builderPicks[slotId][itemId]; return renderBuilder(slotId, dateStr); }
+  const it = BUILDERS[slotId].items.find(x => x.id === itemId);
+  if (!it || !window.EBFoodLog || !EBFoodLog.pickAmount) { builderPicks[slotId][itemId] = true; return renderBuilder(slotId, dateStr); }
+  EBFoodLog.pickAmount(builderFood(it), { meal: false, cta: `Add to ${slotId === 'protein' ? 'shake' : 'coffee'}`,
+    onDone: (f, amt, unit, t) => { builderPicks[slotId][itemId] = { amt, unit, qty: EBFoodLog.qtyLabel(f, amt, unit), t }; renderBuilder(slotId, dateStr); } });
 }
+// A pick is `true` (the item's usual amount) or { amt, unit, qty, t } after choosing an amount.
+function pickValues(it, pick) { return pick === true ? { qty: it.unit, cal: it.cal, p: it.p, c: it.c, f: it.f, fib: it.fib || 0 } : { qty: pick.qty, ...pick.t }; }
 
 function builderTotals(slotId) {
   const cfg = BUILDERS[slotId];
@@ -6129,9 +6142,11 @@ function builderTotals(slotId) {
   const t = { cal:0, p:0, c:0, f:0, fib:0, names:[] };
   cfg.items.forEach(it => {
     if (!picks[it.id]) return;
-    t.cal += it.cal; t.p += it.p; t.c += it.c; t.f += it.f; t.fib += (it.fib||0);
-    t.names.push(`${it.name} (${it.unit})`);
+    const v = pickValues(it, picks[it.id]);
+    t.cal += v.cal; t.p += v.p; t.c += v.c; t.f += v.f; t.fib += (v.fib||0);
+    t.names.push(`${it.name} (${v.qty})`);
   });
+  t.cal = Math.round(t.cal);
   return t;
 }
 
@@ -6144,22 +6159,22 @@ function renderBuilder(slotId, dateStr) {
   const r1 = r2;
 
   const rows = cfg.items.map(it => {
-    const on = !!picks[it.id];
+    const on = !!picks[it.id], v = on ? pickValues(it, picks[it.id]) : { qty: it.unit, cal: it.cal, p: it.p };
     return `<button type="button" class="builder-row${on ? ' on' : ''}"
       onclick="toggleBuilderItem('${slotId}', '${it.id}', '${dateStr}')">
       <span class="builder-check">${on ? '✓' : ''}</span>
       <span class="builder-info">
-        <span class="builder-name">${it.name} <span class="builder-unit">${it.unit}</span></span>
+        <span class="builder-name">${it.name} <span class="builder-unit">${v.qty}</span></span>
         ${it.note ? `<span class="builder-note">${it.note}</span>` : ''}
       </span>
-      <span class="builder-macros">${it.cal} cal · ${r1(it.p)}g P</span>
+      <span class="builder-macros">${Math.round(v.cal)} cal · ${r1(v.p)}g P</span>
     </button>`;
   }).join('');
 
   panel.innerHTML = `
     <div class="talk-popup-handle"></div>
     <div class="talk-popup-title">${cfg.title}</div>
-    <div class="talk-popup-sub" style="margin-bottom:12px">Tick what you actually put in.</div>
+    <div class="talk-popup-sub" style="margin-bottom:12px">Tap what you put in, then pick how much.</div>
     <div class="builder-list">${rows}</div>
     <div class="builder-total">
       <span class="builder-total-cal">${t.cal} cal</span>
@@ -6174,17 +6189,26 @@ function renderBuilder(slotId, dateStr) {
 function getLastBuild(slotId) {
   try { return JSON.parse(localStorage.getItem('lastBuild_' + slotId) || 'null'); } catch { return null; }
 }
+// Last build as picks ({ id: true | { amt, unit, qty, t } }); older saves were a list of ids.
+function lastBuildPicks(slotId) {
+  const last = getLastBuild(slotId); if (!last) return {};
+  if (Array.isArray(last)) { const o = {}; last.forEach(id => { o[id] = true; }); return o; }
+  return last;
+}
+function lastBuildCal(slotId) {
+  const picks = lastBuildPicks(slotId), cfg = BUILDERS[slotId]; if (!cfg) return 0;
+  return Math.round(cfg.items.reduce((a, it) => a + (picks[it.id] ? pickValues(it, picks[it.id]).cal : 0), 0));
+}
 function setLastBuild(slotId, ids) {
   try { localStorage.setItem('lastBuild_' + slotId, JSON.stringify(ids)); } catch {}
 }
 
 // Add the previous build straight to the log — no modal, no re-ticking.
 function repeatLastBuild(slotId, dateStr) {
-  const ids = getLastBuild(slotId);
-  if (!ids || !ids.length) return;
+  const picks = lastBuildPicks(slotId);
+  if (!Object.keys(picks).length) return;
   window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'repeat', slot: slotId });
-  builderPicks[slotId] = {};
-  ids.forEach(id => { builderPicks[slotId][id] = true; });
+  builderPicks[slotId] = JSON.parse(JSON.stringify(picks));
   confirmBuilder(slotId, dateStr);
 }
 
@@ -6192,7 +6216,7 @@ function confirmBuilder(slotId, dateStr) {
   const t = builderTotals(slotId);
   if (t.cal === 0) return;
   window.EBAnalytics && EBAnalytics.track('meal_logged', { source: 'builder', slot: slotId });
-  setLastBuild(slotId, Object.keys(builderPicks[slotId] || {}));
+  setLastBuild(slotId, builderPicks[slotId] || {});
   const r1 = r2;
   const cfg = BUILDERS[slotId];
   const meal = {

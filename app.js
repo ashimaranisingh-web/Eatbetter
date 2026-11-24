@@ -1302,33 +1302,26 @@
         <label class="fl-search pb-search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
           <input type="search" data-pb-q placeholder="Search food, e.g. soaked almonds" value="${esc(q)}" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search food"></label>
         <div data-pb-results>${resultsHTML()}</div>
-        <details class="pb-own"${err ? ' open' : ''}><summary>Can’t find it? Add your own</summary>
-        <div class="pb-form">
-          <label><span>Name</span><input class="eb-input" data-pb-f="name" placeholder="Warm water with jeera" autocomplete="off"></label>
-          <label><span>Amount</span><input class="eb-input" data-pb-f="unit" placeholder="1 glass" autocomplete="off"></label>
-          <div class="pb-two"><label><span>Calories</span><input class="eb-input" type="number" inputmode="decimal" min="0" data-pb-f="cal"></label>
-          <label><span>Protein g</span><input class="eb-input" type="number" inputmode="decimal" min="0" data-pb-f="p" placeholder="0"></label></div>
-          <p class="fl-err" role="alert">${esc(err)}</p>
-          <button type="button" class="eb-btn primary" data-pb="add">Add item</button>
-        </div></details>
+        <button type="button" class="eb-link pb-own-link" data-pb="new">Can’t find it? Add a new food</button>
         <p class="app-card-label pb-add-label">Your pre-brekkie</p>
         ${live.length ? `<ul class="pb-list">${live.map(it => `<li><span><b>${esc(it.name)}</b><small>${esc(it.unit || '')}${it.unit ? ' · ' : ''}${Math.round(it.cal)} cal</small></span><button type="button" class="pb-del" data-pb-del="${esc(it.id)}" aria-label="Delete ${esc(it.name)}">Delete</button></li>`).join('')}</ul>`
           : `<p class="pb-empty">Nothing here yet. Search above or add your own.</p>`}
         <button type="button" class="eb-link pb-hide" data-pb="hide">Hide Pre-brekkie from my day</button>`;
     };
+    // Step 2 for Pre-brekkie: the same amount drawer as everywhere, then it joins her list.
+    const askAmount = f => FL.pickAmount(f, { meal: false, cta: 'Add to Pre-brekkie', onDone: (f, amt, unit, t) => {
+      WAKEUP_ITEMS.push({ id: 'pb-' + Date.now(), name: f.n, unit: FL.qtyLabel(f, amt, unit), cal: t.cal, p: t.p || 0, c: t.c || 0, f: t.f || 0, fib: t.fib || 0 });
+      saveWakeupList(); q = ''; if (pg.isConnected) paint();
+      undoToast(`${f.n} added`, () => { WAKEUP_ITEMS.pop(); saveWakeupList(); if (pg.isConnected) paint(); else mealList(); });
+    } });
     pg.addEventListener('input', e => {
       if (!e.target.matches('[data-pb-q]')) return;
       q = e.target.value; const r = pg.querySelector('[data-pb-results]'); if (r) r.innerHTML = resultsHTML();
     });
     pg.addEventListener('click', e => {
       const pick = e.target.closest('[data-pb-pick]');
-      if (pick && FL) {
-        const f = FL.food(pick.dataset.pbPick); if (!f) return;
-        const u = FL.defaultUnit(f), a = FL.defaultAmt(u), t = FL.totals(f, a, u);
-        WAKEUP_ITEMS.push({ id: 'pb-' + Date.now(), name: f.n, unit: FL.qtyLabel(f, a, u), cal: t.cal, p: t.p || 0, c: t.c || 0, f: t.f || 0, fib: t.fib || 0 });
-        saveWakeupList(); q = ''; paint();
-        return undoToast(`${f.n} added`, () => { WAKEUP_ITEMS.pop(); saveWakeupList(); if (pg.isConnected) paint(); else mealList(); });
-      }
+      if (pick && FL) { const f = FL.food(pick.dataset.pbPick); if (f) askAmount(f); return; }
+      if (e.target.closest('[data-pb="new"]') && FL) return FL.newFood({ name: q.trim() }, askAmount);
       const del = e.target.closest('[data-pb-del]');
       if (del) {
         const it = WAKEUP_ITEMS.find(x => x.id === del.dataset.pbDel); if (!it) return;
@@ -1423,8 +1416,7 @@
       if (more > 0) rows.push(`<button type="button" class="ml-more" data-ml-more="${slot.id}" aria-expanded="${!folded}">${folded ? `Show ${more} more` : 'Show less'}</button>`);
       // Coffee / protein: build from parts
       if (BUILDERS[slot.id]) {
-        const last = getLastBuild(slot.id); let lastT = 0;
-        if (last && last.length) BUILDERS[slot.id].items.forEach(it => { if (last.includes(it.id)) lastT += it.cal; });
+        const lastT = typeof lastBuildCal === 'function' ? lastBuildCal(slot.id) : 0;
         // Repeat on the left, Build on the right: one row, easy to reach
         rows.push(`<div class="ml-acts${lastT > 0 ? '' : ' ml-acts-one'}">${lastT > 0 ? `<button type="button" class="ml-repeat" onclick="repeatLastBuild('${slot.id}', '${ds}')">↻ Repeat · ${lastT} cal</button>` : ''}<button type="button" class="ml-build" onclick="openBuilder('${slot.id}', '${ds}')">+ ${slot.id === 'protein' ? 'Build shake' : 'Build coffee'}</button></div>`);
       } else if (planned) {
