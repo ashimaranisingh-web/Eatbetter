@@ -1138,7 +1138,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) .pb-del { color: var(--n-danger) !impo
 .pb-hide { display: block; margin: 24px auto 0; }
 html.noir body:not(#_a):not(#_b):not(#_c) .pb-hide { color: var(--n-danger) !important; }
 /* Full-screen pages stay phone width (centred) on wider screens, like the rest of the app */
-#dayModeSearch.fl-page, .pb-page { left: 0 !important; right: 0 !important; width: auto !important; max-width: 430px; margin-left: auto !important; margin-right: auto !important; }
+html body #dayModeSearch.fl-page, html body .pb-page { left: 0 !important; right: 0 !important; width: auto !important; max-width: 430px !important; margin-left: auto !important; margin-right: auto !important; }
 .pb-search { margin: 8px 0 0; }
 .pb-results { margin-top: 8px !important; }
 .pb-addbtn { min-height: 44px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -1214,3 +1214,20 @@ html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt i { borde
 html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt.on { color: var(--n-accent-l) !important; font-weight: 600; }
 html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt.on i { border-color: var(--n-accent-l) !important; background: radial-gradient(circle, var(--n-accent-l) 0 4px, transparent 4.5px) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .fl-grow-meal { padding: 0 8px !important; }
+/* The amount drawer sits above every page and the builders */
+#flSheet .fl-sheet-bg { z-index: 1100 !important; }
+#flSheet .fl-sheet { z-index: 1101 !important; }
+/* New food page (step 1 of 2) */
+.nf-page { position: fixed; inset: 0; z-index: 300; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 24px); left: 0 !important; right: 0 !important; max-width: 430px; margin: 0 auto !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .nf-page { background: var(--n-page) !important; }
+.nf-intro { margin: 8px 0 16px; }
+.nf-intro h2 { margin: 4px 0 8px; font-size: 20px; line-height: 24px; font-weight: 600; }
+.nf-intro p { margin: 0; font-size: 14px; line-height: 20px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .nf-intro p, html.noir body:not(#_a):not(#_b):not(#_c) .nf-sub { color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .nf-intro .nf-step { color: var(--n-accent-l) !important; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.nf-form { display: grid; gap: 8px; }
+.nf-form label { display: grid; gap: 4px; font-size: 14px; }
+.nf-sub { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+.nf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nf-form .fl-err:empty { display: none; }
+.pb-own-link { display: block; margin: 16px 0 0; min-height: 44px; font-weight: 600; }

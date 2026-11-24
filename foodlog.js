@@ -339,9 +339,9 @@
       <div class="fl-live">${heroHTML(st.fix ? { ...t, ...st.fix } : t)}</div>
       ${st.fix ? fixHTML(t) : ''}
       <div class="fl-group">
-        <div class="fl-grow fl-grow-meal">
+        ${st.pick && st.pick.meal === false ? '' : `<div class="fl-grow fl-grow-meal">
           ${slotSeg(st.slot, 'data-fl-slot')}
-        </div>
+        </div>`}
         <div class="fl-grow"><span>Amount</span>
           <div class="fl-step">
             <button type="button" data-fl-step="-1" aria-label="Less">−</button>
@@ -352,8 +352,8 @@
           ${units.length > 1 ? `<span class="fl-menu"><select data-fl-unit aria-label="Unit">${units.map(u => `<option value="${u}"${u === st.unit ? ' selected' : ''}>${esc(unitText(f, u))}</option>`).join('')}</select></span>`
             : `<span class="fl-menu-one">${esc(unitText(f, st.unit))}</span>`}</label>
       </div>
-      <button type="button" class="eb-btn primary fl-add" data-fl-add>${st.fix ? 'Save and add to' : 'Add to'} ${SLOT_NAME[st.slot]}</button>
-      ${st.fix ? '' : `<button type="button" class="eb-link fl-editnut" data-fl-fix>Edit nutrition</button>`}
+      <button type="button" class="eb-btn primary fl-add" data-fl-add>${st.pick && st.pick.cta ? esc(st.pick.cta) : `${st.fix ? 'Save and add to' : 'Add to'} ${SLOT_NAME[st.slot]}`}</button>
+      ${st.fix || st.pick ? '' : `<button type="button" class="eb-link fl-editnut" data-fl-fix>Edit nutrition</button>`}
       ${f.src === 'shared' && f.code && !st.fix ? `<button type="button" class="eb-link fl-editnut" data-fl-flag="${esc(f.code)}">Different on your pack? Report it</button>` : ''}
     </div>`;
   }
@@ -940,7 +940,7 @@
     const t = e.target, root = t.closest('#foodLog, #flSheet'); if (!root) return;
     const at = sel => t.closest(sel);
     let n;
-    if (at('[data-fl-close]')) { Object.assign(st, { open: null, fix: null, scan: null, label: null }); return paintResults(); }
+    if (at('[data-fl-close]')) { Object.assign(st, { open: null, fix: null, scan: null, label: null, pick: null }); return paintResults(); }
     if ((n = at('[data-fl-slot]'))) { st.slot = n.dataset.flSlot; return paintResults(); }
     if (at('[data-fl-scan]')) return startScan();
     if ((n = at('[data-fl-label]'))) return readLabel(n.dataset.flLabel);
@@ -1001,6 +1001,14 @@
       return liveUpdate(box, f, cur.amt, cur.unit, ed ? null : st.fix);
     }
     if (at('[data-fl-fix]')) { const f = byId(st.open); st.fix = { ...totals(f, st.amt, st.unit), n: f.n }; return paintResults(); }
+    if (at('[data-fl-add]') && st.pick) {
+      // Amount step opened by Pre-brekkie or a builder: hand the amount back to whoever asked.
+      const f = byId(st.open); if (!f || !(st.amt > 0)) return;
+      const cb = st.pick.onDone, amt = st.amt, unit = st.unit, t = totals(f, amt, unit), slot = st.slot;
+      Object.assign(st, { open: null, fix: null, pick: null }); paintSheet();
+      if (cb) cb(f, amt, unit, t, slot);
+      return;
+    }
     if (at('[data-fl-add]')) {
       let f = byId(st.open); if (!f || !(st.amt > 0)) return;
       if (f.id.slice(0, 2) === 'o:') f = persistTemp(f, st.scan && st.scan.status === 'similar' ? st.scan.code : null);
@@ -1016,10 +1024,8 @@
     }
     if (at('[data-fl-create]')) {
       const fromScan = st.scan && st.scan.code ? st.scan : null;
-      st.create = { name: fromScan ? (fromScan.name || '') : foodWords(st.raw), unit: '1 serving', cal: '', p: '', c: '', f: '', code: fromScan ? fromScan.code : null };
-      st.scan = null;
-      paintResults(); const nm = $('flResults').querySelector('[data-fl-cr="name"]'); if (nm && !nm.value) nm.focus();
-      return;
+      st.scan = null; st.create = null; paintSheet();
+      return newFood({ name: fromScan ? (fromScan.name || '') : foodWords(st.raw), code: fromScan ? fromScan.code : null });
     }
     if (at('[data-fl-cancel]')) { st.create = null; return paintResults(); }
     if (at('[data-fl-save-own]')) {
@@ -1172,5 +1178,62 @@
   function reset() { Object.assign(st, { raw: '', open: null, fix: null, create: null, edit: null, scan: null, label: null, online: null, replace: null }); }
   // For the edit sheet on Nutrition's meal cards.
   const food = id => byId(id);
-  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, food, totals, qtyLabel, unitText, stepOf, defaultUnit, defaultAmt, focus: () => { st.focused = true; }, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
+
+  // ── One amount step for any known food ──
+  // Search, Pre-brekkie and the coffee / shake builders all use the same drawer:
+  // meal (optional), amount − / +, unit, live calories, then one button.
+  function pickAmount(f, opts) {
+    const id = f.id || ('t:' + norm(f.n).replace(/ /g, '-'));
+    if (!byId(id)) temp[id] = { ...f, id };
+    st.pick = opts || {};
+    openFood(byId(id) || temp[id], opts && opts.pre);
+    paintSheet();
+  }
+
+  // ── New food: its own page, separate from logging ──
+  // Step 1 saves it to her foods (findable in search on Plan, Log and Guide days).
+  // Step 2 is the usual amount drawer. `after(food)` replaces step 2 when another
+  // screen (Pre-brekkie) wants the amount for itself.
+  function newFood(pre, after) {
+    const p = pre || {};
+    const pg = document.createElement('div');
+    pg.className = 'fl-page nf-page'; pg.setAttribute('role', 'dialog'); pg.setAttribute('aria-modal', 'true'); pg.setAttribute('aria-label', 'New food');
+    const field = (k, label, extra = '') => `<label><span>${label}</span><input class="eb-input" data-nf-f="${k}" ${extra}></label>`;
+    pg.innerHTML = `<div class="flp-head"><button type="button" class="flp-back" data-nf="back" aria-label="Back"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Back</button><b>New food</b><span></span></div>
+      <div class="nf-intro"><p class="nf-step">Step 1 of 2</p><h2>Add a food to your foods</h2>
+        <p>Save it once and it shows up in search on Plan, Log and Guide days. Next, you’ll pick how much you ate.</p></div>
+      <div class="nf-form">
+        ${field('name', 'Name', `value="${esc(p.name || '')}" autocomplete="off" placeholder="Mum’s besan chilla"`)}
+        ${field('unit', 'One serving is', 'value="1 serving" autocomplete="off" placeholder="1 bowl, 2 pieces, 1 glass"')}
+        <p class="nf-sub">Nutrition for one serving</p>
+        <div class="nf-two">${field('cal', 'Calories', 'type="number" inputmode="decimal" min="0"')}${field('p', 'Protein g', 'type="number" inputmode="decimal" min="0"')}
+          ${field('c', 'Carbs g', 'type="number" inputmode="decimal" min="0"')}${field('f', 'Fat g', 'type="number" inputmode="decimal" min="0"')}
+          ${field('fib', 'Fibre g', 'type="number" inputmode="decimal" min="0"')}</div>
+        <p class="fl-src">Use the label on the pack, or your best guess. You can change it later.</p>
+        <p class="fl-err" role="alert"></p>
+        <button type="button" class="eb-btn primary" data-nf="save">Save and pick amount</button>
+      </div>`;
+    document.body.appendChild(pg); document.body.classList.add('fl-page-open');
+    const close = () => { pg.remove(); if (!document.querySelector('.fl-page')) document.body.classList.remove('fl-page-open'); };
+    const nm = pg.querySelector('[data-nf-f="name"]'); if (nm && !nm.value) setTimeout(() => nm.focus(), 50);
+    pg.addEventListener('click', e => {
+      const b = e.target.closest('[data-nf]'); if (!b) return;
+      if (b.dataset.nf === 'back') return close();
+      const v = k => (pg.querySelector(`[data-nf-f="${k}"]`).value || '').trim(), err = pg.querySelector('.fl-err');
+      if (!v('name')) { err.textContent = 'Give it a name first.'; return; }
+      if (v('cal') === '' || !(+v('cal') >= 0)) { err.textContent = 'Add the calories for one serving.'; return; }
+      const item = { id: 'custom-ing-' + Date.now(), name: v('name'), unit: v('unit') || '1 serving',
+        cal: Math.round(+v('cal')), p: r1(v('p')), c: r1(v('c')), f: r1(v('f')), fib: r1(v('fib')) };
+      try { const list = getCustomIngredients(); list.push(item); setCustomIngredients(list); } catch {}
+      if (p.code) remember_scan(p.code, { ref: 'c:' + item.id });   // next scan of this pack finds it
+      cache = null;
+      window.EBAnalytics && EBAnalytics.track('food_created', { mode: 'log' });
+      const f = byId('c:' + item.id); close();
+      EB.toast && EB.toast(`${item.name} saved to your foods`);
+      if (!f) return;
+      if (after) return after(f);
+      st.raw = ''; st.pick = null; openFood(f); paintSheet();   // step 2: the usual amount drawer
+    });
+  }
+  window.EBFoodLog = { pickAmount, newFood, focusSearch, html, mounted, isActive, reset, food, totals, qtyLabel, unitText, stepOf, defaultUnit, defaultAmt, focus: () => { st.focused = true; }, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
 })();
