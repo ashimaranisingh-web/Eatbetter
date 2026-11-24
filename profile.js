@@ -223,11 +223,13 @@
       const v = tm.dataset.trackMode, cur = EBDayMode.currentMode();
       if (v === cur) return;
       const name = (EBDayMode.MODES.find(m => m.v === v) || {}).t || v;
-      if (EBDayMode.hasFood(todayStr()) && !confirm(`Switch to ${name}? Everything you’ve logged for food today will be cleared. Other days stay as they are.`)) return;
-      EBDayMode.changeMode(v);
-      patch(p => { p.trackMode = v; });
-      EB.toast(`Tracking with ${name} from today`);
-      return render();
+      return EBDayMode.confirmSwitch(v).then(yes => {
+        if (!yes) return;
+        EBDayMode.changeMode(v);
+        patch(p => { p.trackMode = v; });
+        EB.toast(`Tracking with ${name} from today`);
+        render();
+      });
     }
     const tp = t.closest('[data-theme-pref]');
     if (tp) { EB.setThemePref(tp.dataset.themePref); return render(); }

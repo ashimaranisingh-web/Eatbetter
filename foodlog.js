@@ -17,7 +17,7 @@
   const r1 = n => Math.round((+n || 0) * 10) / 10;
 
   const SRC = { usda: 'USDA FoodData Central', ifct: 'IFCT 2017 (NIN)', mf: 'Home recipe (Menu-fi)', plan: 'Your meal plan', own: 'Your own food', you: 'Your numbers', off: 'Open Food Facts', label: 'Your pack label', shared: 'Menu-fi pack labels' };
-  const SLOTS = [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['snack', 'Snack'], ['dinner', 'Dinner']];
+  const SLOTS = [['wakeup', 'Pre-brekkie'], ['coffee', 'Coffee'], ['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['snack', 'Snack'], ['dinner', 'Dinner']];
   const SLOT_NAME = Object.fromEntries(SLOTS);
   const PLURAL = { pack: 'packs', piece: 'pieces', katori: 'katori', spoon: 'spoons', cup: 'cups', serving: 'servings', g: 'g', ml: 'ml' };
   const RECENT = 'eb_food_recent', FAV = 'eb_food_fav', SCANNED = 'eb_food_scanned';
@@ -340,8 +340,7 @@
       ${st.fix ? fixHTML(t) : ''}
       <div class="fl-group">
         <div class="fl-grow fl-grow-meal">
-          <div class="fl-seg" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, l]) =>
-            `<button type="button" class="${st.slot === v ? 'on' : ''}" data-fl-slot="${v}" role="radio" aria-checked="${st.slot === v}">${l}</button>`).join('')}</div>
+          ${slotSeg(st.slot, 'data-fl-slot')}
         </div>
         <div class="fl-grow"><span>Amount</span>
           <div class="fl-step">
@@ -363,6 +362,7 @@
     const c = st.create;
     return `<div class="fl-create">
       <p class="fl-create-title">Create my own food</p>
+      ${slotSeg(st.slot, 'data-fl-slot')}
       <p class="fl-src">It’s saved to your foods, so you can find it next time and in Plan mode too.</p>
       <label><span>Name</span><input class="eb-input" type="text" value="${esc(c.name)}" data-fl-cr="name" autocomplete="off"></label>
       <label><span>One serving is</span><input class="eb-input" type="text" value="${esc(c.unit)}" placeholder="1 bowl, 2 pieces, 1 glass" data-fl-cr="unit" autocomplete="off"></label>
@@ -370,21 +370,22 @@
         `<label><span>${l}</span><input class="eb-input" type="number" inputmode="decimal" min="0" step="any" value="${esc(c[k])}" data-fl-cr="${k}"></label>`).join('')}</div>
       <p class="fl-src">Use the label on the pack, or your best guess. You can change it later.</p>
       <p class="fl-err" id="flErr" role="alert"></p>
-      ${slotRadio(st.slot, 'data-fl-slot')}
       <button type="button" class="eb-btn primary" data-fl-save-own>Save and add to ${SLOT_NAME[st.slot]}</button>
       <button type="button" class="eb-link" data-fl-cancel>Cancel</button>
     </div>`;
   }
 
-  // Which meal: radio options shown with the food, once one is picked.
-  function slotRadio(sel, attr) {
-    return `<div class="fl-radio" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, t]) =>
-      `<button type="button" class="fl-radio-opt${sel === v ? ' on' : ''}" ${attr}="${v}" role="radio" aria-checked="${sel === v}"><i aria-hidden="true"></i>${t}</button>`).join('')}</div>`;
+  // Which meal: radio buttons with text everywhere (Pre-brekkie · Coffee · Breakfast · Lunch · Snack · Dinner).
+  function slotSeg(sel, attr) {
+    return `<div class="fl-radio fl-meal-radio" role="radiogroup" aria-label="Which meal">${SLOTS.map(([v, l]) =>
+      `<button type="button" class="fl-radio-opt${sel === v ? ' on' : ''}" ${attr}="${v}" role="radio" aria-checked="${sel === v}"><i aria-hidden="true"></i>${l}</button>`).join('')}</div>`;
   }
   let compact = false;   // Plan / Guide days: just the bar until she types or scans
   function resultsHTML() {
-    // Compact search now lives on its own page, so its results always show
-    // (Favourites, Frequent and Recent before she types).
+    // Compact search lives on its own page, so its results always show.
+    // Log mode starts empty: Favourites / Frequent / Recent appear only once
+    // she taps the search bar, and results once she types.
+    if (!compact && !st.focused && !st.raw.trim() && !st.create) return '';
     return resultsBody();
   }
   function onlineHTML() {
@@ -836,7 +837,7 @@
   function editHTML(m) {
     const e = st.edit, f = e.food;
     return `<div class="fl-detail">
-      ${slotRadio(e.slot, 'data-fl-eslot')}
+      ${slotSeg(e.slot, 'data-fl-eslot')}
       ${f && !e.fix ? amountHTML(f, e.amt, e.unit) + `<div class="fl-live">${totalHTML(f, totals(f, e.amt, e.unit))}</div>
           <button type="button" class="eb-link fl-fixlink" data-fl-efix>Numbers look off? Correct them</button>`
         : `<div class="fl-fix">${[['cal', 'Calories'], ['p', 'Protein g'], ['c', 'Carbs g'], ['f', 'Fat g']].map(([k, l]) =>
@@ -887,9 +888,6 @@
     return `<div class="fl" id="foodLog">
       ${bar}
       <div id="flResults" class="fl-results">${resultsHTML()}</div>
-      <p class="fl-label fl-logged-head">Logged today</p>
-      ${loggedHTML(d)}
-      <p class="app-muted small fl-note">All numbers are estimates from USDA FoodData Central, IFCT 2017 (National Institute of Nutrition), Open Food Facts or typical home recipes. General guidance, not medical advice.</p>
     </div>`;
   }
 
@@ -1130,9 +1128,9 @@
   });
   // Keep the search box in view above the keyboard.
   // Plan / Guide days: tapping the search bar shows Favourites and Recent.
-  document.addEventListener('focusin', e => { if (e.target.id === 'flSearch' && compact && !st.focused) { st.focused = true; paintResults(); } });
+  document.addEventListener('focusin', e => { if (e.target.id === 'flSearch' && !st.focused) { st.focused = true; paintResults(); } });
   document.addEventListener('focusout', e => {
-    if (e.target.id !== 'flSearch' || !compact) return;
+    if (e.target.id !== 'flSearch') return;
     setTimeout(() => { const a = document.activeElement; if (a && a.closest && a.closest('#foodLog, #flSheet')) return; if (st.focused && !st.raw.trim()) { st.focused = false; paintResults(); } }, 200);
   });
   document.addEventListener('focusin', e => {
@@ -1174,5 +1172,5 @@
   function reset() { Object.assign(st, { raw: '', open: null, fix: null, create: null, edit: null, scan: null, label: null, online: null, replace: null }); }
   // For the edit sheet on Nutrition's meal cards.
   const food = id => byId(id);
-  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, food, totals, qtyLabel, unitText, stepOf, focus: () => { st.focused = true; }, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
+  window.EBFoodLog = { focusSearch, html, mounted, isActive, reset, food, totals, qtyLabel, unitText, stepOf, defaultUnit, defaultAmt, focus: () => { st.focused = true; }, search: q => search(parse(q).q), parse, norm, catalog, lookup, fromOFF, parseLabel, flushShares };
 })();

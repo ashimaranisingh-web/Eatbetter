@@ -3419,9 +3419,9 @@ html body #flSheet .fl-grow { display: flex; align-items: center; justify-conten
 html body #flSheet .fl-grow + .fl-grow { box-shadow: inset 0 0.5px 0 rgba(60,60,67,.22); }
 html body #flSheet .fl-grow-meal { padding: 8px; }
 /* Segmented control */
-html body #flSheet .fl-seg { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; padding: 2px; border-radius: 9px; background: rgba(118,118,128,.12); }
-html body #flSheet .fl-seg button { min-height: 32px; border: 0; border-radius: 7px; background: none; font: inherit; font-size: 12px; font-weight: 500; color: #141414; cursor: pointer; }
-html body #flSheet .fl-seg button.on { background: #fff; font-weight: 600; box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 0 0 0.5px rgba(0,0,0,.04); }
+html body .fl-seg { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; padding: 2px; border-radius: 9px; background: rgba(118,118,128,.12); }
+html body .fl-seg button { min-height: 32px; border: 0; border-radius: 7px; background: none; font: inherit; font-size: 12px; font-weight: 500; color: #141414; cursor: pointer; }
+html body .fl-seg button.on { background: #fff; font-weight: 600; box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 0 0 0.5px rgba(0,0,0,.04); }
 /* Stepper */
 html body #flSheet .fl-step { display: flex; align-items: center; gap: 2px; }
 html body #flSheet .fl-step button { width: 36px; height: 32px; border: 0; border-radius: 8px; background: rgba(118,118,128,.12); font-size: 20px; line-height: 1; color: #141414; cursor: pointer; }

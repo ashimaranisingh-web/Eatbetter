@@ -299,9 +299,9 @@ html.noir body:not(#_a):not(#_b):not(#_c) :is(.app-daylog-sec, .app-period-list 
 /* ── Food drawer: dark groups, controls and menus ── */
 html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-group { background: var(--n-card2) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-grow + .fl-grow, html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-grow { border-color: var(--n-hair2) !important; box-shadow: none; }
-html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg { background: #1a1a1c !important; }
-html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg button { color: var(--n-ink2) !important; background: transparent !important; }
-html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-seg button.on { background: #3a3a3d !important; color: var(--n-ink) !important; box-shadow: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-seg { background: #1a1a1c !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-seg button { color: var(--n-ink2) !important; background: transparent !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-seg button.on { background: #3a3a3d !important; color: var(--n-ink) !important; box-shadow: none !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-step button { background: #3a3a3d !important; color: var(--n-ink) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #flSheet .fl-step .fl-amt-in { background: #1a1a1c !important; color: var(--n-ink) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #flSheet :is(.fl-menu, .fl-menu select, .fl-grow > span) { background-color: transparent !important; color: var(--n-ink) !important; }
@@ -1102,9 +1102,115 @@ html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-grocery { margin-bottom
 html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-grocery + .app-tiles { margin-top: 16px !important; }
 /* Text links above/below the kitchen group carry tap padding (12px / 8px);
    subtract it so the visible gap matches the page's 16px rhythm */
-html.noir body:not(#_a):not(#_b):not(#_c) #mealPlanFoot + .app-grocery { margin-top: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #mealPlanFoot:not(:empty) + .app-grocery { margin-top: 0 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles { margin-bottom: 0 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles + .app-food-search:not([hidden]) ~ .app-wrapup, html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles ~ .app-wrapup { margin-top: 0 !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-tiles { column-gap: 12px !important; }
 /* Current weight lives on Home only */
 html.noir body:not(#_a):not(#_b):not(#_c) #cycleSection .cycle-weight { display: none !important; }
+/* Every meal card keeps its coloured left edge (Wake up, Coffee, Protein too) */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec[data-slot] { border-left: 3px solid var(--slot-accent, var(--n-stroke)) !important; }
+/* Edit on the regulars, next to the calorie target */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-head em { margin-left: auto; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-slot-edit { min-height: 32px; margin-left: 8px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--n-accent-l) !important; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-head:not(:has(em)) .ml-slot-edit { margin-left: auto; }
+/* Hidden regulars: add them back */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-hidden { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 0; font-size: 13px; color: var(--n-ink3) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-hidden button { min-height: 32px; padding: 0 12px; border: 1px solid var(--n-hair2); border-radius: 16px; background: none; font: inherit; font-size: 13px; color: var(--n-ink) !important; cursor: pointer; }
+/* Pre-brekkie page (Edit on the Pre-brekkie card) */
+.pb-page { position: fixed; inset: 0; z-index: 250; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 24px); }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-page { background: var(--n-page) !important; }
+.pb-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.pb-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px; border-radius: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-list li { background: var(--n-card) !important; }
+.pb-list li > span { display: grid; gap: 2px; min-width: 0; }
+.pb-list b { font-size: 15px; font-weight: 500; }
+.pb-list small { font-size: 13px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-list small, html.noir body:not(#_a):not(#_b):not(#_c) .pb-empty { color: var(--n-ink3) !important; }
+.pb-del { min-height: 44px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-del { color: var(--n-danger) !important; }
+.pb-empty { margin: 16px 0 0; font-size: 14px; }
+.pb-add-label { margin: 24px 0 8px !important; }
+.pb-form { display: grid; gap: 8px; }
+.pb-form label { display: grid; gap: 4px; font-size: 13px; }
+.pb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pb-form .fl-err:empty { display: none; }
+.pb-hide { display: block; margin: 24px auto 0; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-hide { color: var(--n-danger) !important; }
+/* Full-screen pages stay phone width (centred) on wider screens, like the rest of the app */
+#dayModeSearch.fl-page, .pb-page { left: 0 !important; right: 0 !important; width: auto !important; max-width: 430px; margin-left: auto !important; margin-right: auto !important; }
+.pb-search { margin: 8px 0 0; }
+.pb-results { margin-top: 8px !important; }
+.pb-addbtn { min-height: 44px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-addbtn { color: var(--n-accent-l) !important; }
+.pb-own { margin: 16px 0 0; }
+.pb-own summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 600; cursor: pointer; list-style: none; }
+.pb-own summary::-webkit-details-marker { display: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-own summary { color: var(--n-accent-l) !important; }
+.pb-own .pb-form { margin-top: 8px; }
+/* Pre-brekkie search bar: same look as Add food's */
+.pb-page .pb-search { position: relative; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 16px; border-radius: 12px; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-page .pb-search { color: var(--n-ink3) !important; }
+.pb-page .pb-search input[type="search"] { flex: 1; min-width: 0; height: 50px; border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; font: inherit; font-size: 16px; outline: none; -webkit-appearance: none; }
+html.noir body:not(#_a):not(#_b):not(#_c) .pb-page .pb-search input { color: var(--n-ink) !important; }
+.pb-page .pb-search input::-webkit-search-cancel-button { display: none; }
+/* One header height on Nutrition, Menstruation and Fitness, so the title and date strip don't jump between tabs */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head { box-sizing: border-box; min-height: 57px; padding-bottom: 12px !important; display: flex; align-items: flex-start; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head h1 { margin: 0 !important; line-height: 25px; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageFitness) .app-head .app-head-row { flex: 1; align-items: center; height: 25px; margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageCycle .app-head { align-items: center; }
+/* Rule of 8 for the tab headers: 16 above · 24 title line · 16 below = 56 */
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head { min-height: 56px; padding-top: 16px !important; padding-bottom: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head h1 { line-height: 24px; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageFitness) .app-head .app-head-row { height: 24px; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head h1 { line-height: 24px !important; height: 24px; }
+html.noir body:not(#_a):not(#_b):not(#_c) :is(#pageFood, #pageCycle, #pageFitness) .app-head + .app-shared { margin-top: 0 !important; }
+
+/* ══ Type scale: 11 · 14 · 16 · 20 · 24 · 32 (11 = small text; WCAG: small grey text keeps ≥4.5:1 contrast) ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.activity-item-src, .app-muted, .app-cycle-bar-ends span, .app-hist-top em, .app-macros-toggle span, .app-meta, .app-quick-sub, .app-tolog-line, .app-tile > span, .ch-note, .ch-day, .ch-tag, .cycle-mood-hint, .fitness-name, .fitness-tally, .fitness-tally span, .ml-sub, .wkm-d, dt, dd small, small) { font-size: 11px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.activity-add-btn, .eb-seg-btn, .cycle-today-btn, .cycle-month, .app-card-label, .preset-dur, .app-grocery-t > span, .app-sum-line, .cal-term-label, .cyc-sub, .cyc-history summary > span, .ml-slot-edit, .ml-head > em) { font-size: 14px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.app-grocery-t > b, .app-sum-big > span, .cyc-history > summary) { font-size: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.cal-op, .ch-target > b, .cycle-month-btn, .app-card > i) { font-size: 20px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .hero-num { font-size: 32px !important; }
+
+/* ══ Spacing: the last off-grid values onto 4 / 8 ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.app-logrow-text, .app-cycle-bar, .activity-item-name, .cal-equation, .ml-main, .app-grocery-t, .app-tile, .hero-stack) { row-gap: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.app-logrow-text, .app-cycle-bar, .activity-item-name, .cal-equation, .ml-main, .app-grocery-t, .app-tile, .hero-stack) { column-gap: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.cal-term-label, .app-tolog-line) { margin-top: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.cyc-now-tag, .cal-op, .hero-stack) { padding-top: 4px !important; padding-bottom: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page dt { padding-top: 0 !important; padding-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-x { margin: -8px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .ch-manage { margin-top: -16px !important; margin-bottom: -16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-coach { margin-bottom: -24px !important; }
+
+/* ══ Rule of 8, round 2 (11px stays as the one small-text exception) ══ */
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sub,
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-stats3 > div > span { font-size: 11px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-head > em { font-size: 14px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .coach-bubble p, html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .coach-bubble p span { font-size: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page :is(.ch-home > span, .app-food-list > li > span) { row-gap: 4px !important; column-gap: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .ch-home > span > small { margin-bottom: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .cal-op { padding-left: 4px !important; padding-right: 4px !important; }
+
+/* ══ WCAG contrast ══ */
+/* "34 days" in Previous cycles was dark grey on dark (1.8:1) → standard grey (5.5:1) */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-hist-top em { color: var(--n-ink3) !important; }
+/* PMS buttons: white on #f13294 was 3.7:1 → #d81b72 is 4.9:1. Pink text keeps the lighter accent (6.1:1). */
+html.noir:not(#_a):not(#_b) body.pms-mode { --n-accent: #d81b72; --accent: #d81b72; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .mode-toggle-bar #btnPMS.active { background: #d81b72 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-burned-list > li > span { row-gap: 4px !important; column-gap: 4px !important; }
+/* Log and Guide days show logged food as the Plan meal cards */
+html body #pageFood:is([data-dayview="log"], [data-dayview="guide"]) #slotSection { display: block !important; }
+html body #pageFood[data-dayview="guide"] #slotSection:has(.ml:empty) { display: none !important; }
+/* Log days: 16px from the search bar to the first meal card, and from the last card to the sources note */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood[data-dayview="log"] #foodLog { margin-bottom: 16px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood #flResults:empty { margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .fl-note { margin: 16px 0 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .fl-note { margin-top: 12px !important; } /* + the list's 4px gap = 16 */
+/* Meal picker everywhere: radio + text, no background or border; selected turns accent (3 columns) */
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0 8px !important; margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt { min-height: 44px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; font-size: 14px !important; color: var(--n-ink) !important; white-space: nowrap; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt i { border-color: var(--n-ink3) !important; background: none !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt.on { color: var(--n-accent-l) !important; font-weight: 600; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-meal-radio .fl-radio-opt.on i { border-color: var(--n-accent-l) !important; background: radial-gradient(circle, var(--n-accent-l) 0 4px, transparent 4.5px) !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .fl-grow-meal { padding: 0 8px !important; }
