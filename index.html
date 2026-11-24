@@ -4684,8 +4684,8 @@ function renderCycleCalendar() {
     const info = getPhaseForDate(ds, cycleStart);
     const meta = info ? PHASE_META[info.phase] : null;
     const dotClass = meta ? meta.dot : '';
-    const clickAttr = info ? `onclick="showPhasePopup('${ds}','${cycleStart}')"` : '';
-    return `<div class="cycle-day-cell${isToday ? ' today' : ''}" data-date="${ds}" ${clickAttr} style="${info ? 'cursor:pointer' : ''}">
+    // Tapping a date opens that day on the current page (handled in app.js), never a popup.
+    return `<div class="cycle-day-cell${isToday ? ' today' : ''}" data-date="${ds}" style="cursor:pointer">
       <span class="cycle-day-name">${WEEK_DAYS[d.getDay()]}</span>
       <span class="cycle-day-num">${d.getDate()}</span>
       ${window.EBMood ? EBMood.cellMark(ds, dotClass) : `<span class="cycle-dot ${dotClass}"></span>`}
@@ -5370,12 +5370,15 @@ function todayStr() {
 // content and clicking a different tab did nothing. selectedDateStr() maps
 // the active tab to that weekday's actual date within the current week, so
 // each tab now has its own real, distinct log.
+// Which week Nutrition / Fitness are showing: 0 = this week, -1 = last week, and so on.
+// Set by tapping a date on the strip; Home and Menstruation always reset it to 0.
+let viewWeekOffset = 0;
 function getMondayOfThisWeek() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   const day = d.getDay(); // 0=Sun..6=Sat
   const diff = day === 0 ? 6 : day - 1; // days since Monday
-  d.setDate(d.getDate() - diff);
+  d.setDate(d.getDate() - diff + viewWeekOffset * 7);
   return d;
 }
 function dateStrForDay(day) {
@@ -5530,6 +5533,10 @@ const WAKEUP_ITEMS = [
   { id:'banana60',    name:'Banana',                    unit:'60g',       cal:53, p:0.8, c:13.5, f:0.2, fib:1.6 },
   { id:'chia',        name:'Chia seeds & lemon water',  unit:'5g + 250ml',cal:30, p:1,   c:3,    f:1.5, fib:2 },
 ];
+// She can delete items or add her own (Nutrition → Pre-brekkie → Edit).
+// Deleted items stay in the list marked off, so days she already ticked them keep their calories.
+(function () { try { const v = JSON.parse(localStorage.getItem('eb_prebrekkie')); if (Array.isArray(v) && v.length) WAKEUP_ITEMS.splice(0, WAKEUP_ITEMS.length, ...v); } catch {} })();
+function saveWakeupList() { try { localStorage.setItem('eb_prebrekkie', JSON.stringify(WAKEUP_ITEMS)); } catch {} }
 
 function getWakeupItems(ds) {
   try {
@@ -5565,7 +5572,7 @@ function wakeupTotals(ds) {
 
 const MEAL_SLOTS = [
   {
-    id: 'wakeup', emoji: '☀️', name: 'Wake up', time: '7–8am',
+    id: 'wakeup', emoji: '☀️', name: 'Pre-brekkie', time: '7–8am',
     targetP: 1, targetCal: 40, fixed: true,
     meal: { name: 'Chia seeds + lemon water + electrolytes', cal: 40, p: 1, c: 5, f: 2, fib: 4,
       desc: 'Chia seeds (5g) soaked overnight in water · Fresh lemon juice · Water (250ml) · Electrolyte tablet (1)' }
@@ -5598,7 +5605,7 @@ const MEAL_SLOTS = [
 
 const PMS_MEAL_SLOTS = [
   {
-    id: 'wakeup', emoji: '☀️', name: 'Wake up', time: '7–8am',
+    id: 'wakeup', emoji: '☀️', name: 'Pre-brekkie', time: '7–8am',
     targetP: 1, targetCal: 40, fixed: true,
     meal: { name: 'Chia seeds + lemon water + electrolytes', cal: 40, p: 1, c: 5, f: 2, fib: 4,
       desc: 'Chia seeds (5g) soaked overnight in water · Fresh lemon juice · Water (250ml) · Electrolyte tablet (1)' }
@@ -5863,7 +5870,7 @@ function renderSlotSection() {
     if (slot.fixed) {
       const picked = getWakeupItems(ds);
       const wt = wakeupTotals(ds);
-      const rows = WAKEUP_ITEMS.map(it => {
+      const rows = WAKEUP_ITEMS.filter(it => !it.off).map(it => {
         const on = picked.includes(it.id);
         return `<label class="wake-row${on ? ' on' : ''}">
           <input type="checkbox" class="slot-check" style="margin:0"

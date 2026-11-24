@@ -1242,7 +1242,7 @@
       const before = (() => { try { return getWakeupItems(ds); } catch { return []; } })();
       try { setWakeupItems(ds, []); localStorage.removeItem('wakeup_checked_' + ds); } catch {}
       repaintMeals();
-      return undoToast('Wake up unticked', () => { try { setWakeupItems(ds, before); } catch {} repaintMeals(); });
+      return undoToast('Pre-brekkie unticked', () => { try { setWakeupItems(ds, before); } catch {} repaintMeals(); });
     }
     const log = getSlotLog(ds), before = log[slot], wasEaten = (() => { try { return getSlotEaten(ds, slot); } catch { return false; } })();
     delete log[slot]; setSlotLog(ds, log);
@@ -1277,22 +1277,125 @@
         <button type="button" class="ml-tick${done ? ' on' : ''}" ${tick} role="checkbox" aria-checked="${!!done}" aria-label="${done ? 'Eaten. Tap to undo' : 'Mark eaten'}">${done ? TICK : ''}</button>
       </div></div>`;
   }
+  // Regulars (Wake up, Coffee, Protein) can be hidden from her day and added back later.
+  const HIDE_KEY = 'eb_hidden_slots', HIDEABLE = ['wakeup', 'coffee', 'protein'];
+  const hiddenSlots = () => { try { return JSON.parse(localStorage.getItem(HIDE_KEY)) || []; } catch { return []; } };
+  const setHidden = a => { try { localStorage.setItem(HIDE_KEY, JSON.stringify(a)); } catch {} };
+  // Pre-brekkie: its own page to delete items, add her own, or hide the card.
+  function preBrekkiePage() {
+    const pg = document.createElement('div'); pg.className = 'fl-page pb-page'; pg.setAttribute('role', 'dialog'); pg.setAttribute('aria-modal', 'true'); pg.setAttribute('aria-label', 'Pre-brekkie');
+    document.body.appendChild(pg); document.body.classList.add('fl-page-open');
+    const close = () => { pg.remove(); document.body.classList.remove('fl-page-open'); mealList(); try { renderTracker(); } catch {} };
+    let q = '';
+    const FL = window.EBFoodLog;
+    // Search results: the same foods as Add food, each added at its usual serving.
+    const resultsHTML = () => {
+      if (!q.trim() || !FL || !FL.search) return '';
+      const list = (FL.search(q) || []).slice(0, 8);
+      if (!list.length) return `<p class="pb-empty">Nothing found for “${esc(q.trim())}”. Add it yourself below.</p>`;
+      return `<ul class="pb-list pb-results">${list.map(f => { const u = FL.defaultUnit(f), a = FL.defaultAmt(u), t = FL.totals(f, a, u);
+        return `<li><span><b>${esc(f.n)}</b><small>${esc(FL.qtyLabel(f, a, u))} · ${t.cal} cal</small></span><button type="button" class="pb-addbtn" data-pb-pick="${esc(f.id)}" aria-label="Add ${esc(f.n)}">+ Add</button></li>`; }).join('')}</ul>`;
+    };
+    const paint = (err = '') => {
+      const live = WAKEUP_ITEMS.filter(it => !it.off);
+      pg.innerHTML = `<div class="flp-head"><button type="button" class="flp-back" data-pb="back" aria-label="Back"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Back</button><b>Pre-brekkie</b><span></span></div>
+        <label class="fl-search pb-search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" data-pb-q placeholder="Search food, e.g. soaked almonds" value="${esc(q)}" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search food"></label>
+        <div data-pb-results>${resultsHTML()}</div>
+        <details class="pb-own"${err ? ' open' : ''}><summary>Can’t find it? Add your own</summary>
+        <div class="pb-form">
+          <label><span>Name</span><input class="eb-input" data-pb-f="name" placeholder="Warm water with jeera" autocomplete="off"></label>
+          <label><span>Amount</span><input class="eb-input" data-pb-f="unit" placeholder="1 glass" autocomplete="off"></label>
+          <div class="pb-two"><label><span>Calories</span><input class="eb-input" type="number" inputmode="decimal" min="0" data-pb-f="cal"></label>
+          <label><span>Protein g</span><input class="eb-input" type="number" inputmode="decimal" min="0" data-pb-f="p" placeholder="0"></label></div>
+          <p class="fl-err" role="alert">${esc(err)}</p>
+          <button type="button" class="eb-btn primary" data-pb="add">Add item</button>
+        </div></details>
+        <p class="app-card-label pb-add-label">Your pre-brekkie</p>
+        ${live.length ? `<ul class="pb-list">${live.map(it => `<li><span><b>${esc(it.name)}</b><small>${esc(it.unit || '')}${it.unit ? ' · ' : ''}${Math.round(it.cal)} cal</small></span><button type="button" class="pb-del" data-pb-del="${esc(it.id)}" aria-label="Delete ${esc(it.name)}">Delete</button></li>`).join('')}</ul>`
+          : `<p class="pb-empty">Nothing here yet. Search above or add your own.</p>`}
+        <button type="button" class="eb-link pb-hide" data-pb="hide">Hide Pre-brekkie from my day</button>`;
+    };
+    pg.addEventListener('input', e => {
+      if (!e.target.matches('[data-pb-q]')) return;
+      q = e.target.value; const r = pg.querySelector('[data-pb-results]'); if (r) r.innerHTML = resultsHTML();
+    });
+    pg.addEventListener('click', e => {
+      const pick = e.target.closest('[data-pb-pick]');
+      if (pick && FL) {
+        const f = FL.food(pick.dataset.pbPick); if (!f) return;
+        const u = FL.defaultUnit(f), a = FL.defaultAmt(u), t = FL.totals(f, a, u);
+        WAKEUP_ITEMS.push({ id: 'pb-' + Date.now(), name: f.n, unit: FL.qtyLabel(f, a, u), cal: t.cal, p: t.p || 0, c: t.c || 0, f: t.f || 0, fib: t.fib || 0 });
+        saveWakeupList(); q = ''; paint();
+        return undoToast(`${f.n} added`, () => { WAKEUP_ITEMS.pop(); saveWakeupList(); if (pg.isConnected) paint(); else mealList(); });
+      }
+      const del = e.target.closest('[data-pb-del]');
+      if (del) {
+        const it = WAKEUP_ITEMS.find(x => x.id === del.dataset.pbDel); if (!it) return;
+        it.off = true; saveWakeupList(); paint();
+        return undoToast(`${it.name} deleted`, () => { it.off = false; saveWakeupList(); if (pg.isConnected) paint(); else mealList(); });
+      }
+      const b = e.target.closest('[data-pb]'); if (!b) return;
+      if (b.dataset.pb === 'back') return close();
+      if (b.dataset.pb === 'hide') { close(); setHidden([...new Set([...hiddenSlots(), 'wakeup'])]); mealList(); return undoToast('Pre-brekkie hidden', () => { setHidden(hiddenSlots().filter(x => x !== 'wakeup')); mealList(); }); }
+      if (b.dataset.pb === 'add') {
+        const v = k => (pg.querySelector(`[data-pb-f="${k}"]`).value || '').trim();
+        const name = v('name'), cal = parseFloat(v('cal'));
+        if (!name) return paint('Give it a name.');
+        if (!(cal >= 0)) return paint('Add the calories, or your best guess.');
+        WAKEUP_ITEMS.push({ id: 'pb-' + Date.now(), name, unit: v('unit'), cal: Math.round(cal), p: parseFloat(v('p')) || 0, c: 0, f: 0, fib: 0 });
+        saveWakeupList(); paint();
+      }
+    });
+    paint();
+  }
+  function slotEdit(slotId) {
+    if (slotId === 'wakeup') return preBrekkiePage();
+    let ds; try { ds = selectedDateStr(); } catch { return; }
+    const slot = (isPMSMode() ? PMS_MEAL_SLOTS : MEAL_SLOTS).find(s => s.id === slotId); if (!slot) return;
+    const ov = document.createElement('div'); ov.className = 'eb-cal-overlay app-sheet-overlay';
+    ov.innerHTML = `<div class="eb-cal app-sheet ml-info" role="dialog" aria-modal="true" aria-label="${esc(slot.name)}">
+      <div class="app-sheet-head"><b>${esc(slot.name)}</b><button type="button" class="eb-icon-btn" data-sheet-close aria-label="Close">${ICONS.close}</button></div>
+      <p class="app-muted">${BUILDERS[slotId] ? 'Change what you usually have, or hide it if it isn’t part of your day.' : 'Hide it if it isn’t part of your day.'} You can add it back at the bottom of your meals.</p>
+      <div class="ml-info-acts">${BUILDERS[slotId] ? `<button type="button" data-se="edit">Change what I usually have</button>` : ''}<button type="button" class="del" data-se="hide">Hide ${esc(slot.name)}</button></div></div>`;
+    document.body.appendChild(ov);
+    const close = () => ov.remove();
+    ov.addEventListener('click', e => {
+      if (e.target === ov || e.target.closest('[data-sheet-close]')) return close();
+      const a = e.target.closest('[data-se]'); if (!a) return; close();
+      if (a.dataset.se === 'edit') return openBuilder(slotId, ds);
+      setHidden([...new Set([...hiddenSlots(), slotId])]); mealList();
+      undoToast(`${slot.name} hidden`, () => { setHidden(hiddenSlots().filter(x => x !== slotId)); mealList(); });
+    });
+  }
   function mealList() {
     const el = $('slotSection'); if (!el) return;
     let ds; try { ds = selectedDateStr(); } catch { return; }
-    const log = getSlotLog(ds), pms = isPMSMode(), slots = pms ? PMS_MEAL_SLOTS : MEAL_SLOTS;
+    const log = getSlotLog(ds), pms = isPMSMode(), all = pms ? PMS_MEAL_SLOTS : MEAL_SLOTS;
+    const hidden = hiddenSlots();
+    // Log and Guide days: only the meals she's logged something in, as the same cards (no planned meals).
+    const view = window.EBDayMode ? EBDayMode.modeFor(ds) : 'plan', onlyLogged = view !== 'plan';
+    const logged = id => Array.isArray(log[id]) ? log[id] : log[id] ? [log[id]] : [];
+    const hasItems = s => s.fixed ? getWakeupItems(ds).length > 0 || logged(s.id).length > 0 : logged(s.id).length > 0;
+    const slots = all.filter(s => !hidden.includes(s.id) && (!onlyLogged || hasItems(s)));
     const html = slots.map(slot => {
-      const head = (right) => `<p class="ml-head"><span>${esc(slot.name)}${slot.time ? ` · ${esc(slot.time)}` : ''}</span>${right ? `<em>${right}</em>` : ''}</p>`;
+      const edit = HIDEABLE.includes(slot.id) ? `<button type="button" class="ml-slot-edit" data-ml-slotedit="${slot.id}" aria-label="Edit ${esc(slot.name)}">Edit</button>` : '';
+      // Chip shows the meal name only (no time). The regulars show Edit instead of a calorie number.
+      const head = (right) => `<p class="ml-head"><span>${esc(slot.name)}</span>${right && !edit ? `<em>${right}</em>` : ''}${edit}</p>`;
       // Wake up: tick each item
       if (slot.fixed) {
         const picked = getWakeupItems(ds);
-        return `<section class="ml-sec" data-slot="${slot.id}">${head('')}<div class="ml-group">${WAKEUP_ITEMS.map(it =>
-          mlRow({ done: picked.includes(it.id), name: it.name, cal: it.cal, p: it.p, sub: esc(it.unit), tick: `data-ml-wake="${it.id}"` })).join('')}</div></section>`;
+        return `<section class="ml-sec" data-slot="${slot.id}">${head('')}<div class="ml-group">${WAKEUP_ITEMS.filter(it => !it.off && (!onlyLogged || getWakeupItems(ds).includes(it.id))).map(it =>
+          mlRow({ done: picked.includes(it.id), name: it.name, cal: it.cal, p: it.p, sub: esc(it.unit), tick: `data-ml-wake="${it.id}"` })).join('')}${
+          // Food logged into Pre-brekkie from search sits under the usual items.
+          logged(slot.id).map((m, i) => mlRow({ done: true, name: plainName(m.name), cal: m.cal, p: m.p, sub: m.qty ? esc(plainName(m.qty)) : '',
+            tick: `data-ml-del="${slot.id}:${i}"`, open: `data-ml-edit="${slot.id}:${i}" aria-haspopup="dialog"`,
+            swipe: `<button type="button" class="del" data-ml-del="${slot.id}:${i}">Delete</button>` })).join('')}</div></section>`;
       }
       let items = log[slot.id]; items = !items ? [] : Array.isArray(items) ? items : [items];
       const target = slot.targetCal ? `~${Math.round(slot.targetCal)} cal` : '';
       const rows = [];
-      const planned = !items.length && slot.defaultMeal && !replaceModeSlots.has(slot.id);
+      const planned = !onlyLogged && !items.length && slot.defaultMeal && !replaceModeSlots.has(slot.id);
       if (planned) {
         const d = getEffectiveDefaultMeal(slot, currentDay, pms);
         if (d) rows.push(mlRow({ done: false, name: plainName(d.name), cal: d.cal, p: d.p, tick: `data-ml-accept="${slot.id}"`, open: `data-ml-info="${slot.id}:plan"`,
@@ -1311,8 +1414,10 @@
       const plannedOnly = items.length && slot.defaultMeal && isPlannedOnly(slot, ds);
       // Long meals show the first 2 foods; "Show N more" opens the rest.
       const more = items.length - ML_SHOW, folded = more > 0 && !mlOpen.has(slot.id);
-      items.forEach((m, i) => (folded && i >= ML_SHOW) || rows.push(mlRow({ done: true, name: plainName(m.name), cal: m.cal, p: m.p,
-        sub: `${m.qty ? esc(plainName(m.qty)) : ''}${m.tag && TAGS[m.tag] ? ` <em class="ml-tag ml-tag-${m.tag}">${TAGS[m.tag]}</em>` : ''}`,
+      // Coffee / Protein: the chip already says what it is, so what's in it becomes the name (wraps to 2 lines).
+      const built = m => BUILDERS[slot.id] && m.qty;
+      items.forEach((m, i) => (folded && i >= ML_SHOW) || rows.push(mlRow({ done: true, name: plainName(built(m) ? m.qty : m.name), cal: m.cal, p: m.p,
+        sub: `${m.qty && !built(m) ? esc(plainName(m.qty)) : ''}${m.tag && TAGS[m.tag] ? ` <em class="ml-tag ml-tag-${m.tag}">${TAGS[m.tag]}</em>` : ''}`,
         tick: plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`,
         open: `data-ml-edit="${slot.id}:${i}" aria-haspopup="dialog"`, swipe: `<button type="button" class="alt" data-ml-replace="${slot.id}">Replace</button><button type="button" class="del" ${plannedOnly ? `data-ml-unplan="${slot.id}"` : `data-ml-del="${slot.id}:${i}"`}>${plannedOnly ? 'Undo' : 'Delete'}</button>` })));
       if (more > 0) rows.push(`<button type="button" class="ml-more" data-ml-more="${slot.id}" aria-expanded="${!folded}">${folded ? `Show ${more} more` : 'Show less'}</button>`);
@@ -1324,7 +1429,7 @@
         rows.push(`<div class="ml-acts${lastT > 0 ? '' : ' ml-acts-one'}">${lastT > 0 ? `<button type="button" class="ml-repeat" onclick="repeatLastBuild('${slot.id}', '${ds}')">↻ Repeat · ${lastT} cal</button>` : ''}<button type="button" class="ml-build" onclick="openBuilder('${slot.id}', '${ds}')">+ ${slot.id === 'protein' ? 'Build shake' : 'Build coffee'}</button></div>`);
       } else if (planned) {
         /* planned card already offers "Replace / Add" along the bottom */
-      } else if (items.length && slot.defaultMeal && !plannedOnly) {
+      } else if (!onlyLogged && items.length && slot.defaultMeal && !plannedOnly) {
         // Swapped for something else: go back to the plan on the left, add more on the right
         rows.push(`<div class="ml-acts"><button type="button" data-ml-restore="${slot.id}">↺ Back to planned meal</button><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
       } else rows.push(`<div class="ml-acts ml-acts-one"><button type="button" data-ml-add="${slot.id}">+ Add food</button></div>`);
@@ -1335,7 +1440,12 @@
     // "Craving something?" lives under Coffee on plan days: lift it out before
     // the list is redrawn so it isn't thrown away, then put it back.
     const crave = $('craveLink'); if (crave && el.contains(crave)) el.after(crave);
-    el.innerHTML = `<div class="ml">${html}${reviewHTML(ds)}</div>`;
+    const back = all.filter(s => hidden.includes(s.id));
+    const hiddenRow = back.length ? `<p class="ml-hidden">Hidden ${back.map(s => `<button type="button" data-ml-unhide="${s.id}">+ ${esc(s.name)}</button>`).join('')}</p>` : '';
+    const empty = view === 'log' && !html ? `<p class="app-log-empty">Nothing logged yet. Search above and your meals show up here.</p>` : '';
+    // Log days: where the numbers come from, under the meals.
+    const note = view === 'log' ? `<p class="app-muted small fl-note">All numbers are estimates from USDA FoodData Central, IFCT 2017 (National Institute of Nutrition), Open Food Facts or typical home recipes. General guidance, not medical advice.</p>` : '';
+    el.innerHTML = `<div class="ml">${empty}${html}${onlyLogged ? '' : hiddenRow}${reviewHTML(ds)}${note}</div>`;
     const coffee = el.querySelector('.ml-sec[data-slot="coffee"]');
     if (crave && coffee && ($('pageFood') || {}).dataset?.dayview === 'plan') coffee.after(crave);
   }
@@ -1386,7 +1496,7 @@
   const UNIT_NAMES = { g: 'grams', piece: 'pieces', katori: 'katori / bowl', cup: 'cup', serving: 'serving', ml: 'ml', spoon: 'spoon', pack: 'pack' };
   function editSheet(slotId, i) {
     let ds; try { ds = selectedDateStr(); } catch { return; }
-    const slots = (isPMSMode() ? PMS_MEAL_SLOTS : MEAL_SLOTS).filter(x => ['breakfast', 'lunch', 'snack', 'dinner'].includes(x.id));
+    const slots = (isPMSMode() ? PMS_MEAL_SLOTS : MEAL_SLOTS).filter(x => ['wakeup', 'coffee', 'breakfast', 'lunch', 'snack', 'dinner'].includes(x.id));
     const log = getSlotLog(ds), arr = Array.isArray(log[slotId]) ? log[slotId] : log[slotId] ? [log[slotId]] : [];
     const m = arr[i]; if (!m) return;
     const FL = window.EBFoodLog;
@@ -1419,7 +1529,7 @@
         ${units.length > 1 ? `<div class="eb-seg ml-edit-units" role="radiogroup" aria-label="Unit">${units.map(u => `<button type="button" class="eb-seg-btn${e.unit === u ? ' on' : ''}" data-me-unit="${u}" role="radio" aria-checked="${e.unit === u}">${UNIT_NAMES[u] || u}</button>`).join('')}</div>`
           : `<p class="ml-edit-unit">${byAmount ? esc(UNIT_NAMES[e.unit] || e.unit) : `${e.amt === 1 ? 'serving' : 'servings'} of ${esc(plainName(m.qty || m.name))}`}</p>`}
         <p class="ml-edit-label">Meal</p>
-        ${radios(slots.map(x => [x.id, x.name]), e.slot, 'data-me-slot', 'Meal')}
+        <div class="fl-radio fl-meal-radio" role="radiogroup" aria-label="Meal">${slots.map(x => `<button type="button" class="fl-radio-opt${e.slot === x.id ? ' on' : ''}" data-me-slot="${x.id}" role="radio" aria-checked="${e.slot === x.id}"><i aria-hidden="true"></i>${esc(x.name)}</button>`).join('')}</div>
         <p class="ml-edit-label">How was it?</p>
         ${radios(Object.entries(TAGS), e.tag, 'data-me-tag', 'How was it')}
         <p class="ml-edit-label">Why you ate it <span>(optional)</span></p>
@@ -1527,7 +1637,7 @@
   }
 
   document.addEventListener('click', e => {
-    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part], #slotSection [data-ml-restore], #slotSection [data-ml-edit], #slotSection [data-ml-more]');
+    const t = e.target.closest('#slotSection [data-ml-wake], #slotSection [data-ml-accept], #slotSection [data-ml-unplan], #slotSection [data-ml-del], #slotSection [data-ml-info], #slotSection [data-ml-add], #slotSection [data-ml-replace], #slotSection [data-ml-part], #slotSection [data-ml-restore], #slotSection [data-ml-edit], #slotSection [data-ml-more], #slotSection [data-ml-slotedit], #slotSection [data-ml-unhide]');
     if (!t) return;
     let ds; try { ds = selectedDateStr(); } catch { return; }
     const d = t.dataset;
@@ -1538,6 +1648,8 @@
     if (d.mlDel) { const [sid, i] = d.mlDel.split(':'); return delItem(sid, +i, ds); }
     if (d.mlInfo) return mealInfo(d.mlInfo);
     if (d.mlEdit) { const [sid, i] = d.mlEdit.split(':'); return editSheet(sid, +i); }
+    if (d.mlSlotedit) return slotEdit(d.mlSlotedit);
+    if (d.mlUnhide) { setHidden(hiddenSlots().filter(x => x !== d.mlUnhide)); return mealList(); }
     if (d.mlMore) { mlOpen.has(d.mlMore) ? mlOpen.delete(d.mlMore) : mlOpen.add(d.mlMore); return mealList(); }
     if (d.mlRestore) return restoreDefault(d.mlRestore, ds);
     if (d.mlAdd) return window.EBFoodLog ? EBFoodLog.focusSearch(d.mlAdd) : null;
@@ -1810,10 +1922,13 @@
   }
   document.addEventListener('click', e => {
     if (active !== 'food' && active !== 'fitness') return;
-    const cell = e.target.closest('#cycleSection .cycle-day-cell'); if (!cell) return;
-    const key = dayKeyFor(cell.dataset.date); if (!key) return;   // other weeks: phase info as before
+    const cell = e.target.closest('#cycleSection .cycle-day-cell'); if (!cell || !cell.dataset.date) return;
     e.stopPropagation(); e.preventDefault();
-    switchDay(key); markPicked();
+    // Any date, past or ahead: move to its week, then open that day.
+    const d = new Date(cell.dataset.date + 'T00:00');
+    const monday = x => { const m = new Date(x); m.setHours(0, 0, 0, 0); m.setDate(m.getDate() - (m.getDay() + 6) % 7); return m; };
+    viewWeekOffset = Math.round((monday(d) - monday(new Date())) / (7 * 86400000));
+    switchDay(WEEK[(d.getDay() + 6) % 7]); markPicked();
   }, true);
 
   function closeOverlays() {
@@ -1837,6 +1952,8 @@
     if (!PAGES.includes(tab)) tab = 'home';
     if (!initial && tab !== active) window.EBAnalytics && EBAnalytics.track('tab_viewed', { tab });
     if (tab !== 'home' && active === 'home' && homeDs) { homeDs = null; currentDay = todayKey(); try { renderTabs(); } catch {} }
+    // Home and Menstruation always show this week; Nutrition / Fitness keep the week she picked.
+    if ((tab === 'home' || tab === 'cycle') && viewWeekOffset) { viewWeekOffset = 0; currentDay = todayKey(); try { renderTabs(); } catch {} }
     active = tab;
     document.body.dataset.tab = tab;
     PAGES.forEach(t => { pageEl(t).hidden = t !== tab; });

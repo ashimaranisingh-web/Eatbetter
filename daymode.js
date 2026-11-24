@@ -87,9 +87,9 @@
           <b>${m.t}</b>${CHEVRON}
         </button>
         ${menuOpen ? `<ul class="app-dm-menu" role="listbox" aria-label="How you eat today">${MODES.map(x => `<li>
-            <button type="button" class="app-dm-opt${x.v === mode ? ' on' : ''}" role="option" aria-selected="${x.v === mode}" data-dm-pick="${x.v}"${locked && x.v !== mode ? ' disabled' : ''}>
+            <button type="button" class="app-dm-opt${x.v === mode ? ' on' : ''}" role="option" aria-selected="${x.v === mode}" data-dm-pick="${x.v}">
               <span><b>${x.t}</b><small>${x.line}</small></span>${x.v === mode ? CHECK : ''}
-            </button></li>`).join('')}${locked ? '<li><p class="app-dm-lock">Set for this day, since you’ve started. Pick again tomorrow.</p></li>' : ''}</ul>` : ''}
+            </button></li>`).join('')}</ul>` : ''}
       </div>`;
   }
   function paintPicker(focus) {
@@ -400,7 +400,7 @@
     const t = e.target;
     if (t.closest('[data-dm-toggle]')) { menuOpen = !menuOpen; return paintPicker(menuOpen ? 'menu' : null); }
     const pick = t.closest('[data-dm-pick]');
-    if (pick) { if (pick.disabled) return; menuOpen = false; const same = pick.dataset.dmPick === modeFor(ds()); if (same) return paintPicker('btn'); return setMode(pick.dataset.dmPick); }
+    if (pick) { if (pick.disabled) return; menuOpen = false; const same = pick.dataset.dmPick === modeFor(ds()); if (same) return paintPicker('btn'); const v = pick.dataset.dmPick; return confirmSwitch(v).then(yes => { if (!yes) return paintPicker(); guideToLog(ds()); setMode(v); }); }
     if (menuOpen && !t.closest('.app-dm')) { menuOpen = false; paintPicker(); }
     const m = t.closest('[data-daymode]');
     if (m && !m.disabled) {
@@ -445,15 +445,36 @@
     ['slots_', 'guide_', 'wakeup_items_', 'wakeup_checked_'].forEach(k => { try { localStorage.removeItem(k + d); } catch {} });
     try { Object.keys(localStorage).filter(k => k.startsWith('slotEaten_' + d + '_')).forEach(k => localStorage.removeItem(k)); } catch {}
   }
+  // Leaving Guide: each ticked meal becomes a logged estimate in its meal, so it still counts.
+  const GUIDE_SLOT = { breakfast: 'breakfast', 'mid-morning': 'snack', lunch: 'lunch', snack: 'snack', dinner: 'dinner' };
+  function guideToLog(d) {
+    if (get('dayMode_' + d, null) !== 'guide') return;
+    const done = guideMeals(d).filter(m => m.done); if (!done.length) return;
+    let log = {}; try { log = getSlotLog(d); } catch {}
+    done.forEach(m => {
+      const slot = GUIDE_SLOT[m.name.toLowerCase()] || 'snack';
+      if (!Array.isArray(log[slot])) log[slot] = log[slot] ? [log[slot]] : [];
+      log[slot].push({ name: m.name, qty: 'Guide estimate', cal: m.mid, p: m.p, c: m.c, f: m.f, fib: m.fib, src: 'guide', at: Date.now() });
+    });
+    try { setSlotLog(d, log); } catch {}
+    const g = guideFor(d); g.done = []; saveGuide(d, g);
+  }
+  // Switching mid-day keeps everything she's logged; it shows as meal cards in the new mode.
+  function confirmSwitch(v) {
+    const name = (MODES.find(x => x.v === v) || {}).t || v, d = todayStr();
+    if (!hasFood(d) || !window.EB || !EB.ask) return Promise.resolve(true);
+    return EB.ask({ title: `Switch to ${name}?`, ok: `Switch to ${name}`, cancel: 'Keep as is',
+      body: `What you’ve logged today stays and shows as meal cards.${get('dayMode_' + d, null) === 'guide' ? ' Meals you ticked in Guide become estimates in those meals.' : ''} Switching often makes your weeks harder to compare, so try to stick with one for a while.` });
+  }
   function changeMode(v) {
     if (!MODES.some(x => x.v === v)) return;
     const d = todayStr();
-    if (hasFood(d)) clearDay(d);
+    guideToLog(d);
     put('eb_lastDayMode', v); put('dayMode_' + d, v);
     window.EBAnalytics && EBAnalytics.track('day_mode_set', { mode: v });
     refresh();
   }
   const currentMode = () => modeFor(todayStr());
 
-  window.EBDayMode = { openSearch, closeSearch, subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
+  window.EBDayMode = { confirmSwitch, openSearch, closeSearch, subpage, closeSubpages, openMealPlan, openDishes, paint, refresh, modeFor, estimate, guideMeals, changeMode, currentMode, hasFood, MODES };
 })();

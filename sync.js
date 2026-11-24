@@ -13,7 +13,7 @@
   // Saved data that follows the person between devices. Left out on purpose:
   // eb_health (each phone connects to Health itself), eb_theme, eb_consent,
   // eb_sync, weekExpanded and Supabase's own session keys.
-  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_time|eb_grocery|eb_symptoms|eb_cycle_daily|eb_moodfaces|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
+  const SYNCED = /^(eb_profile|eb_food_recent|eb_food_fav|eb_food_scanned|eb_plan|eb_energy|eb_time|eb_grocery|eb_hidden_slots|eb_prebrekkie|eb_symptoms|eb_cycle_daily|eb_moodfaces|eb_challenges|mealPlan_|slots_|slotEaten_|wakeup_|lastBuild_|supp_)/;
 
   let session = null, applying = false, pushTimer = null;
 
