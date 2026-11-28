@@ -1,7 +1,7 @@
 // ── Log mode: search any food, pick an amount, add it to a meal ───────
 // Foods come from four places, in this order of trust for the person:
 //   your own foods (mealPlan_customIngredients, shared with Plan mode),
-//   Menu-fi's home-cooked dishes (assistant.js, per serving),
+//   Menufi's home-cooked dishes (assistant.js, per serving),
 //   USDA FoodData Central and IFCT 2017 (fooddb.js, per 100 g).
 // Entries go into the same per-day log as Plan (slots_<date>), with a few
 // extra fields (src, ref, amt, unit, est) that older code simply ignores.
@@ -16,7 +16,7 @@
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const r1 = n => Math.round((+n || 0) * 10) / 10;
 
-  const SRC = { usda: 'USDA FoodData Central', ifct: 'IFCT 2017 (NIN)', mf: 'Home recipe (Menu-fi)', plan: 'Your meal plan', own: 'Your own food', you: 'Your numbers', off: 'Open Food Facts', label: 'Your pack label', shared: 'Menu-fi pack labels' };
+  const SRC = { usda: 'USDA FoodData Central', ifct: 'IFCT 2017 (NIN)', mf: 'Home recipe (Menufi)', plan: 'Your meal plan', own: 'Your own food', you: 'Your numbers', off: 'Open Food Facts', label: 'Your pack label', shared: 'Menufi pack labels' };
   const SLOTS = [['wakeup', 'Pre-brekkie'], ['coffee', 'Coffee'], ['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['snack', 'Snack'], ['dinner', 'Dinner']];
   const SLOT_NAME = Object.fromEntries(SLOTS);
   const PLURAL = { pack: 'packs', piece: 'pieces', katori: 'katori', spoon: 'spoons', cup: 'cups', serving: 'servings', g: 'g', ml: 'ml' };
@@ -604,7 +604,7 @@
     return byId('b:' + code) || f;
   }
 
-  // A row from Menu-fi's shared pack database → a food.
+  // A row from Menufi's shared pack database → a food.
   function fromShared(r) {
     if (!r || r.cal == null) return null;
     // Disputed: more "wrong numbers" reports than labels backing it. Skip it.
@@ -626,7 +626,7 @@
     if (showFound(code)) { track('found_saved'); return paintResults(); }
     st.scan = { status: 'loading', code, msg: 'Looking it up…' }; paintResults();
     const still = () => st.scan && st.scan.code === code;
-    // Menu-fi's shared pack labels first: read from real packs by other people.
+    // Menufi's shared pack labels first: read from real packs by other people.
     // Waits at most 0.6 s for it when the pack is also in the bundled list.
     const bundledFirst = offIndia(code);
     try {
@@ -703,7 +703,7 @@
         <button type="button" class="eb-seg-btn${L.basis === 'serve' ? ' on' : ''}" data-fl-lbb="serve" role="radio" aria-checked="${L.basis === 'serve'}">Per serving</button></div>
       <div class="fl-fix">${field('cal', `Calories ${per}`)}${field('p', 'Protein g')}${field('c', 'Carbs g')}${field('f', 'Fat g')}${field('fib', 'Fibre g')}${field('sug', 'Sugar g')}${field('na', 'Sodium mg')}${field('serving', `Serving ${u}${L.basis === 'serve' ? '' : ' (optional)'}`)}${field('pack', `Pack size ${u}`)}${field('pieceG', `One piece ${u} (optional)`)}${field('pieceName', 'Piece is called', 'text')}</div>
       <p class="fl-err" id="flErr" role="alert"></p>
-      ${L.code ? `<p class="fl-src">${window.EBSync && EBSync.signedIn && EBSync.signedIn() ? 'Saving also shares this pack’s barcode and numbers with other Menu-fi users, so their scan finds it. Nothing about you is shared.' : 'Once you sign in, this pack is shared with other Menu-fi users so their scan finds it. Nothing about you is shared.'}</p>` : ''}
+      ${L.code ? `<p class="fl-src">${window.EBSync && EBSync.signedIn && EBSync.signedIn() ? 'Saving also shares this pack’s barcode and numbers with other Menufi users, so their scan finds it. Nothing about you is shared.' : 'Once you sign in, this pack is shared with other Menufi users so their scan finds it. Nothing about you is shared.'}</p>` : ''}
       <button type="button" class="eb-btn primary" data-fl-lbsave>Save, then pick how much</button>
       ${native() ? `<button type="button" class="eb-link" data-fl-label="camera">Retake the photo</button>` : ''}
     </div>`;
@@ -801,7 +801,7 @@
         <button type="button" class="eb-link fl-make" data-fl-scan>Scan another</button></div>`;
     }
     if (sc.status === 'denied') return `<div class="fl-scanbox">${head('Barcode')}
-        <p class="fl-hint">Camera access is off for Menu-fi. Turn it on in the iPhone Settings app → Menu-fi → Camera, or type the numbers instead.</p>
+        <p class="fl-hint">Camera access is off for Menufi. Turn it on in the iPhone Settings app → Menufi → Camera, or type the numbers instead.</p>
         <button type="button" class="eb-btn secondary fl-make-btn" data-fl-type>Type the barcode</button></div>`;
     if (sc.status === 'error') return `<div class="fl-scanbox">${head('Barcode')}
         <p class="fl-hint">Couldn’t reach the food database. Check your internet and try again, or read the pack label instead.</p>

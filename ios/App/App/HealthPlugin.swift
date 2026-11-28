@@ -2,7 +2,7 @@ import Foundation
 import Capacitor
 import HealthKit
 
-/// Apple Health bridge for Menu-fi (JS name "Health", used by health.js).
+/// Apple Health bridge for Menufi (JS name "Health", used by health.js).
 /// Reads weight, period days and workouts; writes each day's eaten
 /// calories and macros, replacing that day's earlier totals.
 @objc(HealthPlugin)

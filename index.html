@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Menu-fi</title>
+<title>Menufi</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -4656,6 +4656,7 @@ function renderCycleCalendar() {
           <input type="date" id="cycleStartInput" placeholder="First day of last period">
           <button class="cycle-setup-btn" onclick="saveCycleStart()">Start tracking</button>
         </div>
+        <p class="cycle-setup-hint">Add your last period date to start</p>
       </div>`;
     const isEl = document.getElementById('insightSection');
     if (isEl) isEl.innerHTML = '';
@@ -6663,6 +6664,7 @@ renderWeight();
 <script src="reminders.js"></script>
 <script src="planner.js"></script>
 <script src="challenges.js"></script>
+<script src="clover.js"></script>
 <script src="app.js"></script>
 <script src="onboarding.js"></script>
 <script src="profile.js"></script>

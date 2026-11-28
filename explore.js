@@ -52,7 +52,7 @@
     wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-labelledby', 'exploreTitle');
     wrap.innerHTML = `
       <div class="eb-explore-card">
-        <h2 id="exploreTitle">Set up Menu-fi to save this</h2>
+        <h2 id="exploreTitle">Set up Menufi to save this</h2>
         <p>Your meals, cycle, workouts and challenges are saved to your account. Finish setup and sign in, and everything you do from then on is kept. It takes about 2 minutes.</p>
         <div class="eb-cta-row">
           <button type="button" class="eb-btn secondary" data-explore="later">Keep looking</button>

@@ -2,7 +2,7 @@
   "name": "menufi",
   "private": true,
   "version": "1.0.0",
-  "description": "Menu-fi — menstrual-cycle-based nutrition for your fitness",
+  "description": "Menufi — menstrual-cycle-based nutrition for your fitness",
   "scripts": {
     "build": "node scripts/build-web.mjs",
     "ios": "npm run build && npx cap sync ios && npx cap open ios"

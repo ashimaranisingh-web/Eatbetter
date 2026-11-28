@@ -43,7 +43,7 @@
       const list = build(p);
       if (!list.length) return;
       const perm = await LN.requestPermissions();
-      if (perm.display !== 'granted') { EB.toast('Turn on notifications for Menu-fi in Settings to get reminders'); return; }
+      if (perm.display !== 'granted') { EB.toast('Turn on notifications for Menufi in Settings to get reminders'); return; }
       await LN.schedule({ notifications: list });
     } catch {}
   }

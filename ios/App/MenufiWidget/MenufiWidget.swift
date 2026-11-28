@@ -1,7 +1,7 @@
 import WidgetKit
 import SwiftUI
 
-// Menu-fi widget: what to eat next and today's workout, with the cycle day
+// Menufi widget: what to eat next and today's workout, with the cycle day
 // as a small line on top. Shown on the home and
 // lock screen. The app writes the data (MenufiPlugin.updateWidget) into the
 // shared App Group as JSON: two weeks of days, so the widget stays right
@@ -140,7 +140,7 @@ struct DayLine: View {
                     .overlay(Circle().stroke(Color.white.opacity(0.9), lineWidth: 1))
                 Text("Day \(d.day) · \(d.label)")
             } else {
-                Text("Menu-fi")
+                Text("Menufi")
             }
         }
         .font(.system(size: 11, weight: .semibold))
@@ -170,7 +170,7 @@ struct MealBlock: View {
                 Text("All meals logged").font(.system(size: nameSize, weight: .semibold))
             } else {
                 Kicker(text: "Food")
-                Text("Open Menu-fi for today’s meals").font(.system(size: 13, weight: .medium)).opacity(0.85)
+                Text("Open Menufi for today’s meals").font(.system(size: 13, weight: .medium)).opacity(0.85)
             }
         }
     }
@@ -198,7 +198,7 @@ struct WorkoutBlock: View {
                 }
             }
         } else {
-            Text("Open Menu-fi for a workout").font(.system(size: 12, weight: .medium)).opacity(0.85)
+            Text("Open Menufi for a workout").font(.system(size: 12, weight: .medium)).opacity(0.85)
         }
     }
 }
@@ -273,7 +273,7 @@ struct MenufiWidgetView: View {
         case .accessoryInline:
             if let m = entry.next { Text("\(m.slot): \(m.name)") }
             else if let w = entry.workout { Text(w.name) }
-            else if let d = entry.day { Text("Day \(d.day) · \(d.label)") } else { Text("Menu-fi") }
+            else if let d = entry.day { Text("Day \(d.day) · \(d.label)") } else { Text("Menufi") }
         case .accessoryCircular:
             if let d = entry.day {
                 VStack(spacing: -2) {
@@ -289,7 +289,7 @@ struct MenufiWidgetView: View {
                 } else if entry.allLogged {
                     Text("All meals logged").font(.system(size: 13, weight: .bold))
                 } else {
-                    Text("Menu-fi").font(.system(size: 13, weight: .bold))
+                    Text("Menufi").font(.system(size: 13, weight: .bold))
                 }
                 MoveBlock(entry: entry, compact: true)
             }

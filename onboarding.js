@@ -413,7 +413,7 @@
       <p class="eb-field-note">You’ll see a target for each meal. Tick a meal when you’ve had it.</p></div>`;
   }
 
-  // "Why Menu-fi": three steps, each with a small animated icon.
+  // "Why Menufi": three steps, each with a small animated icon.
   function whyCarousel() {
     const steps = [
       { ico: `<svg viewBox="0 0 48 48" width="44" height="44"><g class="why-ring"><circle cx="24" cy="24" r="17" fill="none" stroke="#ef5350" stroke-width="5" stroke-dasharray="19 88" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#42a5f5" stroke-width="5" stroke-dasharray="25 82" stroke-dashoffset="-24" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#f48fb1" stroke-width="5" stroke-dasharray="10 97" stroke-dashoffset="-53" stroke-linecap="round"/><circle cx="24" cy="24" r="17" fill="none" stroke="#ffd600" stroke-width="5" stroke-dasharray="36 71" stroke-dashoffset="-67" stroke-linecap="round"/></g></svg>`,
@@ -421,7 +421,7 @@
       { ico: `<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="12" width="30" height="27" rx="4"/><path d="M9 20h30M17 8v7M31 8v7"/><path class="why-tick" d="M18 29l4 4 8-8"/></svg>`,
         t: 'Life doesn’t pause for it', d: 'Work, stress and busy days keep going. Month after month, it helps to have someone guiding you.' },
       { ico: `<svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="why-spark" d="M24 6v6M24 36v6M6 24h6M36 24h6M11.5 11.5l4 4M32.5 32.5l4 4M36.5 11.5l-4 4M15.5 32.5l-4 4"/><circle cx="24" cy="24" r="6"/></svg>`,
-        t: 'Menu-fi plans around your phase', d: 'We track your cycle and suggest meals and workouts that suit the phase you’re in. That’s why we ask about your cycle next.' }
+        t: 'Menufi plans around your phase', d: 'We track your cycle and suggest meals and workouts that suit the phase you’re in. That’s why we ask about your cycle next.' }
     ];
     return `<ol class="ob-why">${steps.map((x, i) => `<li style="--i:${i}"><span class="ob-why-ico">${x.ico}</span><span><b>${x.t}</b><span>${x.d}</span></span></li>`).join('')}</ol>`;
   }
@@ -471,14 +471,14 @@
       id: 'tester', info: true, profile: false, cta: 'Got it',
       footLink: { label: 'Not now', action: 'declineStats' },
       eyebrow: 'Before you start',
-      title: p => firstName(p) ? `Thanks for trying Menu-fi, ${esc(firstName(p))}` : 'Thanks for trying Menu-fi',
+      title: p => firstName(p) ? `Thanks for trying Menufi, ${esc(firstName(p))}` : 'Thanks for trying Menufi',
       render: () => `
-        <p class="ob-lead">Menu-fi is new, so it records <b>which features you use</b> (like logging a meal or scanning a barcode), linked to your sign-in email, and <b>screen replays with every word hidden</b>: where you tap and scroll, not what’s on screen.</p>
+        <p class="ob-lead">Menufi is new, so it records <b>which features you use</b> (like logging a meal or scanning a barcode), linked to your sign-in email, and <b>screen replays with every word hidden</b>: where you tap and scroll, not what’s on screen.</p>
         <p class="ob-tester-sub">How it helps</p>
         <ul class="ob-how">
           <li><span class="ob-how-ico">1</span><span><b>See what really gets used</b>Feedback says what you think. This shows what you did.</span></li>
           <li><span class="ob-how-ico">2</span><span><b>Follow up with you</b>Never opened Guide, or stopped logging on day two? I can ask why.</span></li>
-          <li><span class="ob-how-ico">3</span><span><b>Fix the right things first</b>I build Menu-fi myself, so this decides what I fix next.</span></li>
+          <li><span class="ob-how-ico">3</span><span><b>Fix the right things first</b>I build Menufi myself, so this decides what I fix next.</span></li>
         </ul>
         <div class="ob-never"><b>Never recorded</b><span>Period dates, symptoms, weight, food, Apple Health data, or anything you type. Replays hide all text, numbers and photos.</span></div>
         <p class="eb-privacy">Your choice. Switch it off any time in Account, or ask me to delete it.</p>`,
@@ -525,7 +525,7 @@
       summary: p => [label(TRACK_MODES, p.trackMode), p.food.diet && label(DIETS, p.food.diet)].filter(Boolean).join(' · ')
     },
     {
-      id: 'why', info: true, eyebrow: 'Why Menu-fi', title: 'Made for a body that changes every month',
+      id: 'why', info: true, eyebrow: 'Why Menufi', title: 'Made for a body that changes every month',
       render: () => whyCarousel()
     },
     {
@@ -549,7 +549,7 @@
       id: 'account', short: 'Account', profile: false,
       when: () => !!(window.EBSync && EBSync.enabled()),
       title: 'Save everything to your email',
-      render: () => `<p class="ob-lead">Your plan, meals and cycle are saved to your account, so nothing is lost if you change phones. Menu-fi needs an account to track.</p>
+      render: () => `<p class="ob-lead">Your plan, meals and cycle are saved to your account, so nothing is lost if you change phones. Menufi needs an account to track.</p>
         ${EBSync.signedIn() ? `<p class="ob-done-line">${ICONS.check}<span>Saved to ${esc(EBSync.email())}</span></p>`
           : `<button type="button" class="eb-btn secondary" data-action="signIn">Continue with email</button>`}
         <p class="eb-privacy">Private to you. We never share it.</p>`,
@@ -811,10 +811,10 @@
     return `<button type="button" class="eb-icon-btn" data-ob="theme" aria-label="Switch to ${light ? 'dark' : 'light'} mode">${light ? ICONS.moon : ICONS.sun}</button>`;
   }
 
-  // Menu-fi mark: three drops meeting in the middle — Me, Nu, Fi.
-  const LOGO = `<svg class="ob-logo" viewBox="-40 -40 80 80" aria-hidden="true"><g class="ob-logo-spin">
-    ${[0, 120, 240].map((r, i) => `<path class="ob-petal" style="--r:${r}deg;--i:${i}" d="M0 1C-13 -10 -14 -33 0 -34C14 -33 13 -10 0 1Z"/>`).join('')}
-  </g></svg>`;
+  // Menufi mark: three drops meeting in the middle — Me, Nu, Fi.
+  // The clover story, from the real leaf photo (clover.js): three green leaves grow as a normal
+  // clover, the side leaves swing apart to make room, then the pink "lucky" leaf grows into the gap.
+  const LOGO = window.EBClover ? EBClover.svg({ animate: true, size: 128 }) : '';
 
   // Splash → welcome: the mark springs in and turns (2s), the name rises,
   // then the tagline (1s later), then the buttons.
@@ -823,11 +823,12 @@
     el.innerHTML = `
       <div class="ob-splash-mark">
         ${LOGO}
-        <p class="ob-splash-name">Menu-fi</p>
+        <p class="ob-splash-name">Menufi</p>
         <p class="ob-splash-meaning"><span style="--i:0"><b>Me</b>nstruation</span><span style="--i:1"><b>Nu</b>trition</span><span style="--i:2"><b>Fi</b>tness</span></p>
+        <p class="ob-splash-meaning ob-splash-copy">All your needs in one app.</p>
       </div>
       <div class="ob-body ob-welcome">
-        <h1 class="ob-title ob-splash-tag" id="obTitle">Built for the busy ladies trying to stay fit through it all.</h1>
+        <h1 class="ob-title ob-splash-tag eb-sr-only" id="obTitle">Menufi. All your needs in one app.</h1>
       </div>
       <div class="ob-foot ob-splash-cta">
         <button type="button" class="eb-btn primary" data-ob="start">Get started</button>
@@ -843,7 +844,7 @@
   }
 
   // Skipping setup: say plainly what she'll miss. Without her weight, goal and
-  // food, Menu-fi can't work out calories or plan meals.
+  // food, Menufi can't work out calories or plan meals.
   function confirmSkip() {
     const missing = [
       !draft.goal && 'your goal',
@@ -852,7 +853,7 @@
     ].filter(Boolean);
     const list = missing.length ? missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}` : 'the rest of setup';
     EB.ask({ title: 'Skip setup?', ok: 'Skip anyway', cancel: 'Keep going',
-      body: `Without ${list}, Menu-fi can’t work out your calories or plan meals for you, so most of the app won’t fit you yet. You can look around and finish setup any time. Nothing is saved until you do.` })
+      body: `Without ${list}, Menufi can’t work out your calories or plan meals for you, so most of the app won’t fit you yet. You can look around and finish setup any time. Nothing is saved until you do.` })
       .then(yes => { if (!yes) return; window.EBExplore && EBExplore.start(); close(); location.reload(); });
   }
 
@@ -1304,6 +1305,18 @@
   // ── Public ──
   window.EBOnboarding = { open, STEPS, titleOf, bindStep, openCalendar, DIETS, CUISINES, isDone: () => !!EB.getProfile().completedAt };
 
-  function boot() { if (!EBOnboarding.isDone() && !(window.EBExplore && EBExplore.isOn())) open(); }
+  // Launch: onboarding has its own clover splash; everyone else sees the clover grow once per launch.
+  function launchSplash() {
+    try { if (sessionStorage.getItem('eb_launch_seen')) return; sessionStorage.setItem('eb_launch_seen', '1'); } catch {}
+    const s = document.createElement('div');
+    s.className = 'launch-splash'; s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = `${LOGO}<p class="launch-name">Menufi</p><p class="launch-tag"><span><b>Me</b>nstruation</span> <span><b>Nu</b>trition</span> <span><b>Fi</b>tness</span></p><p class="launch-tag launch-copy">All your needs in one app.</p>`;
+    document.body.appendChild(s);
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const done = () => { if (!s.isConnected) return; s.classList.add('out'); setTimeout(() => s.remove(), 400); };
+    s.addEventListener('click', done);   // tap to skip
+    setTimeout(done, calm ? 700 : 2900);
+  }
+  function boot() { if (!EBOnboarding.isDone() && !(window.EBExplore && EBExplore.isOn())) open(); else launchSplash(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
