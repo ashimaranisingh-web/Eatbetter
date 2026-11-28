@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Menu-fi</string>
+	<string>Menufi</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,19 +27,19 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Menu-fi uses the camera to scan the barcode on a food pack, so you can log it without typing.</string>
+	<string>Menufi uses the camera to scan the barcode on a food pack, so you can log it without typing.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Menu-fi reads your weight, period days and workouts to keep your meal plan in step with your cycle and activity.</string>
+	<string>Menufi reads your weight, period days and workouts to keep your meal plan in step with your cycle and activity.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Menu-fi saves the calories, protein, carbs, fat and fiber you log so Apple Health shows what you ate.</string>
+	<string>Menufi saves the calories, protein, carbs, fat and fiber you log so Apple Health shows what you ate.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Menu-fi uses the microphone when you answer questions or log meals by voice.</string>
+	<string>Menufi uses the microphone when you answer questions or log meals by voice.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Menu-fi reads a photo of a food pack’s nutrition label, so you don’t have to type the numbers.</string>
+	<string>Menufi reads a photo of a food pack’s nutrition label, so you don’t have to type the numbers.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save your weekly poster to Photos.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Menu-fi turns what you say into text when you answer by voice.</string>
+	<string>Menufi turns what you say into text when you answer by voice.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -5,7 +5,7 @@
 // Leave a value empty and that feature stays switched off.
 window.EB_CONFIG = {
   posthog: {
-    key: 'phc_tSsY4aLjapS3qE7P7rCx7SD3xZt4jFyqCeYq2qR7N4eb',   // Menu-fi org, EU project
+    key: 'phc_tSsY4aLjapS3qE7P7rCx7SD3xZt4jFyqCeYq2qR7N4eb',   // Menufi org, EU project
     host: 'https://eu.i.posthog.com'    // or https://us.i.posthog.com
   },
   supabase: {

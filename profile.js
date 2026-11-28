@@ -59,8 +59,6 @@
     return `
         <p class="eb-group-label">Account</p>
         <div class="eb-list">
-          ${isOwner ? `<button type="button" class="eb-list-row" data-pf="redo"><span class="eb-row-text"><span class="eb-list-label">See Onboarding</span>
-            <span class="eb-list-value">Only you see this</span></span>${ICONS.chevron}</button>` : ''}
           <button type="button" class="eb-list-row" data-pf="signOut"><span class="eb-list-label">Sign Out</span></button>
         </div>
         <p class="eb-group-note">Everything saves to your account by itself.</p>`;
@@ -110,11 +108,6 @@
           <input type="file" accept="image/*" data-pf="photo" hidden>
         </label>
 
-        <a class="pf-test-card" href="${FEEDBACK_URL}" target="_blank" rel="noopener">
-          <span class="pf-test-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/></svg></span>
-          <span class="pf-test-text"><b>Test Menu-fi (10min)</b></span>
-          <span class="pf-test-go" aria-hidden="true">›</span>
-        </a>
 
         <div class="eb-list">
           <label class="eb-list-row is-input"><span class="eb-list-label">Name</span>
@@ -139,6 +132,8 @@
             <span class="eb-list-value">Goal, body, cycle, food and more · ${setCount} of ${steps.length} set</span></span>${ICONS.chevron}</button>
           <button type="button" class="eb-list-row" data-pf="showWeight" role="switch" aria-checked="${!!p.showWeight}"><span class="eb-row-text"><span class="eb-list-label">Show Current Weight</span>
             <span class="eb-list-value">A small line under the dates on every page</span></span><span class="pf-switch${p.showWeight ? ' on' : ''}" aria-hidden="true"></span></button>
+          <button type="button" class="eb-list-row" data-pf="redo"><span class="eb-row-text"><span class="eb-list-label">See the Intro Again</span>
+            <span class="eb-list-value">The welcome and setup questions, with your answers filled in</span></span>${ICONS.chevron}</button>
         </div>
 
         ${window.EBHealth && EBHealth.native ? `

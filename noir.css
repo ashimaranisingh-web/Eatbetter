@@ -1,4 +1,4 @@
-/* ═══ Menu-fi dark design language ("noir") ═══════════════════════════════
+/* ═══ Menufi dark design language ("noir") ═══════════════════════════════
    From the original meal-plan design: pure black page, near-black cards with
    a fine light edge, a lifted "counter" surface with an accent strip for the
    numbers that matter, uppercase micro-labels, coloured meal edges + chips,
@@ -182,7 +182,7 @@ html.noir body:not(#_a):not(#_b):not(#_c) :is(.eb-step-btn, .eb-mic) { backgroun
 html.noir body:not(#_a):not(#_b):not(#_c) .ob-skip { color: var(--n-ink2) !important; }
 html.noir body:not(#_a):not(#_b):not(#_c) .ob-foot::before { background: linear-gradient(transparent, #000) !important; }
 
-/* "Why Menu-fi" list: no card behind it */
+/* "Why Menufi" list: no card behind it */
 html.noir body:not(#_a):not(#_b):not(#_c) .ob-why { background: transparent !important; box-shadow: none !important; }
 /* Meal sections: 8px from label to card, 16px between cards */
 html.noir body:not(#_a):not(#_b):not(#_c) #slotSection .ml-sec .ml-head { margin: 0 16px 8px !important; }
@@ -1231,3 +1231,92 @@ html.noir body:not(#_a):not(#_b):not(#_c) .nf-intro .nf-step { color: var(--n-ac
 .nf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .nf-form .fl-err:empty { display: none; }
 .pb-own-link { display: block; margin: 16px 0 0; min-height: 44px; font-weight: 600; }
+/* Clover mark, top right of each page: that page's leaf lit, the rest dimmed */
+.app-band { position: relative; }
+.app-clover { position: absolute; top: 28px; right: 16px; width: 32px; height: 32px; pointer-events: none; z-index: 2; }
+.app-clover svg { display: block; }
+.app-clover .clv-leaf { opacity: .28; transition: opacity .3s ease; }
+.app-clover .clv-leaf.on { opacity: 1; }
+#pageHome .app-clover { top: 20px; }
+/* Room for it on the right of each header */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head { padding-right: 44px !important; }
+@media (prefers-reduced-motion: reduce) { .app-clover .clv-leaf { transition: none; } }
+/* Cycle setup: hint under the date input */
+.cycle-setup-hint { margin: 8px 0 0; font-size: 14px; text-align: center; }
+html.noir body:not(#_a):not(#_b):not(#_c) .cycle-setup-hint { color: var(--n-ink3) !important; }
+.app-clover .clv-stem { opacity: .5; }
+
+/* ══ Onboarding clover: 3 green leaves grow, swing apart, the pink leaf grows into the gap ══ */
+.ob-clover .obc-leaf { fill: #5fae3e; }
+.ob-clover .obc-luck .obc-leaf { fill: #f06b9a; }
+.ob-clover .obc-stem { fill: none; stroke: #5fae3e; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 50; stroke-dashoffset: 50; animation: obc-draw .5s ease-out .15s forwards; }
+.ob-clover .obc-turn { transform-origin: 0 0; transform: rotate(var(--a)); animation: obc-shift .7s cubic-bezier(.65,0,.35,1) 1s forwards; }
+.ob-clover .obc-pop { transform-origin: 0 0; transform: scale(0); animation: obc-pop .55s cubic-bezier(.34,1.56,.64,1) calc(var(--i) * 110ms) forwards; }
+.ob-clover .obc-pop.obc-luck { animation-delay: 1.65s; animation-duration: .7s; }
+@keyframes obc-draw { to { stroke-dashoffset: 0; } }
+@keyframes obc-shift { to { transform: rotate(var(--b)); } }
+@keyframes obc-pop { to { transform: scale(1); } }
+/* Name and words follow once the clover is whole */
+.ob-splash .ob-splash-mark { animation-delay: 2.5s !important; }
+.ob-splash-name { animation-delay: 2.6s !important; }
+.ob-splash-meaning { animation-delay: 2.75s !important; }
+.ob-splash .ob-title.ob-splash-tag { animation-delay: 3.2s !important; }
+.ob-splash .ob-splash-cta { animation-delay: 3.6s !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ob-clover .obc-stem { animation: none; stroke-dashoffset: 0; }
+  .ob-clover .obc-turn { animation: none; transform: rotate(var(--b)); }
+  .ob-clover .obc-pop { animation: none; transform: scale(1); }
+}
+/* Clover always pinned top right (Home had a rule pulling it into the page flow) */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-band > .app-clover { position: absolute !important; display: block !important; left: auto !important; right: 16px !important; bottom: auto !important; margin: 0 !important; width: 32px; height: 32px; }
+/* One header for all four tabs: 16 above · 24 title line (20px, medium) · 16 below; content starts at 72px */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-band { padding-bottom: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-head { box-sizing: border-box; min-height: 56px; padding: 16px 4px 16px 4px !important; margin: 0 !important; display: flex; align-items: center; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-head .app-head-row { height: 24px; margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageHome .app-head .app-date { font-size: 20px !important; font-weight: 500 !important; line-height: 24px !important; margin: 0 !important; color: var(--n-ink) !important; letter-spacing: 0 !important; }
+/* Every header is 16 + 56 tall, so the clover's centre is the title's centre: 16 + 16 + 12 − 16 = 28 */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-band > .app-clover { top: 28px !important; }
+/* Launch splash: the same clover story as onboarding, once per launch */
+.launch-splash { position: fixed; inset: 0; z-index: 5000; background: #0b0b0c; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; transition: opacity .4s ease; }
+.launch-splash.out { opacity: 0; pointer-events: none; }
+.launch-splash .ob-logo { width: 120px; height: 120px; overflow: visible; margin-bottom: 8px; }
+.launch-splash .launch-name, .launch-splash .launch-tag { margin: 0; opacity: 0; transform: translateY(8px); animation: ob-rise .5s cubic-bezier(.22,1,.36,1) forwards; }
+.launch-splash .launch-name { font-size: 20px; font-weight: 600; color: #fff; animation-delay: 2.1s; }
+.launch-splash .launch-tag { font-size: 14px; color: rgba(255,255,255,.75); animation-delay: 2.3s; }
+@keyframes ob-rise { to { opacity: 1; transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .launch-splash .launch-name, .launch-splash .launch-tag { animation: none; opacity: 1; transform: none; } }
+
+/* ══ Clover from the real leaf photo (clover.js) ══ */
+.clv { display: block; overflow: visible; }
+.clv .clv-piece { transform-box: view-box; transform-origin: 256px 255px; transition: opacity .3s ease; }
+/* Page headers: that page's leaf lit, the rest dimmed */
+.clv.clv-lit .clv-piece:not(.on) { opacity: .3; }
+.clv.clv-lit .clv-stem { opacity: .5; }
+.app-clover .clv-stem, .app-clover .clv-leaf { }
+/* Splash: 3 green leaves grow (sides tilted up, like a 3-leaf clover), swing apart, pink grows into the gap */
+.clv-anim .clv-stem { opacity: 0; animation: clvFade .5s ease .1s forwards; }
+.clv-anim .clv-bottom { scale: 0; animation: clvPop .55s cubic-bezier(.34,1.56,.64,1) 0s forwards; }
+.clv-anim .clv-left { scale: 0; rotate: 32deg; animation: clvPop .55s cubic-bezier(.34,1.56,.64,1) .11s forwards, clvSwing .7s cubic-bezier(.65,0,.35,1) 1s forwards; }
+.clv-anim .clv-right { scale: 0; rotate: -32deg; animation: clvPop .55s cubic-bezier(.34,1.56,.64,1) .22s forwards, clvSwing .7s cubic-bezier(.65,0,.35,1) 1s forwards; }
+.clv-anim .clv-top { scale: 0; animation: clvPop .7s cubic-bezier(.34,1.56,.64,1) 1.65s forwards; }
+@keyframes clvPop { to { scale: 1; } }
+@keyframes clvSwing { to { rotate: 0deg; } }
+@keyframes clvFade { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .clv-anim .clv-piece { animation: none !important; scale: 1; rotate: 0deg; opacity: 1; } }
+.ob-splash .ob-splash-mark .clv, .launch-splash .clv { margin-bottom: 8px; }
+/* Nutrition bottom row: Reset day (quiet, left) · Ready to wrap up? (accent, right) */
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-day-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 16px 0 24px; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-day-actions .app-wrapup { width: auto !important; margin: 0 !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) #pageFood .app-day-actions .reset-btn { min-height: 44px; padding: 0 !important; margin: 0 !important; font-size: 16px !important; color: var(--n-ink3) !important; background: none !important; }
+/* Splash text: Menufi, the three words, then the line in the same small size */
+.eb-sr-only { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; margin: -1px !important; padding: 0 !important; }
+.ob-splash .ob-splash-copy { margin-top: -6px; animation-delay: 2.9s !important; }
+.launch-splash .launch-tag { font-size: 12px; letter-spacing: .04em; color: rgba(255,255,255,.75); }
+.launch-splash .launch-tag b { color: #fff; font-weight: 700; }
+.launch-splash .launch-tag span + span { margin-left: 8px; }
+.launch-splash .launch-copy { margin-top: 0; animation-delay: 2.45s; }
+/* Clover sits in the title row (in the flow), at its right end, centred on the title */
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head .app-clover { position: static !important; top: auto !important; right: auto !important; display: block !important; flex: none; width: 32px; height: 32px; margin: -4px 0 -4px auto !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head, html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head .app-head-row { display: flex !important; align-items: center !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head { padding-right: 4px !important; }
+html.noir body:not(#_a):not(#_b):not(#_c) .app-page .app-head > .app-head-row { flex: 1; }

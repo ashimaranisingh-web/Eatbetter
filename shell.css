@@ -409,7 +409,7 @@ input[type="date"].pf-inline { -webkit-appearance: none; appearance: none; justi
 :root[data-theme="light"] .ob-hero-meaning b { color: var(--text-primary); }
 
 /* ── Phone-sized everywhere ──
-   Menu-fi is a phone app. On a wider screen (desktop browser, iPad) it
+   Menufi is a phone app. On a wider screen (desktop browser, iPad) it
    renders as one centred phone-width column instead of stretching. */
 :root { --phone-w: 430px; }
 @media (min-width: 480px) {
@@ -1603,7 +1603,7 @@ body.has-tabs {
 .app-hero span { font-size: 14px; font-weight: 500; line-height: 1.35; color: #fff !important; }
 .app-page .app-motto { margin-top: 4px !important; font-size: 14px; }
 
-/* ══ Splash welcome: black screen, Menu-fi mark springs in and turns, then name → tagline → CTA ══ */
+/* ══ Splash welcome: black screen, Menufi mark springs in and turns, then name → tagline → CTA ══ */
 .ob.ob-splash { background: #0b0b0c !important; color: #fff; }
 .ob-splash .ob-splash-mark {
   position: absolute; left: 0; right: 0; top: 30%; transform: translateY(-50%);
@@ -3259,7 +3259,7 @@ html.safe-fallback body .ob { padding-top: 59px !important; }
 .ob-targets-big b { font-size: 20px; font-weight: 800; color: #141414; letter-spacing: -0.02em; }
 .ob-targets-sub { margin: 0; font-size: 14px; color: #424242; line-height: 1.45; }
 .ob-targets-adj { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
-/* Why Menu-fi */
+/* Why Menufi */
 .ob-why { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 20px; counter-reset: why; }
 .ob-why li { display: flex; gap: 16px; align-items: flex-start; opacity: 0; animation: ob-why-in .6s cubic-bezier(.22,1,.36,1) both; animation-delay: calc(var(--i) * 450ms + 150ms); }
 @keyframes ob-why-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }

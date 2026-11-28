@@ -125,7 +125,7 @@
       advanced_disable_flags: true,
       property_denylist: ['$referrer', '$initial_referrer', '$referring_domain', '$initial_referring_domain'],
     });
-    ph.register({ app: 'menufi' });   // tells Menu-fi apart if a PostHog project is shared
+    ph.register({ app: 'menufi' });   // tells Menufi apart if a PostHog project is shared
     if (consent()?.analytics) ph.opt_in_capturing();
   }
 
@@ -153,7 +153,7 @@
     bar.className = 'eb-consent';
     bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Usage stats');
     bar.innerHTML = `
-      <p>Share anonymous usage stats to help improve Menu-fi? Never your health, cycle or food data.</p>
+      <p>Share anonymous usage stats to help improve Menufi? Never your health, cycle or food data.</p>
       <div class="eb-consent-btns">
         <button type="button" class="eb-consent-no" data-consent="0">No thanks</button>
         <button type="button" class="eb-consent-yes" data-consent="1">OK</button>

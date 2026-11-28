@@ -183,7 +183,7 @@
   async function askPermission() {
     if (!LN) return true;
     try { const p = await LN.requestPermissions(); if (p.display === 'granted') return true; } catch {}
-    window.EB && EB.toast('Turn on notifications for Menu-fi in Settings to get challenge reminders');
+    window.EB && EB.toast('Turn on notifications for Menufi in Settings to get challenge reminders');
     return false;
   }
   if (LN) {

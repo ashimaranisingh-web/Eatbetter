@@ -5,7 +5,7 @@ import WidgetKit
 import AVFoundation
 import Vision
 
-/// Small native helpers for Menu-fi (JS name "Menufi", used by native.js):
+/// Small native helpers for Menufi (JS name "Menufi", used by native.js):
 ///  - updateWidget: saves the next two weeks of cycle days + today's meals
 ///    into the shared App Group so the home/lock screen widget can show them.
 ///  - haptic: a light tap when something is logged.

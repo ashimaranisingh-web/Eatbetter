@@ -246,7 +246,7 @@
     requestAnimationFrame(step);
   }
 
-  // ── Coach: the Menu-fi character with a motivating line ──
+  // ── Coach: the Menufi character with a motivating line ──
   // Motivation only (her numbers and next meal live in the cards below).
   // A different line each day; tapping the bubble shows the next one.
   let coachTap = 0;
@@ -775,7 +775,7 @@
     const left = cur ? Math.round((new Date(cur.end) - new Date(ds)) / 86400000) + 1 : 0;
     sub.innerHTML = meta
       ? `<span class="app-hero-line"><b>Day ${info.dayNum}</b> · ${PHASE_NAME[info.phase]}${isToday ? '' : ` · ${short(ds)}`}</span>`
-      : '<span class="app-hero-sub">Add your last period date to start</span>';
+      : '';   // no cycle yet: the hint sits under the date input instead
     // "13–15 Nov", or "29 Nov – 3 Dec" across months.
     const span = r => { const a = new Date(r.start + 'T00:00'), z = new Date(r.end + 'T00:00'), m = { month: 'short' };
       return a.getMonth() === z.getMonth() ? `${a.getDate()}–${z.getDate()} ${z.toLocaleDateString(undefined, m)}`
@@ -1138,7 +1138,11 @@
     wrapBtn.type = 'button'; wrapBtn.id = 'wrapBtn'; wrapBtn.className = 'app-card app-wrapup'; wrapBtn.dataset.wrapup = '';
     wrapBtn.innerHTML = '<span><b>Ready to wrap up?</b><small></small></span>';
     wrapBtn.className = 'app-wrapup';   // a quiet text action, no card
-    food.appendChild(wrapBtn);
+    // Bottom of Nutrition: "Reset day" on the left, "Ready to wrap up?" on the right.
+    const dayActs = document.createElement('div'); dayActs.className = 'app-day-actions';
+    const resetEl = reset || foodHead.querySelector('#resetBtn'); if (resetEl) dayActs.insertBefore(resetEl, dayActs.firstChild);
+    dayActs.appendChild(wrapBtn);
+    food.appendChild(dayActs);
 
     // Fitness
     const fit = mk('pageFitness');
@@ -1937,6 +1941,33 @@
     try { handleCraving(); } catch {}
     setTimeout(() => window.scrollTo({ top: $('cravingWrap').getBoundingClientRect().top + window.scrollY - 96, behavior: 'smooth' }), 60);
   }
+  // ── Clover mark, top right of every page ──
+  // Three green leaves (menstruation, nutrition, fitness) + the pink "lucky" leaf (the app).
+  // Each page lights up its own leaf: Home = pink top, Menstruation = right, Nutrition = bottom, Fitness = left.
+  const CLOVER_LEAF = { home: 'top', cycle: 'right', food: 'bottom', fitness: 'left' };
+  const HEART = 'M0 0 C -1.6 -2.6 -8.6 -5.6 -8.6 -11.6 C -8.6 -15.6 -5 -17.6 -2 -16.2 C -0.8 -15.4 0 -14.2 0 -13.2 C 0 -14.2 0.8 -15.4 2 -16.2 C 5 -17.6 8.6 -15.6 8.6 -11.6 C 8.6 -5.6 1.6 -2.6 0 0 Z';
+  function cloverSVG(page) {
+    if (window.EBClover) return EBClover.svg({ lit: CLOVER_LEAF[page] || 'top', size: 32 });   // the real leaf photo
+    const on = CLOVER_LEAF[page] || 'top';
+    const leaf = (k, rot, fill) => `<path class="clv-leaf${k === on ? ' on' : ''}" d="${HEART}" transform="translate(20 20) rotate(${rot})" fill="${fill}"/>`;
+    return `<svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">
+      <path class="clv-stem" d="M21 21 Q 28 28 34 37" fill="none" stroke="#5fae3e" stroke-width="2" stroke-linecap="round"/>
+      ${leaf('left', -90, '#5fae3e')}${leaf('right', 90, '#5fae3e')}${leaf('bottom', 180, '#5fae3e')}${leaf('top', 0, '#f06b9a')}</svg>`;
+  }
+  function placeClovers() {
+    PAGES.forEach(t => {
+      // Inside the title row, at its right end: always centred on the title, below any notch.
+      const head = pageEl(t) && pageEl(t).querySelector('.app-band .app-head'); if (!head) return;
+      const row = head.querySelector('.app-head-row') || head;
+      let c = row.querySelector(':scope > .app-clover');
+      if (!c) { c = document.createElement('span'); c.className = 'app-clover'; c.setAttribute('aria-hidden', 'true'); row.appendChild(c); }
+      if (c.dataset.page !== t) { c.dataset.page = t; c.innerHTML = cloverSVG(t); }
+    });
+  }
+  // Pages re-render their bands; put the clover back whenever one goes missing.
+  new MutationObserver(() => { if (PAGES.some(t => { const h = pageEl(t) && pageEl(t).querySelector('.app-band .app-head'); return h && !h.querySelector('.app-clover'); })) placeClovers(); })
+    .observe(document.body, { childList: true, subtree: true });
+
   function go(tab, initial) {
     if (tab === 'chat') { if (window.EBProfile && EBProfile.isOpen()) EBProfile.close(); if (window.EBAssistant && !EBAssistant.isOpen()) EBAssistant.open(); return markActive(); }
     if (tab === 'profile') { if (window.EBAssistant && EBAssistant.isOpen()) EBAssistant.close(true); if (window.EBProfile && !EBProfile.isOpen()) EBProfile.open(); return markActive(); }
@@ -1949,7 +1980,7 @@
     active = tab;
     document.body.dataset.tab = tab;
     PAGES.forEach(t => { pageEl(t).hidden = t !== tab; });
-    placeShared(pageEl(tab));
+    placeShared(pageEl(tab)); placeClovers();
     if (tab === 'cycle') { renderCyclePage(); survivalBadge(); }
     if (tab === 'home') { renderHome(); try { renderWeeklyTracker(); } catch {} }
     if (tab === 'fitness') { renderFitnessPage(); try { renderActivity(); } catch {} }
@@ -2390,7 +2421,7 @@
       const nm = PHASE_STYLE[ph].word; text(nm, kx + 26, 1318, 600, 24, .85);
       g.font = F(600, 24); kx += 26 + g.measureText(nm).width + 28;
     });
-    text('Menu-fi', W - 72, 1318, 800, 30, 1, 'right');
+    text('Menufi', W - 72, 1318, 800, 30, 1, 'right');
     return cv.toDataURL('image/png');
   }
 
@@ -2456,7 +2487,7 @@
     const daysAgo = n => { const d = new Date(today); d.setDate(d.getDate() - n); return d; };
     const p = EB.getProfile();
     Object.assign(p, {
-      name: 'Ashima', birthday: '1996-08-14', goal: 'lose', goals: ['pms', 'energy'],
+      name: 'Ananya', birthday: '1996-08-14', goal: 'lose', goals: ['pms', 'energy'],
       weight: { unit: 'kg', current: 68, goal: 62 },
       cycle: { tracks: true, lastStart: iso(daysAgo(12)), cycleLength: 28, periodLength: 5, regular: 'yes', symptoms: ['cramps', 'cravings', 'bloating'], pmsStart: '4-7' },
       activity: { level: 'moderate', types: ['strength', 'yoga', 'walking'] }, trackers: ['apple'],

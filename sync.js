@@ -199,7 +199,7 @@
     ov.className = 'eb-cal-overlay app-sheet-overlay';
     let email = '', step = 'email', busy = false, err = '', review = false;
     const body = () => step === 'email' ? `
-        <p class="acct-lead">Back up your plan, logs and cycle history, and use Menu-fi on more than one phone. We’ll email you a 6-digit code. No password.</p>
+        <p class="acct-lead">Back up your plan, logs and cycle history, and use Menufi on more than one phone. We’ll email you a 6-digit code. No password.</p>
         <label class="ch-field"><span>Email</span><input class="eb-input" id="acctEmail" type="email" inputmode="email" autocomplete="email" value="${esc(email)}"></label>
         ${err ? `<p class="acct-err" role="alert">${esc(err)}</p>` : ''}
         <button type="button" class="eb-btn primary" data-acct="send" ${busy ? 'disabled' : ''}>${busy ? 'Sending…' : 'Send code'}</button>`
